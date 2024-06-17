@@ -2,20 +2,19 @@ import asyncio
 
 from aiogram import Router, F
 from aiogram.filters import Command, CommandStart
-from aiogram.types import Message, Contact
+from aiogram.types import Message
 from aiogram.utils.chat_action import ChatActionSender
 
 from database.orm_query import orm_add_user, orm_get_user, orm_update_user
-from keyboards.keyboard_contact import contact_keyboard
-from keyboards.keyboard_start import start_keyboard
-from tg_bot.bot_logger import logger
+from tg_bot.keyboards.keyboard_contact import contact_keyboard
+from tg_bot.keyboards.keyboard_start import start_keyboard
+from logging import getLogger
 from tg_bot.filters.filter_admin import AdminFilter
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import User
-from database.engine import session_maker
 
+logger = getLogger(__name__)
 start_router: Router = Router()
 
 

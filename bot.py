@@ -6,24 +6,17 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from dotenv import load_dotenv
-load_dotenv()
 
-from tg_bot.middlewares.middleware_database import DataBaseSession
 from database.engine import create_db, session_maker
-from tg_bot.bot_logger import logger
-from tg_bot.middlewares.middleware_antiflood import AntiFloodMiddleware
-
-
+from logger.bot_logger import logger
 from tg_bot.handlers import handler_start
+from tg_bot.middlewares.middleware_antiflood import AntiFloodMiddleware
+from tg_bot.middlewares.middleware_database import DataBaseSession
 
 
+load_dotenv()
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
-os.getenv("BOT_TOKEN")
-
 DEBUG = os.environ.get('DEBUG') == 'True'
-
-bot: Bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-dp: Dispatcher = Dispatcher(storage=MemoryStorage())
 
 
 async def on_startup(bot: Bot):
@@ -37,6 +30,9 @@ async def on_shutdown(bot: Bot):
 
 
 async def main():
+    bot: Bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    dp: Dispatcher = Dispatcher(storage=MemoryStorage())
+
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
 
@@ -50,6 +46,7 @@ async def main():
         await dp.start_polling(bot)
     finally:
         await bot.session.close()
+
 
 if __name__ == "__main__":
     try:
