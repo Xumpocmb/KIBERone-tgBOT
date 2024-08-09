@@ -6,13 +6,14 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from dotenv import load_dotenv
+from loguru import logger
 
 from database.engine import create_db, session_maker
-from logger.bot_logger import logger
 from tg_bot.handlers import handler_start
 from tg_bot.middlewares.middleware_antiflood import AntiFloodMiddleware
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
+logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
 
 load_dotenv()
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
@@ -23,6 +24,7 @@ async def on_startup(bot: Bot):
     logger.info('Starting bot..')
     logger.info('Creating DB..')
     await create_db()
+    logger.info('DB created. Bot started.')
 
 
 async def on_shutdown(bot: Bot):
