@@ -1,7 +1,15 @@
+import asyncio
 import json
+import os
 
 import requests
 from loguru import logger
+
+CRM_HOSTNAME = os.getenv("CRM_HOSTNAME")
+TEST_CRM_HOSTNAME = os.getenv("TEST_CRM_HOSTNAME")
+CRM_EMAIL = os.getenv("CRM_EMAIL")
+CRM_API_KEY = os.getenv("CRM_API_KEY")
+TEST_CRM_API_KEY = os.getenv("TEST_CRM_API_KEY")
 
 logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
 
@@ -17,17 +25,18 @@ hostname_test = "lera.s20.online"
 email = "lera71642@gmail.com"
 api_key = "3447236a-89ff-11ee-bc12-3cecefbdd1ae"
 api_key_test = "5ce913ee-4f43-11ef-b9b8-3cecefbdd1ae"
+branches = [1, 2, 3]
 
 
 def login_to_alfacrm():
     data = {
-        "email": email,
-        "api_key": api_key_test,
+        "email": CRM_EMAIL,
+        "api_key": TEST_CRM_API_KEY,
     }
 
     data = json.dumps(data)
     try:
-        response = requests.post(f'https://{hostname_test}/v2api/auth/login', headers=headers, data=data)
+        response = requests.post(f'https://{TEST_CRM_HOSTNAME}/v2api/auth/login', headers=headers, data=data)
         response.raise_for_status()
         token_data = response.json()
         token_from_response = token_data.get("token")
@@ -42,42 +51,44 @@ def login_to_alfacrm():
         return None
 
 
-token = login_to_alfacrm()
-
-
 async def create_lid_alfacrm(user_data: dict):
-    headers.update({'X-ALFACRM-API-KEY': token})
-    client_first_name = user_data.get('first_name', None)
-    client_last_name = user_data.get('last_name', None)
-    client_name = f'{client_first_name if client_first_name else ""} {client_last_name if client_last_name else ""} | {user_data.get("username", "")}'
+    logger.info("Получение токена авторизации..")
+    token = login_to_alfacrm()
+    if token:
+        logger.info(f"Токен получен: {token}")
+        await asyncio.sleep(1)
+        headers.update({'X-ALFACRM-API-KEY': token})
+        client_first_name = user_data.get('first_name', None)
+        client_last_name = user_data.get('last_name', None)
+        client_name = f'{client_first_name if client_first_name else ""} {client_last_name if client_last_name else ""} | {user_data.get("username", "")}'
 
-    client_phone = user_data.get("phone_number", '')
+        client_phone = user_data.get("phone_number", '')
 
-    data = {
-        "name": client_name,
-        "phone": client_phone,
-        "branch_ids": [1],
-        "legal_type": 1,
-        "is_study": 0,
-        "note": "created by Telegram BOT",
-    }
-    data = json.dumps(data)
+        data = {
+            "name": client_name,
+            "phone": client_phone,
+            "branch_ids": [1],
+            "legal_type": 1,
+            "is_study": 0,
+            "note": "created by Telegram BOT",
+        }
+        data = json.dumps(data)
 
-    try:
-        response = requests.post(f'https://{hostname_test}/v2api/1/customer/create', headers=headers, data=data)
+        try:
+            response = requests.post(f'https://{hostname_test}/v2api/1/customer/create', headers=headers, data=data)
 
-        if response.status_code == 200:
-            response_data = response.json()
-            logger.debug(f"Клиент создан: {response_data}")
-        else:
-            logger.error(f"Ошибка создания клиента: {response.status_code} - {response.text}")
+            if response.status_code == 200:
+                response_data = response.json()
+                logger.info(f"Клиент создан: {response_data}")
+            else:
+                logger.error(f"Ошибка создания клиента: {response.status_code} - {response.text}")
 
-    except requests.exceptions.ConnectionError as e:
-        logger.error(f"Ошибка соединения: {e}")
-    except requests.exceptions.Timeout as e:
-        logger.error(f"Тайм-аут запроса: {e}")
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Произошла ошибка при запросе: {e}")
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Ошибка соединения: {e}")
+        except requests.exceptions.Timeout as e:
+            logger.error(f"Тайм-аут запроса: {e}")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Произошла ошибка при запросе: {e}")
 
 
 async def check_client_exists(phone_number: str) -> bool:
@@ -86,34 +97,41 @@ async def check_client_exists(phone_number: str) -> bool:
         "phone": phone_number
     }
     data = json.dumps(data_for_search)
-    client_exists: bool = await send_request_for_check_client(data, phone_number)
+    client_exists: bool = await send_request_for_check_client(data)
     if client_exists:
         return True
     else:
         return False
 
 
-async def send_request_for_check_client(data, client_phone) -> bool:
-    headers.update({'X-ALFACRM-TOKEN': token})
-    try:
-        response = requests.post(f'https://{hostname_test}/v2api/{1}/customer/index', headers=headers, data=data)
+async def send_request_for_check_client(data) -> bool:
+    logger.info("Получение токена авторизации..")
+    token = login_to_alfacrm()
+    if token:
+        logger.info(f"Токен получен: {token}")
+        await asyncio.sleep(1)
+        headers.update({'X-ALFACRM-TOKEN': token})
+        for branch in branches:
+            try:
+                logger.info(f"Поиск клиента в филиале {branch}")
+                response = requests.post(f'https://{hostname_test}/v2api/{branch}/customer/index', headers=headers, data=data)
 
-        if response.status_code == 200:
-            response_data = response.json()
-            if response_data.get('total') == 0:
+                if response.status_code == 200:
+                    response_data = response.json()
+                    if response_data.get('total') >= 1:
+                        return True
+                    else:
+                        logger.info(f"Клиент в филиале {branch} не найден, поиск в другом филиале")
+                else:
+                    logger.error(f"Ошибка запроса: {response.status_code} - {response.text}")
+                    return False
+
+            except requests.exceptions.ConnectionError as e:
+                logger.error(f"Ошибка соединения: {e}")
                 return False
-            else:
-                return True
-        else:
-            logger.error(f"Ошибка запроса: {response.status_code} - {response.text}")
-            return False
-
-    except requests.exceptions.ConnectionError as e:
-        logger.error(f"Ошибка соединения: {e}")
-        return False
-    except requests.exceptions.Timeout as e:
-        logger.error(f"Тайм-аут запроса: {e}")
-        return False
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Ошибка при выполнении запроса: {e}")
-        return False
+            except requests.exceptions.Timeout as e:
+                logger.error(f"Тайм-аут запроса: {e}")
+                return False
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Ошибка при выполнении запроса: {e}")
+                return False

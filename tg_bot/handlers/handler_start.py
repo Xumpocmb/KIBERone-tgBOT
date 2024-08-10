@@ -53,7 +53,6 @@ async def handle_new_user(message: Message, is_admin: bool):
 
 
 @start_router.message(CommandStart())
-@start_router.message(CommandStart())
 async def start_handler(message: Message, session: AsyncSession):
     is_admin = check_admin(message.from_user.id)
     user = await orm_get_user(session, tg_id=message.from_user.id)
@@ -73,7 +72,8 @@ async def handle_contact(message: Message, session: AsyncSession):
         'phone_number': str(message.contact.phone_number)
     }
     try:
-        # logger.info(user_data)
+        logger.info("Получен контакт. Работаю с данными..")
+        await message.answer('Ваш контакт получен.\nИдет обработка данных.. \nОжидайте, это не займет много времени :)')
         await orm_add_user(session, data=user_data)
         await asyncio.sleep(2)
         find_client = await check_client_exists(user_data.get('phone_number', ''))
