@@ -20,11 +20,6 @@ headers = {
     'Accept': 'application/json, text/plain, */*',
 }
 
-hostname = "kiberoneminsk.s20.online"
-hostname_test = "lera.s20.online"
-email = "lera71642@gmail.com"
-api_key = "3447236a-89ff-11ee-bc12-3cecefbdd1ae"
-api_key_test = "5ce913ee-4f43-11ef-b9b8-3cecefbdd1ae"
 branches = [1, 2, 3]
 
 
