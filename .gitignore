@@ -67,3 +67,4 @@ venv.bak/
 *.exe
 *.pdf
 /log_file.log
+/debug.log

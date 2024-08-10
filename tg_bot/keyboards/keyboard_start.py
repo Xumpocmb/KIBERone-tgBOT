@@ -2,7 +2,7 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
 button_1: KeyboardButton = KeyboardButton(text='Главное меню')
 
-start_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
+main_menu_button_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
     keyboard=[
         [button_1,]
     ],

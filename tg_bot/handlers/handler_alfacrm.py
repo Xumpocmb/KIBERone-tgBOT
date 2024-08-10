@@ -70,7 +70,7 @@ async def create_lid_alfacrm(user_data: dict):
         data = json.dumps(data)
 
         try:
-            response = requests.post(f'https://{hostname_test}/v2api/1/customer/create', headers=headers, data=data)
+            response = requests.post(f'https://{TEST_CRM_HOSTNAME}/v2api/1/customer/create', headers=headers, data=data)
 
             if response.status_code == 200:
                 response_data = response.json()
@@ -109,7 +109,7 @@ async def send_request_for_check_client(data) -> bool:
         for branch in branches:
             try:
                 logger.info(f"Поиск клиента в филиале {branch}")
-                response = requests.post(f'https://{hostname_test}/v2api/{branch}/customer/index', headers=headers, data=data)
+                response = requests.post(f'https://{TEST_CRM_HOSTNAME}/v2api/{branch}/customer/index', headers=headers, data=data)
 
                 if response.status_code == 200:
                     response_data = response.json()
