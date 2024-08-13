@@ -18,3 +18,14 @@ class User(Base):
 
     def __repr__(self):
         return f"<User(id={self.id}, tg_id={self.tg_id}, username={self.username})>"
+
+
+class BranchesTelegramLink(Base):
+    __tablename__ = "branches_telegram_link"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    branch_id: Mapped[int] = mapped_column()
+    link: Mapped[str] = mapped_column()
+
+    def __repr__(self):
+        return f"<BranchTelegramLinks(id={self.id}, branch_id={self.branch_id}, link={self.link})>"

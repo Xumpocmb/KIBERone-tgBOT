@@ -60,6 +60,8 @@ venv.bak/
 # Pyre type checker
 .pyre/
 .idea/*
+.vscode/*
+.pylintrc
 .env
 *.exe
 *.sqlite3

@@ -10,6 +10,8 @@ from loguru import logger
 
 from database.engine import create_db, session_maker
 from tg_bot.handlers import handler_start
+from tg_bot.handlers import handler_main_menu
+from tg_bot.handlers.inline_handlers import inline_handler_tg_links
 from tg_bot.middlewares.middleware_antiflood import AntiFloodMiddleware
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
@@ -41,11 +43,15 @@ async def main():
     dp.message.middleware(DataBaseSession(session_pool=session_maker))
     dp.message.middleware(AntiFloodMiddleware())
 
-    dp.include_router(handler_start.start_router)
+    dp.include_routers(
+        handler_start.start_router,
+        handler_main_menu.main_menu_router,
+        inline_handler_tg_links.inline_tg_links_router,
+    )
 
     try:
         await bot.delete_webhook(drop_pending_updates=True)
-        await dp.start_polling(bot)
+        await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     finally:
         await bot.session.close()
 
