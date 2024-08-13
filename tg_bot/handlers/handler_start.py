@@ -40,14 +40,18 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
     greeting = (
         f'Привет, {"администратор " if is_admin else ""}{message.from_user.username}!'
     )
-    await message.answer(greeting, reply_markup=main_menu_button_keyboard)
+    async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
+        await asyncio.sleep(0.5)
+        await message.answer(greeting, reply_markup=main_menu_button_keyboard)
 
 
 async def handle_new_user(message: Message, is_admin: bool):
     if is_admin:
         logger.debug("Пользователь является администратором.")
         greeting = f'Привет, {"администратор " if is_admin else ""}{message.from_user.username}!'
-        await message.answer(greeting, reply_markup=main_menu_button_keyboard)
+        async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
+            await asyncio.sleep(0.5)
+            await message.answer(greeting, reply_markup=main_menu_button_keyboard)
     else:
         formatted_message = """
             <b>Предупреждение о сборе информации и обработке персональных данных</b>\n
@@ -63,7 +67,9 @@ async def handle_new_user(message: Message, is_admin: bool):
             """
         greeting = f"Привет, {message.from_user.username}!\n{formatted_message}"
         logger.debug("Запрашиваю у пользователя контакт..")
-        await message.answer(greeting, reply_markup=contact_keyboard)
+        async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
+            await asyncio.sleep(0.5)
+            await message.answer(greeting, reply_markup=contact_keyboard)
 
 
 @start_router.message(CommandStart())

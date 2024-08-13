@@ -154,7 +154,7 @@ async def get_user_groups_from_crm(branch_id: int, user_crm_id: int) -> list | N
     logger.debug(f"Попытка получить группы пользователя (ID): {user_crm_id}")
     response_data = await send_request_to_crm(url=url, data=data, params=params)
     if response_data:
-        logger.error(f"Количество групп пользователя {user_crm_id}: {response_data.get("total", 0)}")
+        logger.debug(f"Количество групп пользователя {user_crm_id}: {response_data.get("total", 0)}")
         group_ids = []
         for item in response_data["items"]:
             group_ids.append(item["group_id"])
