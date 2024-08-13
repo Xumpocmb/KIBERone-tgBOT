@@ -112,5 +112,5 @@ async def handle_contact(message: Message, session: AsyncSession):
     async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
         await asyncio.sleep(0.5)
         await message.answer(
-            "Спасибо! Ваш контакт сохранен."
-        )  # reply_markup=main_menu_button_keyboard
+            "Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard
+        )

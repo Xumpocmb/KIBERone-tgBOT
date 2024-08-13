@@ -16,7 +16,7 @@ inline_tg_links_router.callback_query.middleware(DataBaseSession(session_pool=se
 @inline_tg_links_router.callback_query(F.data == 'tg_links')
 async def tg_links_handler(callback: CallbackQuery, session: AsyncSession):
     user_tg_id = callback.from_user.id
-    # добавить проверку на админа. если админ, то никаких ссылок не показывать
+    # Добавить проверку на админа. Если админ, то никаких ссылок не показывать
     await callback.message.answer('Ссылки на наши телеграм-каналы:',
                                   reply_markup=await make_tg_links_inline_keyboard(session, user_tg_id))
     await callback.answer()

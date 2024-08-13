@@ -93,11 +93,9 @@ async def find_user_by_phone(phone_number: str) -> dict | None:
         for branch in branches:
             logger.debug(f"Поиск пользователя в филиале: {branch}")
             data = {"is_study": status, "page": 0, "phone": phone_number}
-            data_lead = json.dumps(data)
+            data = json.dumps(data)
             url = f"https://{CRM_HOSTNAME}/v2api/{branch}/customer/index"
-            response_data = await send_request_to_crm(
-                url=url, data=data_lead, params=None
-            )
+            response_data = await send_request_to_crm(url=url, data=data, params=None)
             if response_data:
                 if response_data.get("total") != 0:
                     return response_data
@@ -109,7 +107,7 @@ async def send_request_to_crm(url, data, params):
     logger.info("Получение токена авторизации..")
     token = await login_to_alfa_crm()
     if token:
-        logger.debug(f"Токен получен {token}")
+        logger.debug(f"Токен получен.")
         logger.debug("Обновление заголовков..")
         headers.update({"X-ALFACRM-TOKEN": token})
         try:
@@ -143,3 +141,43 @@ async def send_request_to_crm(url, data, params):
         except requests.exceptions.RequestException as e:
             logger.error(f"Ошибка при выполнении запроса: {e}")
             return None
+
+
+async def get_user_groups_from_crm(branch_id: int, user_crm_id: int) -> list | None:
+    data = {"page": 0}
+    params = {
+        "customer_id": user_crm_id,
+    }
+    data = json.dumps(data)
+    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/cgi/customer"
+
+    logger.debug(f"Попытка получить группы пользователя (ID): {user_crm_id}")
+    response_data = await send_request_to_crm(url=url, data=data, params=params)
+    if response_data:
+        logger.error(f"Количество групп пользователя {user_crm_id}: {response_data.get("total", 0)}")
+        group_ids = []
+        for item in response_data["items"]:
+            group_ids.append(item["group_id"])
+        logger.debug(f"Группы пользователя (ID): {group_ids}")
+        return group_ids
+    else:
+        logger.error(f"Не удалось получить группы пользователя (ID): {user_crm_id}")
+        return None
+
+
+async def get_group_link_from_crm(branch_id: int, group_id: int) -> str | None:
+    data = {"id": group_id, "page": 0}
+
+    data = json.dumps(data)
+    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/group/index"
+
+    logger.debug(f"Попытка получить ссылку на группу (ID): {group_id}")
+    response_data = await send_request_to_crm(url=url, data=data, params=None)
+    if response_data:
+        logger.debug("Ответ получен. Поиск ссылки..")
+        group_tg_link = response_data["items"][0]["note"]
+        logger.debug(f"Ссылка на группу: {group_tg_link}")
+        return group_tg_link if group_tg_link else None
+    else:
+        logger.debug("Не удалось получить ссылку на группу.")
+        return None

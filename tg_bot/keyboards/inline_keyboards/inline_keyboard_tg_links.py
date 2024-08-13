@@ -13,7 +13,7 @@ from loguru import logger
 from tg_bot.handlers.handler_alfacrm import (
     login_to_alfa_crm,
     headers,
-    TEST_CRM_HOSTNAME,
+    CRM_HOSTNAME, find_user_by_phone, get_user_groups_from_crm, get_group_link_from_crm,
 )
 
 logger.add(
@@ -25,90 +25,52 @@ logger.add(
 )
 
 
-async def make_tg_links_inline_keyboard(
-    session: AsyncSession, tg_id: int
-) -> InlineKeyboardMarkup:
+async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int) -> InlineKeyboardMarkup:
     buttons = [
         InlineKeyboardButton(
             text="Главный новостной канал KIBERone", url="https://google.com"
         )
     ]
 
-    """
-    добавить кнопку на чат города:
-    взять юзера из бд по тг, узнать его номер телефона
-    получить город, взять из бд ссылку на чат города
-    """
-    # user = await orm_get_user(session, tg_id)
-    # находим юзера по телефону в црм
-    data_for_search = {
-        "is_study": 0,
-        "page": 0,
-        "phone": "+375447123218",  # user.phone_number
-    }
-    data = json.dumps(data_for_search)
-    logger.info("Получение токена авторизации..")
-    token = login_to_alfacrm()
-    client_branch_id = None
-    if token:
-        headers.update({"X-ALFACRM-TOKEN": token})
-        branches = [1, 2, 3]
+    user = await orm_get_user(session, tg_id)
+    response_data = await find_user_by_phone(user.phone_number)
 
-        for branch in branches:
-            try:
-                logger.info(f"Поиск клиента в филиале {branch}")
-                response = requests.post(
-                    f"https://{TEST_CRM_HOSTNAME}/v2api/{branch}/customer/index",
-                    headers=headers,
-                    data=data,
-                )
+    user_branch_ids: list = response_data.get("items", [])[0].get("branch_ids", [])
+    logger.debug(f"Список городов пользователя: {user_branch_ids}")
 
-                if response.status_code == 200:
-                    response_data = response.json()
-                    if response_data.get("total") >= 1:
-                        logger.info(f"Пользователь найден. Работаю с его данными..")
-                        client_branch_id = response_data["items"][0]["branch_ids"][0]
-                        logger.debug(f"client_branch_id: {client_branch_id}")
-                        break
-                    else:
-                        logger.info(
-                            f"Клиент в филиале {branch} не найден, поиск в другом филиале"
-                        )
-                else:
-                    logger.error(
-                        f"Ошибка запроса: {response.status_code} - {response.text}"
-                    )
-
-            except requests.exceptions.ConnectionError as e:
-                logger.error(f"Ошибка соединения: {e}")
-            except requests.exceptions.Timeout as e:
-                logger.error(f"Тайм-аут запроса: {e}")
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Ошибка при выполнении запроса: {e}")
-
-    # берем ссылку на тг города из БД
-    if client_branch_id:
-        city_link = await get_link_to_branch_chat(session, branch_id=client_branch_id)
-        buttons.append(
-            InlineKeyboardButton(text="Канал города", url=f"{str(city_link)}")
-        )
+    if user_branch_ids:
+        for branch_id in user_branch_ids:
+            logger.debug("Получение ссылки на чат города из БД..")
+            city_link = await get_link_to_branch_chat(session, branch_id=branch_id)
+            logger.debug("Формирование кнопки..")
+            buttons.append(InlineKeyboardButton(text="Канал города", url=f"{str(city_link)}"))
     else:
-        city_link = None
+        logger.error(f"Не удалось получить ИД города пользователя {user.phone_number}")
 
-    # ----------------------------------------------------------------------------
-    """
-    добавить кнопку на чат группы:
-    взять юзера из бд, узнать его номер телефона
-    найти юзера в црм по телефону
-    если клиент, то
-    получить группу. у группы получить ссылку
-    """
+    logger.debug("Попытка получить ID пользователя в ЦРМ..")
+    user_crm_id: int = response_data.get("items", [])[0].get("id", None)
+
+    if user_crm_id:
+        logger.debug("ID пользователя в ЦРМ получен успешно!")
+        logger.debug("Попытка получить список групп пользователя в ЦРМ")
+        for branch_id in user_branch_ids:
+            group_ids = await get_user_groups_from_crm(branch_id, user_crm_id)
+            if group_ids:
+                for group_id in group_ids:
+                    logger.debug("Получение ссылки на группу из БД..")
+                    group_link = await get_group_link_from_crm(branch_id, group_id)
+                    logger.debug("Формирование кнопки..")
+                    buttons.append(InlineKeyboardButton(text="Канал группы", url=f"{str(group_link)}"))
+            else:
+                logger.error(f"Не удалось получить список групп пользователя {user.phone_number}")
+    else:
+        logger.error(f"Не удалось получить ID пользователя в ЦРМ {user.phone_number}")
 
     buttons = [[button] for button in buttons]
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=buttons,
         resize_keyboard=True,
-        input_field_placeholder="Перейдите по ссылкам..",
+        input_field_placeholder="Перейдите по ссылкам для вступления в группы..",
     )
     return keyboard
 
