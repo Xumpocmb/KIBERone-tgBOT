@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.orm_query import orm_add_user, orm_get_user, orm_update_user
 from tg_bot.filters.filter_admin import check_admin
 from tg_bot.handlers.handler_alfacrm import create_user_in_alfa_crm, find_user_by_phone
+from tg_bot.keyboards.inline_keyboards.inline_keyboard_tg_links import make_tg_links_inline_keyboard
 from tg_bot.keyboards.keyboard_send_contact import contact_keyboard
 from tg_bot.keyboards.keyboard_start import main_menu_button_keyboard
 
@@ -101,22 +102,26 @@ async def handle_contact(message: Message, session: AsyncSession):
             "Ваш контакт получен.\nИдет обработка данных.. \nОжидайте, это не займет много времени :)"
         )
         await orm_add_user(session, data=user_data)
-        await asyncio.sleep(0.5)
         find_client = await find_user_by_phone(user_data.get("phone_number", ""))
         if find_client:
-            logger.info(
-                f"Пользователь с номером {user_data.get('phone_number', '')} в ЦРМ уже существует."
-            )
+            logger.debug(f"Пользователь с номером {user_data.get('phone_number', '')} в ЦРМ уже существует.")
+            if find_client.get("items", [])[0].get("is_study") == 1:
+                logger.debug("Пользователь в ЦРМ есть и он обучался. Подготовка ссылок и отправка..")
+                async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
+                    await asyncio.sleep(0.5)
+                    await message.answer("Сейчас мы немножко поколдуем.. Ожидайте!")
+                async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
+                    await message.answer("Ссылки на наши телеграм-каналы:\nПрисоединитесь к ним, пожалуйста!",
+                                         reply_markup=await make_tg_links_inline_keyboard(session, message.contact.user_id))
+            else:
+                logger.debug("Пользователь в ЦРМ есть, но он не обучался")
         else:
-            logger.info(
-                f"Пользователь с номером {user_data.get('phone_number', '')} в црм не найден."
-            )
+            logger.info(f"Пользователь с номером {user_data.get('phone_number', '')} в црм не найден.")
             logger.info("Создание новой карточки в ЦРМ..")
             await create_user_in_alfa_crm(user_data)
+            async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
+                await asyncio.sleep(0.5)
+                await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
     except Exception as e:
         logger.error(e)
-    async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
-        await asyncio.sleep(0.5)
-        await message.answer(
-            "Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard
-        )
+

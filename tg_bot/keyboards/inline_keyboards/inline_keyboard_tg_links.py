@@ -1,19 +1,13 @@
-import json
-
-import requests
 from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.orm_query import get_branch_tg_link, orm_get_user
-from loguru import logger
-
 from tg_bot.handlers.handler_alfacrm import (
-    login_to_alfa_crm,
-    headers,
-    CRM_HOSTNAME, find_user_by_phone, get_user_groups_from_crm, get_group_link_from_crm,
+    find_user_by_phone, get_user_groups_from_crm, get_group_link_from_crm,
 )
 
 logger.add(
