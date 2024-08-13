@@ -1,6 +1,7 @@
 import asyncio
 import os
-
+from datetime import datetime, timedelta
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -20,6 +21,12 @@ logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotati
 load_dotenv()
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 DEBUG = os.environ.get('DEBUG') == 'True'
+scheduler = AsyncIOScheduler()
+
+
+async def check_user_statuses():
+    logger.info('Проверка статусов пользователей..')
+    logger.info('Проверка статусов пользователей завершена.')
 
 
 async def on_startup(bot: Bot):
@@ -48,6 +55,9 @@ async def main():
         handler_main_menu.main_menu_router,
         inline_handler_tg_links.inline_tg_links_router,
     )
+
+    scheduler.add_job(check_user_statuses, 'interval', seconds=15, next_run_time=datetime.now() + timedelta(seconds=10))
+    scheduler.start()
 
     try:
         await bot.delete_webhook(drop_pending_updates=True)

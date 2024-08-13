@@ -3,6 +3,7 @@ import json
 import os
 from re import T
 
+import aiohttp
 import requests
 from loguru import logger
 
@@ -29,37 +30,42 @@ branches = [1, 2, 3]
 client_is_study_statuses = [0, 1]
 
 
-async def login_to_alfa_crm():
+async def login_to_alfa_crm() -> str | None:
     data = {
         "email": CRM_EMAIL,
         "api_key": CRM_API_KEY,
     }
 
     data = json.dumps(data)
-    try:
-        response = requests.post(
-            f"https://{CRM_HOSTNAME}/v2api/auth/login", headers=headers, data=data
-        )
-        response.raise_for_status()
-        token_data = response.json()
-        token_from_response = token_data.get("token")
-        if token_from_response:
-            logger.debug(f"Токен получен: {token_from_response}")
-            logger.debug("Пауза между запросами в 1 сек..")
-            await asyncio.sleep(1)
-            return token_from_response
-        else:
-            logger.debug("Токен не найден в ответе сервера.")
+    url = f"https://{CRM_HOSTNAME}/v2api/auth/login"
+
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.post(url, headers=headers, data=data) as response:
+                response.raise_for_status()
+                token_data = await response.json()
+                token_from_response = token_data.get("token")
+
+                if token_from_response:
+                    logger.debug(f"Токен получен: {token_from_response}")
+                    logger.debug("Пауза между запросами в 1 сек..")
+                    await asyncio.sleep(1)
+                    return token_from_response
+                else:
+                    logger.debug("Токен не найден в ответе сервера.")
+                    return None
+        except aiohttp.ClientTimeout as e:
+            logger.error(f"Тайм-аут запроса: {e}")
             return None
-    except requests.exceptions.Timeout as e:
-        logger.error(f"Тайм-аут запроса: {e}")
-        return None
-    except requests.exceptions.ConnectionError as e:
-        logger.error(f"Ошибка соединения: {e}")
-        return None
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Произошла ошибка при запросе: {e}")
-        return None
+        except aiohttp.ClientConnectionError as e:
+            logger.error(f"Ошибка соединения: {e}")
+            return None
+        except aiohttp.ClientResponseError as e:
+            logger.error(f"Ошибка ответа от клиента: {e}")
+            return None
+        except aiohttp.ClientError as e:
+            logger.error(f"Произошла ошибка при запросе: {e}")
+            return None
 
 
 async def create_user_in_alfa_crm(user_data: dict):
@@ -103,44 +109,28 @@ async def find_user_by_phone(phone_number: str) -> dict | None:
                 return None
 
 
-async def send_request_to_crm(url, data, params):
-    logger.info("Получение токена авторизации..")
+async def send_request_to_crm(url: str, data: str, params: dict | None) -> dict | None:
+    logger.debug("Получение токена авторизации..")
     token = await login_to_alfa_crm()
     if token:
-        logger.debug(f"Токен получен.")
+        logger.debug("Токен получен.")
         logger.debug("Обновление заголовков..")
         headers.update({"X-ALFACRM-TOKEN": token})
-        try:
-            response = requests.post(
-                url,
-                headers=headers,
-                data=data,
-                params=params if params else None,
-                timeout=5,
-            )
-            if response.status_code == 200:
-                response_data = response.json()
-                return response_data
-            elif response.status_code == 401:
-                logger.error(
-                    f"Неверный токен: {response.status_code} - {response.text}"
-                )
-                return None
-            else:
-                logger.error(
-                    f"Ошибка запроса: {response.status_code} - {response.text}"
-                )
-                return None
 
-        except requests.exceptions.ConnectionError as e:
-            logger.error(f"Ошибка соединения: {e}")
-            return None
-        except requests.exceptions.Timeout as e:
-            logger.error(f"Тайм-аут запроса: {e}")
-            return None
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Ошибка при выполнении запроса: {e}")
-            return None
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.post(url, headers=headers, data=data, params=params, timeout=5) as response:
+                    if response.status == 200:
+                        return await response.json()
+                    elif response.status == 401:
+                        logger.error(f"Неверный токен: {response.status} - {await response.text()}")
+                        return None
+                    else:
+                        logger.error(f"Ошибка запроса: {response.status} - {await response.text()}")
+                        return None
+            except aiohttp.ClientError as e:
+                logger.error(f"Ошибка запроса: {e}")
+                return None
 
 
 async def get_user_groups_from_crm(branch_id: int, user_crm_id: int) -> list | None:

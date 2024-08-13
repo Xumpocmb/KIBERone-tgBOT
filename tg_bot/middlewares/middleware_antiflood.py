@@ -6,7 +6,7 @@ from aiogram.types import TelegramObject, Message, CallbackQuery
 
 class AntiFloodMiddleware(BaseMiddleware):
     time_updates: dict[int, datetime.datetime] = {}
-    timedelta_limiter: datetime.timedelta = datetime.timedelta(seconds=5)
+    timedelta_limiter: datetime.timedelta = datetime.timedelta(seconds=3)
 
     async def __call__(self, handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]], event: TelegramObject,
                        data: Dict[str, Any]) -> Any:
