@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.orm_query import orm_add_user, orm_get_user, orm_update_user
 from tg_bot.filters.filter_admin import check_admin
-from tg_bot.handlers.handler_alfacrm import create_lid_alfacrm, check_client_exists
+from tg_bot.handlers.handler_alfacrm import create_user_in_alfa_crm, find_user_by_phone
 from tg_bot.keyboards.keyboard_send_contact import contact_keyboard
 from tg_bot.keyboards.keyboard_start import main_menu_button_keyboard
 
@@ -81,13 +81,13 @@ async def handle_contact(message: Message, session: AsyncSession):
         await message.answer('Ваш контакт получен.\nИдет обработка данных.. \nОжидайте, это не займет много времени :)')
         await orm_add_user(session, data=user_data)
         await asyncio.sleep(1)
-        find_client = await check_client_exists(user_data.get('phone_number', ''))
+        find_client = await find_user_by_phone(user_data.get('phone_number', ''))
         if find_client:
-            logger.info(f"Клиент с номером {user_data.get('phone_number', '')} найден.")
+            logger.info(f"Пользователь с номером {user_data.get('phone_number', '')} в ЦРМ уже существует.")
         else:
-            logger.info(f"Клиент с номером {user_data.get('phone_number', '')} не найден.")
-            logger.info("Создание нового клиента/лида")
-            await create_lid_alfacrm(user_data)
+            logger.info(f"Пользователь с номером {user_data.get('phone_number', '')} в црм не найден.")
+            logger.info("Создание новой карточки в ЦРМ..")
+            await create_user_in_alfa_crm(user_data)
     except Exception as e:
         logger.error(e)
     async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
