@@ -141,7 +141,7 @@ async def find_user_by_phone(phone_number: str) -> dict | None:
 #                 return False
 
 
-async def send_request_to_crm(url, data, params, token):
+async def send_request_to_crm(url, data, params):
     logger.info("Получение токена авторизации..")
     token = login_to_alfa_crm()
     if token:
