@@ -10,4 +10,5 @@ main_menu_router: Router = Router()
 
 @main_menu_router.message(F.text == 'Главное меню')
 async def main_menu_handler(message: Message):
+    logger.debug('Главное меню')
     await message.answer('Главное меню', reply_markup=main_menu_inline_keyboard)

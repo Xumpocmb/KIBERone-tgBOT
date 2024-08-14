@@ -6,10 +6,13 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
+from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 from loguru import logger
+from pytz import timezone
 
 from database.engine import create_db, session_maker
+from tasks.check_user_status import check_user_statuses_in_crm
 from tg_bot.handlers import handler_start
 from tg_bot.handlers import handler_main_menu
 from tg_bot.handlers.inline_handlers import inline_handler_tg_links
@@ -24,9 +27,7 @@ DEBUG = os.environ.get('DEBUG') == 'True'
 scheduler = AsyncIOScheduler()
 
 
-async def check_user_statuses():
-    logger.info('Проверка статусов пользователей..')
-    logger.info('Проверка статусов пользователей завершена.')
+
 
 
 async def on_startup(bot: Bot):
@@ -56,8 +57,13 @@ async def main():
         inline_handler_tg_links.inline_tg_links_router,
     )
 
-    scheduler.add_job(check_user_statuses, 'interval', seconds=15, next_run_time=datetime.now() + timedelta(seconds=10))
+    # scheduler.add_job(check_user_statuses, 'interval', seconds=15, next_run_time=datetime.now() + timedelta(seconds=10))
+    scheduler.add_job(check_user_statuses_in_crm, CronTrigger(day_of_week='wed', hour=23, minute=26, timezone=timezone('Europe/Moscow')))
+
+
+
     scheduler.start()
+    # apscheduler.triggers.daily - загуглить
 
     try:
         await bot.delete_webhook(drop_pending_updates=True)
