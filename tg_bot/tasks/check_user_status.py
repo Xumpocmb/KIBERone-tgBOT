@@ -1,9 +1,9 @@
 # from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from datetime import datetime, timedelta
+# from datetime import datetime, timedelta
 
-from loguru import logger
+# from loguru import logger
 # from apscheduler.job import Job
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+# from apscheduler.schedulers.asyncio import AsyncIOScheduler
 #
 # from database.models import ScheduledTasks
 #
@@ -13,15 +13,15 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 #
 # scheduler = AsyncIOScheduler(jobstores=jobstores)
 
-scheduler = AsyncIOScheduler()
+# scheduler = AsyncIOScheduler()
+#
+# logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
+# from crm_logic.alfa_crm_api import check_client_balance_from_crm
 
-logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
-from crm_logic.alfa_crm_api import check_client_balance_from_crm
 
-
-async def check_user_balance():
-    balance = await check_client_balance_from_crm("+375(47)862-48-44")
-    logger.info(f'Баланс пользователя: {balance}')
+# async def check_user_balance():
+#     balance = await check_client_balance_from_crm("+375(47)862-48-44")
+#     logger.info(f'Баланс пользователя: {balance}')
 
 
 # async def check_user_statuses_in_crm():
@@ -29,11 +29,11 @@ async def check_user_balance():
 #     logger.info('Проверка статусов пользователей завершена.')
 
 
-scheduler.add_job(check_user_balance, 'interval', seconds=15, next_run_time=datetime.now() + timedelta(seconds=10))
-logger.debug('Задача добавлена.')
+# scheduler.add_job(check_user_balance, 'interval', seconds=15, next_run_time=datetime.now() + timedelta(seconds=10))
+# logger.debug('Задача добавлена.')
 # scheduler.add_job(check_user_statuses_in_crm, CronTrigger(day_of_week='wed', hour=23, minute=26, timezone=timezone('Europe/Moscow')))
 
-scheduler.start()
+# scheduler.start()
 
 
 # scheduler.add_job(check_user_statuses_in_crm, CronTrigger(day_of_week='wed', hour=23, minute=26, timezone=timezone('Europe/Moscow')))

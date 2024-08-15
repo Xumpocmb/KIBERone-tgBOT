@@ -10,6 +10,7 @@ from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 from loguru import logger
 from pytz import timezone
+from tg_bot.scheduler import setup_scheduler, start_scheduler, stop_scheduler
 
 from crm_logic.alfa_crm_api import check_client_balance_from_crm
 from database.engine import create_db, session_maker
@@ -27,15 +28,19 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN")
 DEBUG = os.environ.get('DEBUG') == 'True'
 
 
+
 async def on_startup(bot: Bot):
     logger.info('Starting bot..')
     logger.info('Creating DB..')
     await create_db()
+    setup_scheduler()
+    # start_scheduler()
     logger.info('DB created. Bot started.')
 
 
 async def on_shutdown(bot: Bot):
     logger.info('Processing shutdown..')
+    stop_scheduler()
 
 
 async def main():
@@ -46,8 +51,8 @@ async def main():
     dp.shutdown.register(on_shutdown)
 
     dp.message.middleware(DataBaseSession(session_pool=session_maker))
-    dp.message.middleware(AntiFloodMiddleware())
-    dp.message.middleware(ChatActionMiddleware())
+    # dp.message.middleware(AntiFloodMiddleware())
+    # dp.message.middleware(ChatActionMiddleware())
 
     dp.include_routers(
         handler_start.start_router,

@@ -17,6 +17,10 @@ class User(Base):
     last_name: Mapped[str] = mapped_column(nullable=True)
     username: Mapped[str] = mapped_column(nullable=True)
     phone_number: Mapped[str] = mapped_column(nullable=True)
+    balance: Mapped[float] = mapped_column(default=0.0, nullable=True)
+    is_student: Mapped[int] = mapped_column(default=0, nullable=True)
+    lesson_date: Mapped[str] = mapped_column(nullable=True)
+    notified: Mapped[bool] = mapped_column(default=True)
 
     def __repr__(self):
         return f"<User(id={self.id}, tg_id={self.tg_id}, username={self.username})>"
@@ -31,15 +35,3 @@ class BranchesTelegramLink(Base):
 
     def __repr__(self):
         return f"<BranchTelegramLinks(id={self.id}, branch_id={self.branch_id}, link={self.link})>"
-
-
-class ScheduledTasks(Base):
-    __tablename__ = "scheduled_tasks"
-
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column()
-    trigger: Mapped[str] = mapped_column()
-    next_run_time: Mapped[datetime] = mapped_column(DateTime)
-
-    def __repr__(self):
-        return f"<ScheduledTasks(id={self.id}, task={self.name})>"

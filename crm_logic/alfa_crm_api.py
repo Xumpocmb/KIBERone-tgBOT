@@ -1,14 +1,14 @@
 import asyncio
 import json
 import os
-from re import T
 
 import aiohttp
-import requests
+from dotenv import load_dotenv
 from loguru import logger
 
+load_dotenv()
 CRM_HOSTNAME = os.getenv("TEST_CRM_HOSTNAME")
-CRM_EMAIL = os.getenv("CRM_EMAIL")
+CRM_EMAIL = os.getenv("TEST_CRM_EMAIL")
 CRM_API_KEY = os.getenv("TEST_CRM_API_KEY")
 
 logger.add(
@@ -54,17 +54,11 @@ async def login_to_alfa_crm() -> str | None:
                 else:
                     logger.debug("Токен не найден в ответе сервера.")
                     return None
-        except aiohttp.ClientTimeout as e:
-            logger.error(f"Тайм-аут запроса: {e}")
-            return None
-        except aiohttp.ClientConnectionError as e:
-            logger.error(f"Ошибка соединения: {e}")
-            return None
-        except aiohttp.ClientResponseError as e:
-            logger.error(f"Ошибка ответа от клиента: {e}")
-            return None
         except aiohttp.ClientError as e:
             logger.error(f"Произошла ошибка при запросе: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Произошла непредвиденная ошибка: {e}")
             return None
 
 
