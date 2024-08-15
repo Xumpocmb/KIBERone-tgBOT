@@ -6,7 +6,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.orm_query import get_branch_tg_link, orm_get_user
-from tg_bot.handlers.handler_alfacrm import (
+from crm_logic.alfa_crm_api import (
     find_user_by_phone, get_user_groups_from_crm, get_group_link_from_crm,
 )
 

@@ -3,13 +3,12 @@ import asyncio
 from aiogram import Router, F
 from aiogram.filters import CommandStart
 from aiogram.types import Message
-from aiogram.utils.chat_action import ChatActionSender
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.orm_query import orm_add_user, orm_get_user, orm_update_user
 from tg_bot.filters.filter_admin import check_admin
-from tg_bot.handlers.handler_alfacrm import create_user_in_alfa_crm, find_user_by_phone
+from crm_logic.alfa_crm_api import create_user_in_alfa_crm, find_user_by_phone
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_tg_links import make_tg_links_inline_keyboard
 from tg_bot.keyboards.keyboard_send_contact import contact_keyboard
 from tg_bot.keyboards.keyboard_start import main_menu_button_keyboard
@@ -41,18 +40,14 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
     greeting = (
         f'Привет, {"администратор " if is_admin else ""}{message.from_user.username}!'
     )
-    async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
-        await asyncio.sleep(0.5)
-        await message.answer(greeting, reply_markup=main_menu_button_keyboard)
+    await message.answer(greeting, reply_markup=main_menu_button_keyboard)
 
 
 async def handle_new_user(message: Message, is_admin: bool):
     if is_admin:
         logger.debug("Пользователь является администратором.")
         greeting = f'Привет, {"администратор " if is_admin else ""}{message.from_user.username}!'
-        async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
-            await asyncio.sleep(0.5)
-            await message.answer(greeting, reply_markup=main_menu_button_keyboard)
+        await message.answer(greeting, reply_markup=main_menu_button_keyboard)
     else:
         formatted_message = """
             <b>Предупреждение о сборе информации и обработке персональных данных</b>\n
@@ -68,9 +63,7 @@ async def handle_new_user(message: Message, is_admin: bool):
             """
         greeting = f"Привет, {message.from_user.username}!\n{formatted_message}"
         logger.debug("Запрашиваю у пользователя контакт..")
-        async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
-            await asyncio.sleep(0.5)
-            await message.answer(greeting, reply_markup=contact_keyboard)
+        await message.answer(greeting, reply_markup=contact_keyboard)
 
 
 @start_router.message(CommandStart())
@@ -107,21 +100,16 @@ async def handle_contact(message: Message, session: AsyncSession):
             logger.debug(f"Пользователь с номером {user_data.get('phone_number', '')} в ЦРМ уже существует.")
             if find_client.get("items", [])[0].get("is_study") == 1:
                 logger.debug("Пользователь в ЦРМ есть и он обучался. Подготовка ссылок и отправка..")
-                async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
-                    await asyncio.sleep(0.5)
-                    await message.answer("Сейчас мы немножко поколдуем.. Ожидайте!")
-                async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
-                    await message.answer("Ссылки на наши телеграм-каналы:\nПрисоединитесь к ним, пожалуйста!",
-                                         reply_markup=await make_tg_links_inline_keyboard(session, message.contact.user_id))
+                await message.answer("Сейчас мы немножко поколдуем.. Ожидайте!")
+                await message.answer("Ссылки на наши телеграм-каналы:\nПрисоединитесь к ним, пожалуйста!",
+                                     reply_markup=await make_tg_links_inline_keyboard(session, message.contact.user_id))
             else:
                 logger.debug("Пользователь в ЦРМ есть, но он не обучался")
         else:
             logger.info(f"Пользователь с номером {user_data.get('phone_number', '')} в црм не найден.")
             logger.info("Создание новой карточки в ЦРМ..")
             await create_user_in_alfa_crm(user_data)
-            async with ChatActionSender(bot=message.bot, chat_id=message.chat.id):
-                await asyncio.sleep(0.5)
-                await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
+            await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
     except Exception as e:
         logger.error(e)
 

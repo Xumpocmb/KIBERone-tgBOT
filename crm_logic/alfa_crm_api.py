@@ -12,7 +12,7 @@ CRM_EMAIL = os.getenv("CRM_EMAIL")
 CRM_API_KEY = os.getenv("TEST_CRM_API_KEY")
 
 logger.add(
-    "debug.log",
+    "../tg_bot/handlers/debug.log",
     format="{time} {level} {message}",
     level="ERROR",
     rotation="1 MB",
@@ -144,7 +144,7 @@ async def get_user_groups_from_crm(branch_id: int, user_crm_id: int) -> list | N
     logger.debug(f"Попытка получить группы пользователя (ID): {user_crm_id}")
     response_data = await send_request_to_crm(url=url, data=data, params=params)
     if response_data:
-        logger.debug(f"Количество групп пользователя {user_crm_id}: {response_data.get("total", 0)}")
+        logger.debug(f"Количество групп пользователя {user_crm_id}: {response_data.get('total', 0)}")
         group_ids = []
         for item in response_data["items"]:
             group_ids.append(item["group_id"])
@@ -171,3 +171,17 @@ async def get_group_link_from_crm(branch_id: int, group_id: int) -> str | None:
     else:
         logger.debug("Не удалось получить ссылку на группу.")
         return None
+
+
+async def check_client_balance_from_crm(phone_number: str) -> int | None:
+    data = {"is_study": 1, "page": 0, "phone": phone_number}
+    data = json.dumps(data)
+    for branch in branches:
+        url = f"https://{CRM_HOSTNAME}/v2api/{branch}/customer/index"
+        response_data = await send_request_to_crm(url=url, data=data, params=None)
+        if response_data:
+            if response_data.get("total") != 0:
+                logger.debug(f"Попытка получить баланс пользователя..")
+                return response_data.get("items", [])[0].get("balance", 0)
+        else:
+            return None

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import DateTime, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -29,3 +31,15 @@ class BranchesTelegramLink(Base):
 
     def __repr__(self):
         return f"<BranchTelegramLinks(id={self.id}, branch_id={self.branch_id}, link={self.link})>"
+
+
+class ScheduledTasks(Base):
+    __tablename__ = "scheduled_tasks"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column()
+    trigger: Mapped[str] = mapped_column()
+    next_run_time: Mapped[datetime] = mapped_column(DateTime)
+
+    def __repr__(self):
+        return f"<ScheduledTasks(id={self.id}, task={self.name})>"
