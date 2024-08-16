@@ -36,39 +36,33 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
         logger.debug("Данные пользователя обновлены в БД.")
     except Exception as e:
         logger.error(e)
-    await asyncio.sleep(1)
-    greeting = (
-        f'Привет, {"администратор " if is_admin else ""}{message.from_user.username}!'
-    )
+    if is_admin:
+        greeting = f'Привет, {"администратор " if is_admin else ""}{message.from_user.username}!'
+    else:
+        greeting = f'Привет, {message.from_user.username}!'
     await message.answer(greeting, reply_markup=main_menu_button_keyboard)
 
 
-async def handle_new_user(message: Message, is_admin: bool):
-    if is_admin:
-        logger.debug("Пользователь является администратором.")
-        greeting = f'Привет, {"администратор " if is_admin else ""}{message.from_user.username}!'
-        await message.answer(greeting, reply_markup=main_menu_button_keyboard)
-    else:
-        formatted_message = """
-            <b>Предупреждение о сборе информации и обработке персональных данных</b>\n
-            Дорогой пользователь! При использовании нашего бота, учтите следующее:
-            1. <b>Сбор информации</b>: Мы можем собирать определенные данные о вас, такие как ваш ID пользователя, имя, фамилию, номер телефона (если вы поделились контактом) и другие данные, необходимые для функционирования бота.
-            2. <b>Обработка персональных данных</b>: Ваши персональные данные будут использоваться только в рамках функциональности бота. Мы не передаем их третьим лицам и не используем для рекламных целей.
-            3. <b>Информационная безопасность</b>: Мы прилагаем все усилия для обеспечения безопасности ваших данных. Однако, помните, что интернет не всегда безопасен, и мы не можем гарантировать абсолютную защиту.
-            4. <b>Согласие</b>: Используя нашего бота, вы соглашаетесь с нашей политикой конфиденциальности и обработкой данных.
+async def handle_new_user(message: Message):
+    formatted_message = """
+        <b>Предупреждение о сборе информации и обработке персональных данных</b>\n
+        Дорогой пользователь! При использовании нашего бота, учтите следующее:
+        1. <b>Сбор информации</b>: Мы можем собирать определенные данные о вас, такие как ваш ID пользователя, имя, фамилию, номер телефона (если вы поделились контактом) и другие данные, необходимые для функционирования бота.
+        2. <b>Обработка персональных данных</b>: Ваши персональные данные будут использоваться только в рамках функциональности бота. Мы не передаем их третьим лицам и не используем для рекламных целей.
+        3. <b>Информационная безопасность</b>: Мы прилагаем все усилия для обеспечения безопасности ваших данных. Однако, помните, что интернет не всегда безопасен, и мы не можем гарантировать абсолютную защиту.
+        4. <b>Согласие</b>: Используя нашего бота, вы соглашаетесь с нашей политикой конфиденциальности и обработкой данных.
 
-            <b>Нажмите кнопку "Поделиться контактом", чтобы отправить свой контакт.</b>
+        <b>Нажмите кнопку "Поделиться контактом", чтобы отправить свой контакт.</b>
 
-            <b>С уважением, KIBERone!</b>
-            """
-        greeting = f"Привет, {message.from_user.username}!\n{formatted_message}"
-        logger.debug("Запрашиваю у пользователя контакт..")
-        await message.answer(greeting, reply_markup=contact_keyboard)
+        <b>С уважением, KIBERone!</b>
+        """
+    greeting = f"Привет, {message.from_user.username}!\n{formatted_message}"
+    logger.debug("Запрашиваю у пользователя контакт..")
+    await message.answer(greeting, reply_markup=contact_keyboard)
 
 
 @start_router.message(CommandStart())
 async def start_handler(message: Message, session: AsyncSession):
-    logger.debug("Хендлер start")
     is_admin = check_admin(message.from_user.id)
     logger.debug("Проверка пользователя в БД..")
     user = await orm_get_user(session, tg_id=message.from_user.id)
@@ -77,7 +71,7 @@ async def start_handler(message: Message, session: AsyncSession):
         await handle_existing_user(message, session, is_admin)
     else:
         logger.debug("Пользователь не найден в БД")
-        await handle_new_user(message, is_admin)
+        await handle_new_user(message)
 
 
 @start_router.message(F.contact)
@@ -91,24 +85,29 @@ async def handle_contact(message: Message, session: AsyncSession):
     }
     try:
         logger.debug("Получен контакт. Работаю с данными..")
-        await message.answer(
-            "Ваш контакт получен.\nИдет обработка данных.. \nОжидайте, это не займет много времени :)"
-        )
+        await message.answer("Ваш контакт получен.\nИдет обработка данных.. \nОжидайте, это не займет много времени :)")
         await orm_add_user(session, data=user_data)
-        find_client = await find_user_by_phone(user_data.get("phone_number", ""))
-        if find_client:
-            logger.debug(f"Пользователь с номером {user_data.get('phone_number', '')} в ЦРМ уже существует.")
-            if find_client.get("items", [])[0].get("is_study") == 1:
-                logger.debug("Пользователь в ЦРМ есть и он обучался. Подготовка ссылок и отправка..")
-                await message.answer("Сейчас мы немножко поколдуем.. Ожидайте!")
-                await message.answer("Ссылки на наши телеграм-каналы:\nПрисоединитесь к ним, пожалуйста!",
-                                     reply_markup=await make_tg_links_inline_keyboard(session, message.contact.user_id))
-            else:
-                logger.debug("Пользователь в ЦРМ есть, но он не обучался")
+
+        is_admin = check_admin(message.from_user.id)
+        if is_admin:
+            logger.debug("Пользователь является администратором.")
+            await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
         else:
-            logger.info(f"Пользователь с номером {user_data.get('phone_number', '')} в црм не найден.")
-            logger.info("Создание новой карточки в ЦРМ..")
-            await create_user_in_alfa_crm(user_data)
+            find_client = await find_user_by_phone(user_data.get("phone_number", ""))
+            if find_client:
+                logger.debug(f"Пользователь с номером {user_data.get('phone_number', '')} в ЦРМ уже существует.")
+                if find_client.get("items", [])[0].get("is_study") == 1:
+                    logger.debug("Пользователь в ЦРМ есть и он обучался. Подготовка ссылок и отправка..")
+                    await message.answer("Сейчас мы немножко поколдуем.. Ожидайте!")
+                    await message.answer("Ссылки на наши телеграм-каналы:\nПрисоединитесь к ним, пожалуйста!",
+                                         reply_markup=await make_tg_links_inline_keyboard(session,
+                                                                                          message.contact.user_id))
+                else:
+                    logger.debug("Пользователь в ЦРМ есть, но он не обучался")
+            else:
+                logger.info(f"Пользователь с номером {user_data.get('phone_number', '')} в црм не найден.")
+                logger.info("Создание новой карточки в ЦРМ..")
+                await create_user_in_alfa_crm(user_data)
             await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
     except Exception as e:
         logger.error(e)

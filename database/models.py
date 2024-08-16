@@ -5,7 +5,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
-    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+    pass
 
 
 class User(Base):
@@ -20,7 +20,8 @@ class User(Base):
     balance: Mapped[float] = mapped_column(default=0.0, nullable=True)
     is_student: Mapped[int] = mapped_column(default=0, nullable=True)
     lesson_date: Mapped[str] = mapped_column(nullable=True)
-    notified: Mapped[bool] = mapped_column(default=True)
+    notified: Mapped[bool] = mapped_column(default=False, nullable=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
 
     def __repr__(self):
         return f"<User(id={self.id}, tg_id={self.tg_id}, username={self.username})>"
@@ -35,3 +36,70 @@ class BranchesTelegramLink(Base):
 
     def __repr__(self):
         return f"<BranchTelegramLinks(id={self.id}, branch_id={self.branch_id}, link={self.link})>"
+
+
+class FAQ(Base):
+    __tablename__ = "FAQ"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    question: Mapped[str] = mapped_column()
+    answer: Mapped[str] = mapped_column()
+
+    def __repr__(self):
+        return f"<FAQ(id={self.id}, question={self.question}, answer={self.answer})>"
+
+class Promotion(Base):
+    __tablename__ = "Promotion"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    question: Mapped[str] = mapped_column()
+    answer: Mapped[str] = mapped_column()
+
+    def __repr__(self):
+        return f"<Promotion(id={self.id}, title={self.question}, content={self.answer})>"
+
+
+class Partner(Base):
+    __tablename__ = "Partner"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    partner: Mapped[str] = mapped_column()
+    description: Mapped[str] = mapped_column()
+
+    def __repr__(self):
+        return f"<Partner(id={self.id}, name={self.partner}, link={self.description})>"
+
+
+class Contact(Base):
+    __tablename__ = "Contact"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    Contact: Mapped[str] = mapped_column()
+    Contact_link: Mapped[str] = mapped_column()
+
+    def __repr__(self):
+        return f"<Contact(id={self.id}, Contact={self.Contact}, Contact_link={self.Contact_link})>"
+
+
+class Link(Base):
+    __tablename__ = "Link"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    link_name: Mapped[str] = mapped_column()
+    link_url: Mapped[str] = mapped_column()
+
+    def __repr__(self):
+        return f"<Link(id={self.id}, name={self.link_name}, link={self.link_url})>"
+
+
+class Manager(Base):
+    __tablename__ = "Manager"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    city: Mapped[str] = mapped_column()
+    location: Mapped[str] = mapped_column()
+    manager: Mapped[str] = mapped_column()
+    link: Mapped[str] = mapped_column()
+
+    def __repr__(self):
+        return f"<Manager(id={self.id}, city={self.city}, manager={self.manager}, link={self.link})>"

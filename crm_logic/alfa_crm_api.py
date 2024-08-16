@@ -12,7 +12,7 @@ CRM_EMAIL = os.getenv("TEST_CRM_EMAIL")
 CRM_API_KEY = os.getenv("TEST_CRM_API_KEY")
 
 logger.add(
-    "../tg_bot/handlers/debug.log",
+    "debug.log",
     format="{time} {level} {message}",
     level="ERROR",
     rotation="1 MB",
@@ -159,7 +159,7 @@ async def get_group_link_from_crm(branch_id: int, group_id: int) -> str | None:
     response_data = await send_request_to_crm(url=url, data=data, params=None)
     if response_data:
         logger.debug("Ответ получен. Поиск ссылки..")
-        group_tg_link = response_data["items"][0]["note"]
+        group_tg_link = response_data.get("items", [])[0].get("note", None)
         logger.debug(f"Ссылка на группу: {group_tg_link}")
         return group_tg_link if group_tg_link else None
     else:

@@ -29,7 +29,6 @@ async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int) -> In
     user = await orm_get_user(session, tg_id)
     response_data = await find_user_by_phone(user.phone_number)
 
-    # проверить на none
     user_branch_ids: list = response_data.get("items", [])[0].get("branch_ids", [])
     logger.debug(f"Список городов пользователя: {user_branch_ids}")
 
@@ -55,7 +54,7 @@ async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int) -> In
                     logger.debug("Получение ссылки на группу из БД..")
                     group_link = await get_group_link_from_crm(branch_id, group_id)
                     logger.debug("Формирование кнопки..")
-                    buttons.append(InlineKeyboardButton(text="Канал группы", url=f"{str(group_link)}"))
+                    buttons.append(InlineKeyboardButton(text="Чат группы", url=f"{str(group_link)}"))
             else:
                 logger.error(f"Не удалось получить список групп пользователя {user.phone_number}")
     else:
