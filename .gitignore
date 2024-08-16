@@ -70,3 +70,4 @@ venv.bak/
 *.pdf
 /log_file.log
 /debug.log
+/files/

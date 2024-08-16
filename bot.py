@@ -1,26 +1,22 @@
 import asyncio
 import os
-from datetime import datetime, timedelta
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 from loguru import logger
-from pytz import timezone
-from tg_bot.scheduler import setup_scheduler, start_scheduler, stop_scheduler
 
-from crm_logic.alfa_crm_api import check_client_balance_from_crm
 from database.engine import create_db, session_maker
-from tg_bot.handlers import handler_start
 from tg_bot.handlers import handler_main_menu
-from tg_bot.handlers.inline_handlers import inline_handler_tg_links
+from tg_bot.handlers import handler_start
 from tg_bot.handlers.inline_handlers import inline_handler_link
+from tg_bot.handlers.inline_handlers import inline_handler_tg_links, handler_inline_main
 from tg_bot.middlewares.middleware_antiflood import AntiFloodMiddleware
 from tg_bot.middlewares.middleware_chat_action import ChatActionMiddleware
 from tg_bot.middlewares.middleware_database import DataBaseSession
+from tg_bot.scheduler import setup_scheduler, stop_scheduler
 
 logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
 
@@ -35,7 +31,6 @@ async def on_startup(bot: Bot):
     logger.info('Creating DB..')
     await create_db()
     # setup_scheduler()
-    # start_scheduler()
     logger.info('DB created. Bot started.')
 
 
@@ -60,6 +55,7 @@ async def main():
         handler_main_menu.main_menu_router,
         inline_handler_tg_links.inline_tg_links_router,
         inline_handler_link.button_link_router,
+        handler_inline_main.inline_main_router,
     )
 
     try:
