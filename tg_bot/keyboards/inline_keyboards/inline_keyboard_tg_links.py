@@ -59,7 +59,7 @@ async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int) -> In
                 logger.error(f"Не удалось получить список групп пользователя {user.phone_number}")
     else:
         logger.error(f"Не удалось получить ID пользователя в ЦРМ {user.phone_number}")
-
+    buttons.append(InlineKeyboardButton(text='<< Назад', callback_data='inline_main'))
     logger.debug("Формирование клавиатуры..")
     buttons = [[button] for button in buttons]
     keyboard = InlineKeyboardMarkup(

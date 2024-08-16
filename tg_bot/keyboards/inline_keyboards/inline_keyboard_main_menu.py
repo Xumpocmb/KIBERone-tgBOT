@@ -46,11 +46,11 @@ button_11: InlineKeyboardButton = InlineKeyboardButton(
 
 button_12: InlineKeyboardButton = InlineKeyboardButton(
     text='Расписание для клиента и лида с группой',
-    callback_data='scheduler')
+    callback_data='user_scheduler')
 
 button_13: InlineKeyboardButton = InlineKeyboardButton(
     text='Расписание для лида без группы',
-    callback_data='scheduler')
+    callback_data='user_scheduler')
 
 # Создаем объект inline-клавиатуры
 main_menu_inline_keyboard_for_client: InlineKeyboardMarkup = InlineKeyboardMarkup(

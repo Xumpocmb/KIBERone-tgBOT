@@ -108,7 +108,13 @@ async def handle_contact(message: Message, session: AsyncSession):
                 logger.info(f"Пользователь с номером {user_data.get('phone_number', '')} в црм не найден.")
                 logger.info("Создание новой карточки в ЦРМ..")
                 await create_user_in_alfa_crm(user_data)
-            await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
+            formatted_text = """
+            Вас приветствует Международная КиберШкола программирования KIBERone! 
+        Если вы зашли в этот чат-бот, то мы уверены, что вы заинтересованы в будущем вашего ребенка и знаете, что изучать программирование сегодня –это даже уже не модно, а НУЖНО! И Вы на правильном пути, ведь мы точно знаем, чему учить детей, чтобы это было актуально через 20 лет
+        Мы уже получили ваш контакт, и наши лучшие менеджеры уже спорят, кто первый Вам позвонит!
+        Но, вы можете сами нам позвонить по номеру +375(29)633-27-79 и уточнить все интересующие вопросы о KIBERone.
+            """
+            await message.answer(formatted_text, reply_markup=main_menu_button_keyboard)
     except Exception as e:
         logger.error(e)
 

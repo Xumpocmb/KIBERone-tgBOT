@@ -19,9 +19,6 @@ async def main_menu_handler(message: Message, session: AsyncSession):
     await message.answer('Главное меню', reply_markup=await get_user_keyboard(session, message.from_user.id))
 
 
-
-
-
 async def get_user_keyboard(session: AsyncSession, tg_id: int):
     user_in_db = await orm_get_user(session, tg_id)
     logger.debug(user_in_db.phone_number)
@@ -32,8 +29,6 @@ async def get_user_keyboard(session: AsyncSession, tg_id: int):
     lessons = await get_client_lessons(user_crm_id=user_crm_id, branch_ids=user_crm_branch_ids)
 
     user_crm_is_study = user_in_crm_data.get("items", [])[0].get("is_study", None)
-
-
 
     if user_crm_is_study:
         logger.debug("is_study 1")
