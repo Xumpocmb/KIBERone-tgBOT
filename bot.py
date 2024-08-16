@@ -12,7 +12,7 @@ from database.engine import create_db, session_maker
 from tg_bot.handlers import handler_main_menu
 from tg_bot.handlers import handler_start
 from tg_bot.handlers.inline_handlers import inline_handler_link
-from tg_bot.handlers.inline_handlers import inline_handler_tg_links, handler_inline_main, inline_handler_faq
+from tg_bot.handlers.inline_handlers import inline_handler_tg_links, inline_handler_main, inline_handler_faq, inline_handler_promo
 from tg_bot.middlewares.middleware_antiflood import AntiFloodMiddleware
 from tg_bot.middlewares.middleware_chat_action import ChatActionMiddleware
 from tg_bot.middlewares.middleware_database import DataBaseSession
@@ -56,7 +56,8 @@ async def main():
         inline_handler_tg_links.inline_tg_links_router,
         inline_handler_link.button_link_router,
         inline_handler_faq.faq_router,
-        handler_inline_main.inline_main_router,
+        inline_handler_promo.promo_router,
+        inline_handler_main.inline_main_router,
     )
 
     try:
