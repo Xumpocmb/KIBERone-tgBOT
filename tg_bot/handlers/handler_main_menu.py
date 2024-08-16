@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.types import Message
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from aiogram.filters import Command
 from crm_logic.alfa_crm_api import find_user_by_phone
 from database.orm_query import orm_get_user
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_main_menu import main_menu_inline_keyboard
@@ -12,7 +12,7 @@ logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotati
 main_menu_router: Router = Router()
 
 
-@main_menu_router.message(F.text == 'Главное меню')
+@main_menu_router.message(Command("menu"))
 async def main_menu_handler(message: Message, session: AsyncSession):
     user_in_db = await orm_get_user(session, tg_id=message.from_user.id)
     logger.debug(user_in_db.phone_number)

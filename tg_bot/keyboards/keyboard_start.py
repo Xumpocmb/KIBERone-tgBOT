@@ -1,6 +1,6 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
-button_1: KeyboardButton = KeyboardButton(text='Главное меню')
+button_1: KeyboardButton = KeyboardButton(text='/menu')
 
 main_menu_button_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
     keyboard=[
