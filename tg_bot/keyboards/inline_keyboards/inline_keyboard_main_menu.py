@@ -6,7 +6,7 @@ button_1: InlineKeyboardButton = InlineKeyboardButton(
 
 button_2: InlineKeyboardButton = InlineKeyboardButton(
     text='Оплата по ЕРИП',
-    callback_data='oplata-erip')
+    callback_data='oplata_erip')
 
 button_3: InlineKeyboardButton = InlineKeyboardButton(
     text='Назначить отработку',

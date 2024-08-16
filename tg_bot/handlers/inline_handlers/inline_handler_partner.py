@@ -15,7 +15,7 @@ partner_router.callback_query.middleware(DataBaseSession(session_pool=session_ma
 
 # главное меню раздела Partner
 @partner_router.callback_query(F.data == 'partner')
-async def process_button_faq_press(callback: CallbackQuery, session: AsyncSession):
+async def process_button_partner_press(callback: CallbackQuery, session: AsyncSession):
     await callback.message.answer(text='Наши партнеры:',
                                   reply_markup=await make_inline_partner_kb(session))
     await callback.message.delete()
@@ -24,7 +24,7 @@ async def process_button_faq_press(callback: CallbackQuery, session: AsyncSessio
 
 # пункт раздела наши партнеры
 @partner_router.callback_query(F.data.startswith('partner-'))
-async def process_button_faq_question_press(callback: CallbackQuery, session: AsyncSession):
+async def process_button_partner_question_press(callback: CallbackQuery, session: AsyncSession):
     query = select(Partner).where(eq(Partner.id, int(callback.data.split('-')[1])))
     result = await session.execute(query)
     partner = result.scalar()

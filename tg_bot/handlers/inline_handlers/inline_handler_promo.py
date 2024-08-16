@@ -16,7 +16,7 @@ promo_router.callback_query.middleware(DataBaseSession(session_pool=session_make
 
 # главное меню раздела Promo
 @promo_router.callback_query(F.data == 'promo')
-async def process_button_faq_press(callback: CallbackQuery, session: AsyncSession):
+async def process_button_promo_press(callback: CallbackQuery, session: AsyncSession):
     await callback.message.answer(text='Наши акции:',
                                   reply_markup=await make_inline_promo_kb(session))
     await callback.message.delete()
@@ -25,7 +25,7 @@ async def process_button_faq_press(callback: CallbackQuery, session: AsyncSessio
 
 # пункт раздела наши акции
 @promo_router.callback_query(F.data.startswith('promo-'))
-async def process_button_faq_question_press(callback: CallbackQuery, session: AsyncSession):
+async def process_button_promo_question_press(callback: CallbackQuery, session: AsyncSession):
     query = select(Promotion).where(eq(Promotion.id, int(callback.data.split('-')[1])))
     result = await session.execute(query)
     promo = result.scalar()

@@ -6,9 +6,6 @@ from tg_bot.keyboards.inline_keyboards.inline_keyboard_link import make_inline_l
 button_link_router: Router = Router()
 
 
-# главное меню раздела Link
-
-
 @button_link_router.callback_query(F.data == 'link')
 async def process_button_link_press(callback: CallbackQuery):
     await callback.message.answer(text='Ссылки на наши социальные сети:',

@@ -12,7 +12,7 @@ manager_contact_router.callback_query.middleware(DataBaseSession(session_pool=se
 
 
 @manager_contact_router.callback_query(F.data == 'contact')
-async def process_button_faq_press(callback: CallbackQuery, session: AsyncSession):
+async def process_button_manager_contact_press(callback: CallbackQuery, session: AsyncSession):
     await callback.message.answer(text='Контакт менеджера:', reply_markup=make_inline_contact_location_kb())
     await callback.message.delete()
     await callback.answer()

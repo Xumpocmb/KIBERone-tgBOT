@@ -9,7 +9,7 @@ english_platform_router: Router = Router()
 
 # главное меню раздела english_platform
 @english_platform_router.callback_query(F.data == 'english_platform')
-async def process_button_faq_press(callback: CallbackQuery):
+async def process_button_english_press(callback: CallbackQuery):
     await callback.message.answer(
         text='Lim English – это набор курсов для обучения английскому языку. '
              'Все курсы делятся по уровню сложности и тематике. '
