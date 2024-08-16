@@ -8,6 +8,7 @@ from database.orm_query import orm_get_user
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_main_menu import main_menu_inline_keyboard
 
 logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
+
 main_menu_router: Router = Router()
 
 

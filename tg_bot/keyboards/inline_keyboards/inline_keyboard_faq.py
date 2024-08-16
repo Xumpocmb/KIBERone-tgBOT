@@ -2,18 +2,17 @@ from aiogram.types import (
     InlineKeyboardButton, InlineKeyboardMarkup,
 )
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.engine import session_maker
-from database.models import Link
+from database.models import FAQ
 
 
-async def make_inline_link_kb() -> InlineKeyboardMarkup:
+async def make_inline_faq_kb(session: AsyncSession) -> InlineKeyboardMarkup:
     buttons = []
-    async with session_maker() as session:
-        query = select(Link)
-        results = await session.execute(query)
-        for item in results.scalars():
-            buttons.append(InlineKeyboardButton(text=str(item.link_name), url=str(item.link_url)))
+    query = select(FAQ)
+    results = await session.scalars(query)
+    for item in results:
+        buttons.append(InlineKeyboardButton(text=item.question, callback_data=f'faq-{str(item.id)}'))
     buttons.append(InlineKeyboardButton(text='<< Назад', callback_data='inline_main'))
     buttons = [[button] for button in buttons]
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons, resize_keyboard=True,
