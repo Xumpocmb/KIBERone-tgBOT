@@ -10,7 +10,7 @@ button_2: InlineKeyboardButton = InlineKeyboardButton(
 
 button_3: InlineKeyboardButton = InlineKeyboardButton(
     text='Назначить отработку',
-    callback_data='contact')
+    callback_data='work_off')
 
 button_4: InlineKeyboardButton = InlineKeyboardButton(
     text='Платформа английского Lim English',
@@ -26,7 +26,7 @@ button_6: InlineKeyboardButton = InlineKeyboardButton(
 
 button_7: InlineKeyboardButton = InlineKeyboardButton(
     text='Контакт Менеджера',
-    callback_data='contact')
+    callback_data='contact_manager')
 
 button_8: InlineKeyboardButton = InlineKeyboardButton(
     text='Социальные сети',
@@ -36,8 +36,24 @@ button_9: InlineKeyboardButton = InlineKeyboardButton(
     text='Ссылки на телеграм чаты',
     callback_data='tg_links')
 
+button_10: InlineKeyboardButton = InlineKeyboardButton(
+    text='Наши Партнёры',
+    callback_data='partner_without_promocodes')
+
+button_11: InlineKeyboardButton = InlineKeyboardButton(
+    text='Контакт Жени',
+    callback_data='contact_jeni')
+
+button_12: InlineKeyboardButton = InlineKeyboardButton(
+    text='Расписание для клиента и лида с группой',
+    callback_data='scheduler')
+
+button_13: InlineKeyboardButton = InlineKeyboardButton(
+    text='Расписание для лида без группы',
+    callback_data='scheduler')
+
 # Создаем объект inline-клавиатуры
-main_menu_inline_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
+main_menu_inline_keyboard_for_client: InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[
         [
             button_1
@@ -66,5 +82,67 @@ main_menu_inline_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
         [
             button_9
         ],
+        [
+            button_12
+        ],
+    ]
+)
+
+main_menu_inline_keyboard_for_lead_with_group: InlineKeyboardMarkup = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            button_1
+        ],
+        [
+            button_2
+        ],
+        [
+            button_3
+        ],
+        [
+            button_5
+        ],
+        [
+            button_10
+        ],
+        [
+            button_7
+        ],
+        [
+            button_8
+        ],
+        [
+            button_9
+        ],
+        [
+            button_12
+        ],
+    ]
+)
+
+main_menu_inline_keyboard_for_lead_without_group: InlineKeyboardMarkup = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            button_1
+        ],
+        [
+            button_2
+        ],
+        [
+            button_5
+        ],
+        [
+            button_10
+        ],
+        [
+            button_11
+        ],
+        [
+            button_8
+        ],
+        [
+            button_13
+        ],
+
     ]
 )

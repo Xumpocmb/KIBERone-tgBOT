@@ -50,7 +50,7 @@ async def main():
 
     dp.message.middleware(DataBaseSession(session_pool=session_maker))
     # dp.message.middleware(AntiFloodMiddleware())
-    # dp.message.middleware(ChatActionMiddleware())
+    dp.message.middleware(ChatActionMiddleware())
 
     dp.include_routers(
         handler_start.start_router,

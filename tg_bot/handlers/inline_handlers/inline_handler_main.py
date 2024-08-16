@@ -3,17 +3,21 @@ from aiogram import Router
 from aiogram.types import CallbackQuery
 
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from tg_bot.keyboards.inline_keyboards.inline_keyboard_main_menu import main_menu_inline_keyboard
+from database.engine import session_maker
+from tg_bot.handlers.handler_main_menu import get_user_keyboard
+from tg_bot.middlewares.middleware_database import DataBaseSession
 
 inline_main_router: Router = Router()
+inline_main_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))
 
 
 # присылает главное inline меню
 @inline_main_router.callback_query(F.data == 'inline_main')
-async def process_button_inline_back_to_main(callback: CallbackQuery):
+async def process_button_inline_back_to_main(callback: CallbackQuery, session: AsyncSession):
     await callback.message.answer(text='Выберите действие..',
-                                  reply_markup=main_menu_inline_keyboard)
+                                  reply_markup=await get_user_keyboard(session, callback.from_user.id))
     await callback.message.delete()
     await callback.answer()
 

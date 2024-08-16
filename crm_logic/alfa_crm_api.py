@@ -179,3 +179,19 @@ async def check_client_balance_from_crm(phone_number: str) -> int | None:
                 return response_data.get("items", [])[0].get("balance", 0)
         else:
             return None
+
+
+async def get_client_lessons(user_crm_id: int, branch_ids: list) -> dict | None:
+    data = {
+        "customer_id": user_crm_id,
+        "status": 1,  # 1 - запланирован урок, 2 - отменен, 3 - проведен
+        "lesson_type_id": 2,  # 3 - пробник, 2 - групповой
+    }
+    data = json.dumps(data)
+    for branch in branch_ids:
+        url = f"https://{CRM_HOSTNAME}/v2api/{branch}/lesson/index"
+        response_data = await send_request_to_crm(url, data, params=None)
+        logger.debug(response_data)
+        if response_data.get("total") != 0:
+            return response_data
+    return {"total": 0}
