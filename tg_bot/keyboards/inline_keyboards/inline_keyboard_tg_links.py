@@ -27,8 +27,6 @@ async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int) -> In
     ]
 
     user = await orm_get_user(session, tg_id)
-    # response_data = await find_user_by_phone(user.phone_number)
-
     user_branch_ids: list = list(map(int, user.user_branch_ids.split(',')))
     logger.debug(f"Список городов пользователя: {user_branch_ids}")
 

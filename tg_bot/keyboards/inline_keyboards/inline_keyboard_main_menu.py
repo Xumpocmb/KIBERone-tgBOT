@@ -6,7 +6,7 @@ button_1: InlineKeyboardButton = InlineKeyboardButton(
 
 button_2: InlineKeyboardButton = InlineKeyboardButton(
     text='Оплата по ЕРИП',
-    callback_data='oplata_erip')
+    callback_data='erip_payment')
 
 button_3: InlineKeyboardButton = InlineKeyboardButton(
     text='Назначить отработку',
@@ -41,8 +41,8 @@ button_10: InlineKeyboardButton = InlineKeyboardButton(
     callback_data='partner_without_promocodes')
 
 button_11: InlineKeyboardButton = InlineKeyboardButton(
-    text='Контакт Жени',
-    callback_data='contact_jeni')
+    text='Контакт Менеджера',
+    callback_data='lead_contact_manager_lead')
 
 button_12: InlineKeyboardButton = InlineKeyboardButton(
     text='Расписание занятий',

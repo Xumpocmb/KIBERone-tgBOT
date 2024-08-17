@@ -99,10 +99,10 @@ class Manager(Base):
     __tablename__ = "Manager"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    city: Mapped[str] = mapped_column()
-    location: Mapped[str] = mapped_column()
+    branch: Mapped[int] = mapped_column()
+    location: Mapped[int] = mapped_column()
     manager: Mapped[str] = mapped_column()
     link: Mapped[str] = mapped_column()
 
     def __repr__(self):
-        return f"<Manager(id={self.id}, city={self.city}, manager={self.manager}, link={self.link})>"
+        return f"<Manager(id={self.id}, city={self.branch}, manager={self.manager}, link={self.link})>"

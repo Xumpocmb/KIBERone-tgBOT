@@ -49,8 +49,8 @@ async def login_to_alfa_crm() -> str | None:
 
                 if token_from_response:
                     logger.debug(f"Токен получен: {token_from_response}")
-                    logger.debug("Пауза между запросами в 1.5 сек..")
-                    await asyncio.sleep(1.5)
+                    logger.debug("Пауза между запросами в 0.5 сек..")
+                    await asyncio.sleep(0.5)
                     return token_from_response
                 else:
                     logger.debug("Токен не найден в ответе сервера.")
@@ -125,28 +125,51 @@ async def find_user_by_phone(phone_number: str) -> dict | None:
     return None
 
 
-async def send_request_to_crm(url: str, data: str, params: dict | None, token: str | None) -> dict | None:
-    logger.debug("Получение токена авторизации..")
+async def send_request_to_crm(url: str, data: str, params: dict | None, token: str | None, retries: int = 3, delay: int = 5) -> dict | None:
     token = token
     if token:
         logger.debug("Токен получен.")
         logger.debug("Обновление заголовков..")
         headers.update({"X-ALFACRM-TOKEN": token})
-
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(url, headers=headers, data=data, params=params, timeout=10) as response:
-                    if response.status == 200:
-                        return await response.json()
-                    elif response.status == 401:
-                        logger.error(f"Неверный токен: {response.status} - {await response.text()}")
-                        return None
+        for attempt in range(retries):
+            async with aiohttp.ClientSession() as session:
+                try:
+                    async with session.post(url, headers=headers, data=data, params=params, timeout=10) as response:
+                        if response.status == 200:
+                            return await response.json()
+                        elif response.status == 401:
+                            logger.error(f"Неверный токен: {response.status} - {await response.text()}")
+                            return None
+                        else:
+                            logger.error(f"Ошибка запроса: {response.status} - {await response.text()}")
+                            return None
+                except aiohttp.ClientResponseError as e:
+                    logger.error(f"Произошла ошибка HTTP-ответа: {e.status} {e.message}")
+                    return None
+                except aiohttp.ClientError as e:
+                    logger.error(f"Ошибка запроса: {e} (попытка {attempt + 1} из {retries})")
+                    if attempt < retries - 1:
+                        await asyncio.sleep(delay)
                     else:
-                        logger.error(f"Ошибка запроса: {response.status} - {await response.text()}")
+                        logger.error("Все попытки отправки запроса исчерпаны.")
                         return None
-            except aiohttp.ClientError as e:
-                logger.error(f"Ошибка запроса: {e}")
-                return None
+                except aiohttp.ClientConnectorError as e:
+                    logger.error(f"Произошла ошибка соединения клиента aiohttp: {e}")
+                    if attempt < retries - 1:
+                        await asyncio.sleep(delay)
+                    else:
+                        logger.error("Все попытки отправки запроса исчерпаны.")
+                        return None
+                except aiohttp.ClientOSError as e:
+                    logger.error(f"Произошла ошибка ОС клиента aiohttp: {e}")
+                    if attempt < retries - 1:
+                        await asyncio.sleep(delay)
+                    else:
+                        logger.error("Все попытки отправки запроса исчерпаны.")
+                        return None
+                except Exception as e:
+                    logger.error(f"Произошла непредвиденная ошибка: {e}")
+                    return None
 
 
 async def get_user_groups_from_crm(branch_id: int, user_crm_id: int) -> list | None:
