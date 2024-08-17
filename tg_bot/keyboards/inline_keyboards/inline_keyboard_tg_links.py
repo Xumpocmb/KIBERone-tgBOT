@@ -27,9 +27,9 @@ async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int) -> In
     ]
 
     user = await orm_get_user(session, tg_id)
-    response_data = await find_user_by_phone(user.phone_number)
+    # response_data = await find_user_by_phone(user.phone_number)
 
-    user_branch_ids: list = response_data.get("items", [])[0].get("branch_ids", [])
+    user_branch_ids: list = list(map(int, user.user_branch_ids.split(',')))
     logger.debug(f"Список городов пользователя: {user_branch_ids}")
 
     if user_branch_ids:
@@ -42,7 +42,7 @@ async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int) -> In
         logger.error(f"Не удалось получить ИД города пользователя {user.phone_number}")
 
     logger.debug("Попытка получить ID пользователя в ЦРМ..")
-    user_crm_id: int = response_data.get("items", [])[0].get("id", None)
+    user_crm_id: int = user.user_crm_id
 
     if user_crm_id:
         logger.debug("ID пользователя в ЦРМ получен успешно!")
@@ -60,6 +60,56 @@ async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int) -> In
     else:
         logger.error(f"Не удалось получить ID пользователя в ЦРМ {user.phone_number}")
     buttons.append(InlineKeyboardButton(text='<< Назад', callback_data='inline_main'))
+    logger.debug("Формирование клавиатуры..")
+    buttons = [[button] for button in buttons]
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=buttons,
+        resize_keyboard=True,
+        input_field_placeholder="Перейдите по ссылкам для вступления в группы..",
+    )
+    logger.debug("Клавиатура готова! Отправка..")
+    return keyboard
+
+
+async def make_tg_links_inline_keyboard_without_back(session: AsyncSession, tg_id: int) -> InlineKeyboardMarkup:
+    buttons = [
+        InlineKeyboardButton(
+            text="Главный новостной канал KIBERone", url="https://google.com"
+        )
+    ]
+
+    user = await orm_get_user(session, tg_id)
+
+    user_branch_ids: list = list(map(int, user.user_branch_ids.split(',')))
+    logger.debug(f"Список городов пользователя: {user_branch_ids}")
+
+    if user_branch_ids:
+        for branch_id in user_branch_ids:
+            logger.debug("Получение ссылки на чат города из БД..")
+            city_link = await get_link_to_branch_chat(session, branch_id=branch_id)
+            logger.debug("Формирование кнопки..")
+            buttons.append(InlineKeyboardButton(text="Канал города", url=f"{str(city_link)}"))
+    else:
+        logger.error(f"Не удалось получить ИД города пользователя {user.phone_number}")
+
+    logger.debug("Попытка получить ID пользователя в ЦРМ..")
+    user_crm_id: int = user.user_crm_id
+
+    if user_crm_id:
+        logger.debug("ID пользователя в ЦРМ получен успешно!")
+        logger.debug("Попытка получить список групп пользователя в ЦРМ")
+        for branch_id in user_branch_ids:
+            group_ids = await get_user_groups_from_crm(branch_id, user_crm_id)
+            if group_ids:
+                for group_id in group_ids:
+                    logger.debug("Получение ссылки на группу из БД..")
+                    group_link = await get_group_link_from_crm(branch_id, group_id)
+                    logger.debug("Формирование кнопки..")
+                    buttons.append(InlineKeyboardButton(text="Чат группы", url=f"{str(group_link)}"))
+            else:
+                logger.error(f"Не удалось получить список групп пользователя {user.phone_number}")
+    else:
+        logger.error(f"Не удалось получить ID пользователя в ЦРМ {user.phone_number}")
     logger.debug("Формирование клавиатуры..")
     buttons = [[button] for button in buttons]
     keyboard = InlineKeyboardMarkup(

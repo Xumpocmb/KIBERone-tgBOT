@@ -21,21 +21,12 @@ async def main_menu_handler(message: Message, session: AsyncSession):
 
 async def get_user_keyboard(session: AsyncSession, tg_id: int):
     user_in_db = await orm_get_user(session, tg_id)
-    logger.debug(user_in_db.phone_number)
-    user_in_crm_data = await find_user_by_phone(user_in_db.phone_number)
-    user_crm_id = user_in_crm_data.get("items", [])[0].get("id", None)
-
-    user_crm_branch_ids = user_in_crm_data.get("items", [])[0].get("branch_ids", None)
-    lessons = await get_client_lessons(user_crm_id=user_crm_id, branch_ids=user_crm_branch_ids)
-
-    user_crm_is_study = user_in_crm_data.get("items", [])[0].get("is_study", None)
+    lessons = user_in_db.user_lessons
+    user_crm_is_study = user_in_db.is_study
 
     if user_crm_is_study:
-        logger.debug("is_study 1")
-        logger.debug('Главное меню')
         return main_menu_inline_keyboard_for_client
-    elif lessons.get("total") > 0:
+    elif lessons:
         return main_menu_inline_keyboard_for_lead_with_group
     else:
-        logger.debug('Главное меню')
         return main_menu_inline_keyboard_for_lead_without_group

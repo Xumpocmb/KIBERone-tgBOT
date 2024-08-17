@@ -48,8 +48,8 @@ async def login_to_alfa_crm() -> str | None:
 
                 if token_from_response:
                     logger.debug(f"Токен получен: {token_from_response}")
-                    logger.debug("Пауза между запросами в 1 сек..")
-                    await asyncio.sleep(1)
+                    logger.debug("Пауза между запросами в 1.5 сек..")
+                    await asyncio.sleep(1.5)
                     return token_from_response
                 else:
                     logger.debug("Токен не найден в ответе сервера.")
@@ -113,7 +113,7 @@ async def send_request_to_crm(url: str, data: str, params: dict | None) -> dict 
 
         async with aiohttp.ClientSession() as session:
             try:
-                async with session.post(url, headers=headers, data=data, params=params, timeout=5) as response:
+                async with session.post(url, headers=headers, data=data, params=params, timeout=10) as response:
                     if response.status == 200:
                         return await response.json()
                     elif response.status == 401:
@@ -186,7 +186,7 @@ async def get_client_lessons(user_crm_id: int, branch_ids: list) -> dict | None:
         "customer_id": user_crm_id,
         "status": 1,  # 1 - запланирован урок, 2 - отменен, 3 - проведен
         "lesson_type_id": 2,  # 3 - пробник, 2 - групповой
-        "page": 1
+        "page": 0
     }
     data = json.dumps(data)
     for branch in branch_ids:

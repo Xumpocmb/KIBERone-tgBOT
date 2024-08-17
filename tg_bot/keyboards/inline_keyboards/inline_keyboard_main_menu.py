@@ -45,11 +45,11 @@ button_11: InlineKeyboardButton = InlineKeyboardButton(
     callback_data='contact_jeni')
 
 button_12: InlineKeyboardButton = InlineKeyboardButton(
-    text='Расписание для клиента и лида с группой',
+    text='Расписание занятий',
     callback_data='user_scheduler')
 
 button_13: InlineKeyboardButton = InlineKeyboardButton(
-    text='Расписание для лида без группы',
+    text='Дата пробного занятия',
     callback_data='user_scheduler')
 
 # Создаем объект inline-клавиатуры

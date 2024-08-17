@@ -8,8 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.orm_query import orm_add_user, orm_get_user, orm_update_user
 from tg_bot.filters.filter_admin import check_admin
-from crm_logic.alfa_crm_api import create_user_in_alfa_crm, find_user_by_phone
-from tg_bot.keyboards.inline_keyboards.inline_keyboard_tg_links import make_tg_links_inline_keyboard
+from crm_logic.alfa_crm_api import create_user_in_alfa_crm, find_user_by_phone, get_client_lessons
+from tg_bot.keyboards.inline_keyboards.inline_keyboard_tg_links import make_tg_links_inline_keyboard, \
+    make_tg_links_inline_keyboard_without_back
 from tg_bot.keyboards.keyboard_send_contact import contact_keyboard
 from tg_bot.keyboards.keyboard_start import main_menu_button_keyboard
 
@@ -45,7 +46,15 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
 
 async def handle_new_user(message: Message):
     formatted_message = """
+        Вас приветствует Международная КиберШкола программирования для детей от 6 до 14 лет  KIBERone! 
+        Мы точно знаем, чему учить детей, чтобы это было актуально через 20 лет!
+        ✅ Цифровая грамотность: Основы программирования, управление данными, работа с нейросетями и искусственным интеллектом;
+        ✅ Финансовая грамотность: управление личными финансами;
+        ✅ Критическое мышление и решение проблем: умение анализировать информацию и находить решения сложных задач;
+        ✅ Эмоциональный интеллект: навыки общения, управление эмоциями и работа в команде.
+        
         <b>Предупреждение о сборе информации и обработке персональных данных</b>\n
+        
         Дорогой пользователь! При использовании нашего бота, учтите следующее:
         1. <b>Сбор информации</b>: Мы можем собирать определенные данные о вас, такие как ваш ID пользователя, имя, фамилию, номер телефона (если вы поделились контактом) и другие данные, необходимые для функционирования бота.
         2. <b>Обработка персональных данных</b>: Ваши персональные данные будут использоваться только в рамках функциональности бота. Мы не передаем их третьим лицам и не используем для рекламных целей.
@@ -85,7 +94,7 @@ async def handle_contact(message: Message, session: AsyncSession):
     }
     try:
         logger.debug("Получен контакт. Работаю с данными..")
-        await message.answer("Ваш контакт получен.\nИдет обработка данных.. \nОжидайте, это не займет много времени :)")
+        await message.answer("Ваш контакт получен.\nИдет обработка данных.. \nОжидайте, мы немножко поколдуем, чтобы подготовить всё для Вас :)")
         await orm_add_user(session, data=user_data)
 
         is_admin = check_admin(message.from_user.id)
@@ -96,11 +105,27 @@ async def handle_contact(message: Message, session: AsyncSession):
             find_client = await find_user_by_phone(user_data.get("phone_number", ""))
             if find_client:
                 logger.debug(f"Пользователь с номером {user_data.get('phone_number', '')} в ЦРМ уже существует.")
+
+                user_branch_ids: list = find_client.get("items", [])[0].get("branch_ids", [])
+                is_study = find_client.get("items", [])[0].get("is_study")
+                user_crm_id: int = find_client.get("items", [])[0].get("id", None)
+
+                logger.debug(f"Проверяю, есть ли у пользователя уроки в ЦРМ..")
+                user_lessons = await get_client_lessons(user_crm_id, user_branch_ids)
+
+                user_data["user_crm_id"] = user_crm_id
+                user_data["is_study"] = is_study
+                user_data["user_branch_ids"] = ','.join(map(str, user_branch_ids))
+                user_data["user_lessons"] = True if user_lessons else False
+
+                logger.debug(f"Заношу данные пользователя в свою БД..")
+                await orm_update_user(session, user_data)
+
                 if find_client.get("items", [])[0].get("is_study") == 1:
                     logger.debug("Пользователь в ЦРМ есть и он обучался. Подготовка ссылок и отправка..")
                     await message.answer("Сейчас мы немножко поколдуем.. Ожидайте!")
                     await message.answer("Ссылки на наши телеграм-каналы:\nПрисоединитесь к ним, пожалуйста!",
-                                         reply_markup=await make_tg_links_inline_keyboard(session,
+                                         reply_markup=await make_tg_links_inline_keyboard_without_back(session,
                                                                                           message.contact.user_id))
                 else:
                     logger.debug("Пользователь в ЦРМ есть, но он не обучался")
@@ -108,13 +133,13 @@ async def handle_contact(message: Message, session: AsyncSession):
                 logger.info(f"Пользователь с номером {user_data.get('phone_number', '')} в црм не найден.")
                 logger.info("Создание новой карточки в ЦРМ..")
                 await create_user_in_alfa_crm(user_data)
-            formatted_text = """
-            Вас приветствует Международная КиберШкола программирования KIBERone! 
-        Если вы зашли в этот чат-бот, то мы уверены, что вы заинтересованы в будущем вашего ребенка и знаете, что изучать программирование сегодня –это даже уже не модно, а НУЖНО! И Вы на правильном пути, ведь мы точно знаем, чему учить детей, чтобы это было актуально через 20 лет
-        Мы уже получили ваш контакт, и наши лучшие менеджеры уже спорят, кто первый Вам позвонит!
-        Но, вы можете сами нам позвонить по номеру +375(29)633-27-79 и уточнить все интересующие вопросы о KIBERone.
-            """
-            await message.answer(formatted_text, reply_markup=main_menu_button_keyboard)
+                formatted_text = """
+                Вас приветствует Международная КиберШкола программирования KIBERone! 
+            Если вы зашли в этот чат-бот, то мы уверены, что вы заинтересованы в будущем вашего ребенка и знаете, что изучать программирование сегодня –это даже уже не модно, а НУЖНО! И Вы на правильном пути, ведь мы точно знаем, чему учить детей, чтобы это было актуально через 20 лет
+            Мы уже получили ваш контакт, и наши лучшие менеджеры уже спорят, кто первый Вам позвонит!
+            Но, вы можете сами нам позвонить по номеру +375(29)633-27-79 и уточнить все интересующие вопросы о KIBERone.
+                """
+                await message.answer(formatted_text, reply_markup=main_menu_button_keyboard)
     except Exception as e:
         logger.error(e)
 

@@ -22,9 +22,8 @@ user_scheduler_router.callback_query.middleware(DataBaseSession(session_pool=ses
 async def process_button_inline_user_scheduler(callback: CallbackQuery, session: AsyncSession):
     await callback.message.answer(text='Ожидайте пожалуйста, я пока проверяю Ваше расписание..')
     user = await orm_get_user(session, callback.from_user.id)
-    response_data = await find_user_by_phone(user.phone_number)
-    user_branch_ids: list = response_data.get("items", [])[0].get("branch_ids", [])
-    user_crm_id: int = response_data.get("items", [])[0].get("id", None)
+    user_branch_ids: list = list(map(int, user.user_branch_ids.split(',')))
+    user_crm_id: int = user.user_crm_id
     user_lessons = await get_client_lessons(user_crm_id, user_branch_ids)
     week = {
         '0': 'Понедельник',
@@ -37,6 +36,7 @@ async def process_button_inline_user_scheduler(callback: CallbackQuery, session:
     }
 
     MINSK = {
+        '1': "Локация разработки и тестирования ПО",
         '12': "Аэродромная, 125, 4 этаж, кабинет 29",
         '14': "Петра Мстиславца, 1, с торца",
         '15': "ТЦ Арена-Сити, Пр-т Победителей 84, 2 этаж",
@@ -59,9 +59,19 @@ async def process_button_inline_user_scheduler(callback: CallbackQuery, session:
         lesson_date_splitted = datetime(int(lesson_date[0]), int(lesson_date[1]), int(lesson_date[2]))
         lesson_day = week[str(lesson_date_splitted.weekday())]
         lesson_time = f"{lesson.get('time_from').split(' ')[1][:-3]} - {lesson.get('time_to').split(' ')[1][:-3]}"
-        lesson_address = lesson["room_id"]
-        await callback.message.answer(text=f'Ближайший урок: \n{lesson_day} ({lesson_date[2]}.{lesson_date[1]}): {lesson_time}\n{lesson_address}')
+        lesson_address = str(lesson.get("room_id", None))
+
+        if lesson_address:
+            if lesson_address in MINSK:
+                lesson_address = MINSK[lesson_address]
+            elif lesson_address in BORISOV:
+                lesson_address = BORISOV[lesson_address]
+            elif lesson_address in BARANOVICHI:
+                lesson_address = BARANOVICHI[lesson_address]
+        await callback.message.answer(text=f'Ближайший урок: \n{lesson_day}: {lesson_time}\n{lesson_address}')
+        logger.debug("Отправлено расписание пользователю")
     else:
         await callback.message.answer(text='В настоящее время у Вас нет занятий')
+        logger.debug("Отправлено сообщение пользователю")
     await callback.answer()
 
