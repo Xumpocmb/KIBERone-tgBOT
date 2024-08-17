@@ -10,7 +10,8 @@ from loguru import logger
 
 from database.engine import create_db, session_maker
 from tg_bot.handlers import handler_main_menu
-from tg_bot.handlers import handler_start
+from tg_bot.handlers import handler_start, handler_help
+from tg_bot.handlers.admin_handlers import admin_handler_user_list, admin_handler_send_all
 from tg_bot.handlers.inline_handlers import inline_handler_link
 from tg_bot.handlers.inline_handlers import (inline_handler_tg_links, inline_handler_main, inline_handler_faq,
                                              inline_handler_promo, inline_handler_partner, inline_handler_contact,
@@ -55,6 +56,7 @@ async def main():
 
     dp.include_routers(
         handler_start.start_router,
+        handler_help.command_help_router,
         handler_main_menu.main_menu_router,
         inline_handler_tg_links.inline_tg_links_router,
         inline_handler_link.button_link_router,
@@ -65,6 +67,10 @@ async def main():
         inline_handler_english_platform.english_platform_router,
         inline_handler_erip.erip_router,
         inline_handler_user_scheduler.user_scheduler_router,
+
+        # admin
+        admin_handler_user_list.admin_user_list_router,
+        admin_handler_send_all.admin_send_all_router,
 
         # last router
         inline_handler_main.inline_main_router,

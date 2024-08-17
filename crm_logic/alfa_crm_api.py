@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+from time import sleep
 
 import aiohttp
 from dotenv import load_dotenv
@@ -54,8 +55,17 @@ async def login_to_alfa_crm() -> str | None:
                 else:
                     logger.debug("Токен не найден в ответе сервера.")
                     return None
+        except aiohttp.ClientResponseError as e:
+            logger.error(f"Произошла ошибка HTTP-ответа: {e.status} {e.message}")
+            return None
         except aiohttp.ClientError as e:
-            logger.error(f"Произошла ошибка при запросе: {e}")
+            logger.error(f"Произошла ошибка клиента aiohttp: {e}")
+            return None
+        except aiohttp.ClientConnectorError as e:
+            logger.error(f"Произошла ошибка соединения клиента aiohttp: {e}")
+            return None
+        except aiohttp.ClientOSError as e:
+            logger.error(f"Произошла ошибка ОС клиента aiohttp: {e}")
             return None
         except Exception as e:
             logger.error(f"Произошла непредвиденная ошибка: {e}")
@@ -63,6 +73,7 @@ async def login_to_alfa_crm() -> str | None:
 
 
 async def create_user_in_alfa_crm(user_data: dict):
+    token = await login_to_alfa_crm()
     client_first_name = user_data.get("first_name", None)
     client_last_name = user_data.get("last_name", None)
     client_name = f'{client_first_name if client_first_name else ""} {client_last_name if client_last_name else ""} | {user_data.get("username", "")}'
@@ -81,21 +92,24 @@ async def create_user_in_alfa_crm(user_data: dict):
 
     url = f"https://{CRM_HOSTNAME}/v2api/1/customer/create"
 
-    response_data = await send_request_to_crm(url, data, params=None)
+    response_data = await send_request_to_crm(url, data, params=None, token=token)
     if response_data.get("success", False):
         logger.info(f"Пользователь в ЦРМ создан!")
+        return response_data
     else:
         logger.error(f"Ошибка создания пользователя в ЦРМ: {response_data.get('errors', None)}")
 
 
 async def find_user_by_phone(phone_number: str) -> dict | None:
+    token = await login_to_alfa_crm()
     for status in client_is_study_statuses:
         for branch in branches:
             logger.debug(f"Поиск пользователя в филиале: {branch}")
             data = {"is_study": status, "page": 0, "phone": phone_number}
             data = json.dumps(data)
             url = f"https://{CRM_HOSTNAME}/v2api/{branch}/customer/index"
-            response_data = await send_request_to_crm(url=url, data=data, params=None)
+            response_data = await send_request_to_crm(url=url, data=data, params=None, token=token)
+            await asyncio.sleep(0.5)
             if response_data:
                 if response_data.get("total") != 0:
                     return response_data
@@ -103,9 +117,9 @@ async def find_user_by_phone(phone_number: str) -> dict | None:
                 return None
 
 
-async def send_request_to_crm(url: str, data: str, params: dict | None) -> dict | None:
+async def send_request_to_crm(url: str, data: str, params: dict | None, token: str | None) -> dict | None:
     logger.debug("Получение токена авторизации..")
-    token = await login_to_alfa_crm()
+    token = token
     if token:
         logger.debug("Токен получен.")
         logger.debug("Обновление заголовков..")
@@ -128,6 +142,7 @@ async def send_request_to_crm(url: str, data: str, params: dict | None) -> dict 
 
 
 async def get_user_groups_from_crm(branch_id: int, user_crm_id: int) -> list | None:
+    token = await login_to_alfa_crm()
     data = {"page": 0}
     params = {
         "customer_id": user_crm_id,
@@ -136,7 +151,7 @@ async def get_user_groups_from_crm(branch_id: int, user_crm_id: int) -> list | N
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/cgi/customer"
 
     logger.debug(f"Попытка получить группы пользователя (ID): {user_crm_id}")
-    response_data = await send_request_to_crm(url=url, data=data, params=params)
+    response_data = await send_request_to_crm(url=url, data=data, params=params, token=token)
     if response_data:
         logger.debug(f"Количество групп пользователя {user_crm_id}: {response_data.get('total', 0)}")
         group_ids = []
@@ -150,13 +165,14 @@ async def get_user_groups_from_crm(branch_id: int, user_crm_id: int) -> list | N
 
 
 async def get_group_link_from_crm(branch_id: int, group_id: int) -> str | None:
+    token = await login_to_alfa_crm()
     data = {"id": group_id, "page": 0}
 
     data = json.dumps(data)
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/group/index"
 
     logger.debug(f"Попытка получить ссылку на группу (ID): {group_id}")
-    response_data = await send_request_to_crm(url=url, data=data, params=None)
+    response_data = await send_request_to_crm(url=url, data=data, params=None, token=token)
     if response_data:
         logger.debug("Ответ получен. Поиск ссылки..")
         group_tg_link = response_data.get("items", [])[0].get("note", None)
@@ -168,11 +184,12 @@ async def get_group_link_from_crm(branch_id: int, group_id: int) -> str | None:
 
 
 async def check_client_balance_from_crm(phone_number: str) -> int | None:
+    token = await login_to_alfa_crm()
     data = {"is_study": 1, "page": 0, "phone": phone_number}
     data = json.dumps(data)
     for branch in branches:
         url = f"https://{CRM_HOSTNAME}/v2api/{branch}/customer/index"
-        response_data = await send_request_to_crm(url=url, data=data, params=None)
+        response_data = await send_request_to_crm(url=url, data=data, params=None, token=token)
         if response_data:
             if response_data.get("total") != 0:
                 logger.debug(f"Попытка получить баланс пользователя..")
@@ -182,6 +199,7 @@ async def check_client_balance_from_crm(phone_number: str) -> int | None:
 
 
 async def get_client_lessons(user_crm_id: int, branch_ids: list) -> dict | None:
+    token = await login_to_alfa_crm()
     data = {
         "customer_id": user_crm_id,
         "status": 1,  # 1 - запланирован урок, 2 - отменен, 3 - проведен
@@ -191,7 +209,7 @@ async def get_client_lessons(user_crm_id: int, branch_ids: list) -> dict | None:
     data = json.dumps(data)
     for branch in branch_ids:
         url = f"https://{CRM_HOSTNAME}/v2api/{branch}/lesson/index"
-        response_data = await send_request_to_crm(url, data, params=None)
+        response_data = await send_request_to_crm(url, data, params=None, token=token)
         if response_data.get("total") != 0:
             return response_data
     return {"total": 0}

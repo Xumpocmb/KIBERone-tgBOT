@@ -95,11 +95,11 @@ async def handle_contact(message: Message, session: AsyncSession):
     try:
         logger.debug("Получен контакт. Работаю с данными..")
         await message.answer("Ваш контакт получен.\nИдет обработка данных.. \nОжидайте, мы немножко поколдуем, чтобы подготовить всё для Вас :)")
-        await orm_add_user(session, data=user_data)
 
         is_admin = check_admin(message.from_user.id)
         if is_admin:
             logger.debug("Пользователь является администратором.")
+            await orm_add_user(session, data=user_data)
             await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
         else:
             find_client = await find_user_by_phone(user_data.get("phone_number", ""))
@@ -113,14 +113,13 @@ async def handle_contact(message: Message, session: AsyncSession):
                 logger.debug(f"Проверяю, есть ли у пользователя уроки в ЦРМ..")
                 user_lessons = await get_client_lessons(user_crm_id, user_branch_ids)
 
-                user_data["user_crm_id"] = user_crm_id
+                user_data ["user_crm_id"] = user_crm_id
                 user_data["is_study"] = is_study
                 user_data["user_branch_ids"] = ','.join(map(str, user_branch_ids))
                 user_data["user_lessons"] = True if user_lessons else False
 
                 logger.debug(f"Заношу данные пользователя в свою БД..")
-                await orm_update_user(session, user_data)
-
+                await orm_add_user(session, data=user_data)
                 if find_client.get("items", [])[0].get("is_study") == 1:
                     logger.debug("Пользователь в ЦРМ есть и он обучался. Подготовка ссылок и отправка..")
                     await message.answer("Сейчас мы немножко поколдуем.. Ожидайте!")
@@ -132,7 +131,15 @@ async def handle_contact(message: Message, session: AsyncSession):
             else:
                 logger.info(f"Пользователь с номером {user_data.get('phone_number', '')} в црм не найден.")
                 logger.info("Создание новой карточки в ЦРМ..")
-                await create_user_in_alfa_crm(user_data)
+                response = await create_user_in_alfa_crm(user_data)
+                logger.debug("Получаю branch_ids в ответе от ЦРМ..")
+                user_branch_ids: list = response.get("model", {}).get("branch_ids", [])
+                user_crm_id: int = response.get("model", {}).get("id", -1)
+                user_data["user_branch_ids"] = ','.join(map(str, user_branch_ids))
+                user_data["user_crm_id"] = user_crm_id
+                user_data["user_lessons"] = False
+                user_data["is_study"] = 0
+                await orm_add_user(session, data=user_data)
                 formatted_text = """
                 Вас приветствует Международная КиберШкола программирования KIBERone! 
             Если вы зашли в этот чат-бот, то мы уверены, что вы заинтересованы в будущем вашего ребенка и знаете, что изучать программирование сегодня –это даже уже не модно, а НУЖНО! И Вы на правильном пути, ведь мы точно знаем, чему учить детей, чтобы это было актуально через 20 лет
