@@ -213,3 +213,20 @@ async def get_client_lessons(user_crm_id: int, branch_ids: list) -> dict | None:
         if response_data.get("total") != 0:
             return response_data
     return {"total": 0}
+
+
+async def get_user_trial_lesson(user_crm_id: int, branch_ids: list) -> dict | None:
+    token = await login_to_alfa_crm()
+    data = {
+        "customer_id": user_crm_id,
+        "lesson_type_id": 3,  # 3 - пробник, 2 - групповой
+        "status": 1,
+        "page": 0
+    }
+    data = json.dumps(data)
+    for branch in branch_ids:
+        url = f"https://{CRM_HOSTNAME}/v2api/{branch}/lesson/index"
+        response_data = await send_request_to_crm(url, data, params=None, token=token)
+        if response_data.get("total") != 0:
+            return response_data
+    return {"total": 0}

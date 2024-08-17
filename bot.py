@@ -16,7 +16,7 @@ from tg_bot.handlers.inline_handlers import inline_handler_link
 from tg_bot.handlers.inline_handlers import (inline_handler_tg_links, inline_handler_main, inline_handler_faq,
                                              inline_handler_promo, inline_handler_partner, inline_handler_contact,
                                              inline_handler_english_platform, inline_handler_erip,
-                                             inline_handler_user_scheduler)
+                                             inline_handler_user_scheduler, inline_handler_trial_lesson)
 from tg_bot.middlewares.middleware_antiflood import AntiFloodMiddleware
 from tg_bot.middlewares.middleware_chat_action import ChatActionMiddleware
 from tg_bot.middlewares.middleware_database import DataBaseSession
@@ -67,6 +67,7 @@ async def main():
         inline_handler_english_platform.english_platform_router,
         inline_handler_erip.erip_router,
         inline_handler_user_scheduler.user_scheduler_router,
+        inline_handler_trial_lesson.trial_lesson_router,
 
         # admin
         admin_handler_user_list.admin_user_list_router,

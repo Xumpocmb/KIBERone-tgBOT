@@ -50,7 +50,7 @@ button_12: InlineKeyboardButton = InlineKeyboardButton(
 
 button_13: InlineKeyboardButton = InlineKeyboardButton(
     text='Дата пробного занятия',
-    callback_data='user_scheduler')
+    callback_data='user_trial_date')
 
 # Создаем объект inline-клавиатуры
 main_menu_inline_keyboard_for_client: InlineKeyboardMarkup = InlineKeyboardMarkup(

@@ -134,11 +134,14 @@ async def handle_contact(message: Message, session: AsyncSession):
                 response = await create_user_in_alfa_crm(user_data)
                 logger.debug("Получаю branch_ids в ответе от ЦРМ..")
                 user_branch_ids: list = response.get("model", {}).get("branch_ids", [])
+                logger.debug("user_branch_ids:", user_branch_ids)
                 user_crm_id: int = response.get("model", {}).get("id", -1)
+                logger.debug("user_crm_id:", user_crm_id)
                 user_data["user_branch_ids"] = ','.join(map(str, user_branch_ids))
                 user_data["user_crm_id"] = user_crm_id
                 user_data["user_lessons"] = False
                 user_data["is_study"] = 0
+                logger.debug("Заношу данные пользователя в свою БД..", user_data)
                 await orm_add_user(session, data=user_data)
                 formatted_text = """
                 Вас приветствует Международная КиберШкола программирования KIBERone! 
