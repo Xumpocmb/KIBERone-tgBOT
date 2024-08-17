@@ -151,5 +151,5 @@ async def handle_contact(message: Message, session: AsyncSession):
                 """
                 await message.answer(formatted_text, reply_markup=main_menu_button_keyboard)
     except Exception as e:
-        logger.error(e)
+        logger.exception("Произошла ошибка при обработке контакта.")
 

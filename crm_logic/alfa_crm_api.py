@@ -102,19 +102,27 @@ async def create_user_in_alfa_crm(user_data: dict):
 
 async def find_user_by_phone(phone_number: str) -> dict | None:
     token = await login_to_alfa_crm()
-    for status in client_is_study_statuses:
-        for branch in branches:
-            logger.debug(f"Поиск пользователя в филиале: {branch}")
-            data = {"is_study": status, "page": 0, "phone": phone_number}
-            data = json.dumps(data)
-            url = f"https://{CRM_HOSTNAME}/v2api/{branch}/customer/index"
-            response_data = await send_request_to_crm(url=url, data=data, params=None, token=token)
-            await asyncio.sleep(0.5)
-            if response_data:
-                if response_data.get("total") != 0:
-                    return response_data
-            else:
-                return None
+
+    async def fetch_data(branch: str, status: int) -> dict | None:
+        logger.debug(f"Поиск пользователя в филиале: {branch}")
+        data = {"is_study": status, "page": 0, "phone": phone_number}
+        data = json.dumps(data)
+        url = f"https://{CRM_HOSTNAME}/v2api/{branch}/customer/index"
+        return await send_request_to_crm(url=url, data=data, params=None, token=token)
+
+    tasks = [
+        fetch_data(str(branch), status)
+        for status in client_is_study_statuses
+        for branch in branches
+    ]
+
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    for response_data in results:
+        if isinstance(response_data, dict) and response_data.get("total") != 0:
+            return response_data
+
+    return None
 
 
 async def send_request_to_crm(url: str, data: str, params: dict | None, token: str | None) -> dict | None:

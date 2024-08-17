@@ -6,15 +6,23 @@ from database.models import User, BranchesTelegramLink
 
 
 async def orm_add_user(session: AsyncSession, data: dict):
-    user = User(
-        tg_id=data.get('tg_id'),
-        username=data.get('username'),
-        first_name=data.get('first_name'),
-        last_name=data.get('last_name'),
-        phone_number=data.get('phone_number'),
-    )
-    session.add(user)
-    await session.commit()
+    try:
+        user = User(
+            tg_id=data.get('tg_id'),
+            username=data.get('username'),
+            first_name=data.get('first_name'),
+            last_name=data.get('last_name'),
+            phone_number=data.get('phone_number'),
+            user_branch_ids = data.get("user_branch_ids"),
+            user_crm_id = data.get("user_crm_id"),
+            user_lessons = data.get("user_lessons"),
+            is_study = data.get("is_study")
+        )
+        session.add(user)
+        await session.commit()
+    except Exception as e:
+        await session.rollback()
+        print(f"An error occurred: {e}")
 
 
 async def orm_get_user(session: AsyncSession, tg_id: int):
