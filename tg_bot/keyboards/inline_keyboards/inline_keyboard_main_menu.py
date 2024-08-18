@@ -103,7 +103,7 @@ main_menu_inline_keyboard_for_lead_with_group: InlineKeyboardMarkup = InlineKeyb
             button_5
         ],
         [
-            button_10
+            button_6
         ],
         [
             button_7
@@ -132,7 +132,7 @@ main_menu_inline_keyboard_for_lead_without_group: InlineKeyboardMarkup = InlineK
             button_5
         ],
         [
-            button_10
+            button_6
         ],
         [
             button_11

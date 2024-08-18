@@ -17,7 +17,7 @@ manager_contact_router: Router = Router()
 manager_contact_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))
 
 
-@manager_contact_router.callback_query(F.data == 'contact_manager')
+@manager_contact_router.callback_query(F.data=='contact_manager' or F.data == 'work_off')
 async def process_button_manager_contact_press(callback: CallbackQuery, session: AsyncSession):
     try:
         logger.info(f"Начало обработки нажатия кнопки от пользователя {callback.from_user.id}")
