@@ -214,14 +214,15 @@ async def get_group_link_from_crm(branch_id: int, group_id: int) -> str | None:
         return None
 
 
-async def check_client_balance_from_crm(phone_number: str) -> int | None:
+async def check_client_balance_from_crm(phone_number: str, branch_ids: list, is_study: int) -> str | None:
     token = await login_to_alfa_crm()
-    data = {"is_study": 1, "page": 0, "phone": phone_number}
+    data = {"is_study": is_study, "page": 0, "phone": phone_number}
     data = json.dumps(data)
-    for branch in branches:
+    for branch in branch_ids:
         url = f"https://{CRM_HOSTNAME}/v2api/{branch}/customer/index"
         response_data = await send_request_to_crm(url=url, data=data, params=None, token=token)
         if response_data:
+            logger.debug(response_data)
             if response_data.get("total") != 0:
                 logger.debug(f"Попытка получить баланс пользователя..")
                 return response_data.get("items", [])[0].get("balance", 0)

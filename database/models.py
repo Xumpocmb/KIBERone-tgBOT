@@ -17,7 +17,7 @@ class User(Base):
     last_name: Mapped[str] = mapped_column(nullable=True)
     username: Mapped[str] = mapped_column(nullable=True)
     phone_number: Mapped[str] = mapped_column(nullable=True)
-    balance: Mapped[float] = mapped_column(default=0.0, nullable=True)
+    balance: Mapped[str] = mapped_column(default="0", nullable=True)
     is_study: Mapped[int] = mapped_column(default=0, nullable=True)
     lesson_date: Mapped[str] = mapped_column(nullable=True)
     notified: Mapped[bool] = mapped_column(default=False, nullable=True)
