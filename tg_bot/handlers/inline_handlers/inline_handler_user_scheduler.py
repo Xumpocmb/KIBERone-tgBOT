@@ -69,7 +69,7 @@ async def process_button_inline_user_scheduler(callback: CallbackQuery, session:
 
         if user_lessons.get("items", []):
             lesson = user_lessons.get("items", [])[-1]
-            lesson_date = lesson.get("date", None).split("-")
+            lesson_date = lesson.get("lesson_date", None).split("-")
             lesson_date_splitted = datetime(int(lesson_date[0]), int(lesson_date[1]), int(lesson_date[2]))
             lesson_day = week[str(lesson_date_splitted.weekday())]
             lesson_time = f"{lesson.get('time_from').split(' ')[1][:-3]} - {lesson.get('time_to').split(' ')[1][:-3]}"

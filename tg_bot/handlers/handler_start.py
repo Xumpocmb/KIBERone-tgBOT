@@ -120,7 +120,7 @@ async def handle_contact(message: Message, session: AsyncSession):
 
                 logger.debug(f"Заношу данные пользователя в свою БД..")
                 await orm_add_user(session, data=user_data)
-                if find_client.get("items", [])[0].get("is_study") == 1:
+                if user_data["user_lessons"]:
                     logger.debug("Пользователь в ЦРМ есть и он обучался. Подготовка ссылок и отправка..")
                     await message.answer("Сейчас мы немножко поколдуем.. Ожидайте!")
                     await message.answer("Ссылки на наши телеграм-каналы:\nПрисоединитесь к ним, пожалуйста!",
