@@ -76,7 +76,7 @@ async def check_user_trial_lesson():
                 user_lessons = await get_user_trial_lesson(user_crm_id, user_branch_ids)
                 if user_lessons.get("items", []):
                     trial_lesson = user_lessons.get("items", [])[0]
-                    lesson_date = trial_lesson.get("date", None)
+                    lesson_date = trial_lesson.get("lesson_date", None)
                     lesson_time = f"{trial_lesson.get('time_from').split(' ')[1][:-3]}"
                     logger.debug(f'У пользователя {user.phone_number} есть запланированные пробные занятия на {lesson_date, lesson_time} | {type(lesson_date)}.')
                     if lesson_date and lesson_time:
