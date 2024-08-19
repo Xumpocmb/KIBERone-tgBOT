@@ -148,7 +148,7 @@ def setup_scheduler():
 
         scheduler.add_job(
             check_user_trial_lesson,
-            IntervalTrigger(minutes=60, start_date=datetime.now() + timedelta(seconds=10)),
+            IntervalTrigger(minutes=60, start_date=datetime.now() + timedelta(minutes=5)),
             id='check_user_trial_lesson',
             misfire_grace_time=None,
         )
