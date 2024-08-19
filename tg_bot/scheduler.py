@@ -97,9 +97,9 @@ async def create_lesson_reminder_task(tg_id, lesson_date):
             f'Задача для отправки напоминания пользователю {tg_id} на {lesson_date} уже существует.')
         return
 
-    # trigger = CronTrigger(year=lesson_date.year, month=lesson_date.month, day=lesson_date.day, hour=9, minute=0)
-    trigger_time = datetime.now() + timedelta(seconds=10)
-    trigger = DateTrigger(run_date=trigger_time)
+    trigger = CronTrigger(year=lesson_date.year, month=lesson_date.month, day=lesson_date.day, hour=9, minute=0)
+    # trigger_time = datetime.now() + timedelta(seconds=10)
+    # trigger = DateTrigger(run_date=trigger_time)
     scheduler.add_job(
         send_reminder_message,
         trigger,
