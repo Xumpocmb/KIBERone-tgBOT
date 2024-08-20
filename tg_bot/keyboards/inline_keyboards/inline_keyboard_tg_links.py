@@ -46,7 +46,7 @@ async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int) -> In
         logger.debug("ID пользователя в ЦРМ получен успешно!")
         logger.debug("Попытка получить список групп пользователя в ЦРМ")
         for branch_id in user_branch_ids:
-            group_ids = await get_user_groups_from_crm(branch_id, user_crm_id)
+            group_ids = await get_user_groups_from_crm(branch_id, user_crm_id, session)
             if group_ids:
                 for group_id in group_ids:
                     logger.debug("Получение ссылки на группу из БД..")

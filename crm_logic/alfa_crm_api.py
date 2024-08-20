@@ -6,6 +6,9 @@ from time import sleep
 import aiohttp
 from dotenv import load_dotenv
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database.orm_query import orm_get_user_by_crm_id
 
 load_dotenv()
 
@@ -179,27 +182,45 @@ async def send_request_to_crm(url: str, data: str, params: dict | None, token: s
                     return None
 
 
-async def get_user_groups_from_crm(branch_id: int, user_crm_id: int) -> list | None:
+async def get_user_groups_from_crm(branch_id: int, user_crm_id: int, session: AsyncSession) -> list | None:
     token = await login_to_alfa_crm()
-    data = {"page": 0}
-    params = {
-        "customer_id": user_crm_id,
-    }
-    data = json.dumps(data)
-    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/cgi/customer"
 
-    logger.debug(f"Попытка получить группы пользователя (ID): {user_crm_id}")
-    response_data = await send_request_to_crm(url=url, data=data, params=params, token=token)
-    if response_data:
-        logger.debug(f"Количество групп пользователя {user_crm_id}: {response_data.get('total', 0)}")
-        group_ids = []
-        for item in response_data["items"]:
-            group_ids.append(item["group_id"])
-        logger.debug(f"Группы пользователя (ID): {group_ids}")
-        return group_ids
-    else:
-        logger.error(f"Не удалось получить группы пользователя (ID): {user_crm_id}")
+    user_from_db = await orm_get_user_by_crm_id(session, user_crm_id)
+    user_phone = user_from_db.phone
+    user_from_crm = await find_user_by_phone(phone_number=user_phone)
+
+    user_items = user_from_crm.get("items", [])
+
+    if not user_items:
+        logger.error(f"Не удалось получить данные пользователя (ID): {user_crm_id}")
         return None
+    else:
+        group_ids = []
+        for item in user_items:
+            user_id = item.get("id")
+            logger.debug(f"Получен ID пользователя (ID): {user_id}")
+
+            data = {"page": 0}
+            params = {
+                "customer_id": user_id,
+            }
+            data = json.dumps(data)
+            url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/cgi/customer"
+
+            logger.debug(f"Попытка получить группы пользователя (ID): {user_id}")
+            response_data = await send_request_to_crm(url=url, data=data, params=params, token=token)
+            if response_data:
+                logger.debug(f"Количество групп пользователя {user_id}: {response_data.get('total', 0)}")
+                for group_item in response_data["items"]:
+                    group_ids.append(group_item["group_id"])
+                logger.debug(f"Группы пользователя (ID): {group_ids}")
+            else:
+                logger.error(f"Не удалось получить группы пользователя (ID): {user_id}")
+        if not group_ids:
+            logger.error(f"Не удалось получить группы пользователя (ID)")
+            return None
+        else:
+            return group_ids
 
 
 async def get_group_link_from_crm(branch_id: int, group_id: int) -> str | None:

@@ -43,6 +43,24 @@ async def orm_get_user(session: AsyncSession, tg_id: int):
         return None
 
 
+async def orm_get_user_by_crm_id(session: AsyncSession, crm_id: int):
+    try:
+        query = select(User).where(User.user_crm_id == crm_id)
+        result = await session.execute(query)
+        user = result.scalar()
+        if user:
+            logger.info(f"Пользователь с tg_id {crm_id} найден: {user}")
+        else:
+            logger.info(f"Пользователь с tg_id {crm_id} не найден.")
+        return user
+    except SQLAlchemyError as e:
+        logger.error(f"Ошибка SQLAlchemy при получении пользователя с tg_id {crm_id}: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Неизвестная ошибка при получении пользователя с tg_id {crm_id}: {e}")
+        return None
+
+
 async def orm_update_user(session: AsyncSession, user_data: dict):
     try:
         tg_id = user_data.get('tg_id')
