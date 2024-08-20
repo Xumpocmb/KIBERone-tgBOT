@@ -186,7 +186,7 @@ async def get_user_groups_from_crm(branch_id: int, user_crm_id: int, session: As
     token = await login_to_alfa_crm()
 
     user_from_db = await orm_get_user_by_crm_id(session, user_crm_id)
-    user_phone = user_from_db.phone
+    user_phone = user_from_db.phone_number
     user_from_crm = await find_user_by_phone(phone_number=user_phone)
 
     user_items = user_from_crm.get("items", [])
