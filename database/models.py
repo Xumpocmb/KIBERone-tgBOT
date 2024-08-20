@@ -17,14 +17,18 @@ class User(Base):
     last_name: Mapped[str] = mapped_column(nullable=True)
     username: Mapped[str] = mapped_column(nullable=True)
     phone_number: Mapped[str] = mapped_column(nullable=True)
-    balance: Mapped[str] = mapped_column(default="0", nullable=True)
+
     is_study: Mapped[int] = mapped_column(default=0, nullable=True)
-    lesson_date: Mapped[str] = mapped_column(nullable=True)
-    notified: Mapped[bool] = mapped_column(default=False, nullable=True)
-    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+    balance: Mapped[str] = mapped_column(default="0", nullable=True)
+    paid_lesson_count: Mapped[int] = mapped_column(default=0, nullable=True)
+    next_lesson_date: Mapped[str] = mapped_column(nullable=True)
     user_branch_ids: Mapped[str] = mapped_column(nullable=True)
     user_crm_id: Mapped[int] = mapped_column(nullable=True)
     user_lessons: Mapped[bool] = mapped_column(nullable=True)
+
+    notified: Mapped[bool] = mapped_column(default=False, nullable=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+
 
     def __repr__(self):
         return f"<User(id={self.id}, tg_id={self.tg_id}, username={self.username})>"

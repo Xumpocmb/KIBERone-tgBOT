@@ -25,7 +25,7 @@ from tg_bot.scheduler import setup_scheduler, stop_scheduler
 logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
 
 load_dotenv()
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
+BOT_TOKEN = os.environ.get("BOT_TOKEN2")
 DEBUG = os.environ.get('DEBUG') == 'True'
 
 

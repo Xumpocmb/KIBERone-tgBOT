@@ -13,7 +13,7 @@ from pytz import timezone
 from loguru import logger
 from sqlalchemy import select
 
-from crm_logic.alfa_crm_api import check_client_balance_from_crm, get_user_trial_lesson
+from crm_logic.alfa_crm_api import check_client_balance_from_crm, get_user_trial_lesson, find_user_by_phone
 from database.engine import session_maker
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -41,27 +41,76 @@ async def get_users_from_db():
         return result.scalars().all()
 
 
-async def test_check_user_balance():
-    logger.info('Task executed: проверка баланса пользователя.')
+async def update_users_info():
+    logger.info('Task executed: обновление информации о пользователях.')
     users = await get_users_from_db()
     if users:
         async with session_maker() as session:
             for user in users:
-                logger.info(f'Проверяю баланс пользователя {user.phone_number}')
-                is_study = user.is_study
-                user_branch_ids = list(map(int, user.user_branch_ids.split(',')))
-                user_balance = await check_client_balance_from_crm(user.phone_number, user_branch_ids, is_study)
-                logger.debug(f'Баланс пользователя {user.phone_number}: {user_balance}')
-                if not user_balance:
-                    user_balance = "0"
-                user.balance = user_balance
-                session.add(user)
-                await session.commit()
-                logger.info(f'Баланс пользователя {user.phone_number} обновлен.')
-                await asyncio.sleep(10)
-        logger.info('Проверка баланса пользователей завершена.')
+                is_admin = check_admin(int(user.tg_id))
+                if not is_admin:
+                    logger.info(f'Поиск пользователя {user.phone_number}')
+                    crm_user = await find_user_by_phone(user.phone_number)
+
+                    if crm_user:
+                        logger.info(f'Пользователь {user.phone_number} найден в ЦРМ')
+                        crm_user_is_study: int = crm_user.get("items", [])[0].get("is_study", 0)
+                        crm_user_balance: str = crm_user.get("items", [])[0].get("balance", "0")
+                        crm_user_next_lesson_date: str = crm_user.get("items", [])[0].get("next_lesson_date", "")
+                        crm_user_paid_lesson_count: int = crm_user.get("items", [])[0].get("paid_lesson_count", 0)
+
+                        user.is_study = crm_user_is_study
+                        user.balance = crm_user_balance
+                        user.next_lesson_date = crm_user_next_lesson_date
+                        user.paid_lesson_count = crm_user_paid_lesson_count
+                        logger.info(f'Обновляю информацию о пользователе {user.phone_number}')
+                        session.add(user)
+                        await session.commit()
+                        logger.info(f'Информация о пользователе {user.phone_number} обновлена.')
+
+                        if crm_user_paid_lesson_count == 0:
+                            lesson_datetime = datetime.strptime(crm_user_next_lesson_date, '%Y-%m-%d %H:%M')
+                            await create_payment_reminder_task(user.tg_id, lesson_datetime)
+
+                        await asyncio.sleep(10)
+                    else:
+                        logger.info(f'Пользователь {user.phone_number} не найден в ЦРМ')
+                        await asyncio.sleep(10)
+            logger.info('Обновление информации о пользователях завершено.')
     else:
-        logger.info('Пользователи пока не были найдены.')
+        logger.info('Нет пользователей в базе данных')
+
+
+async def create_payment_reminder_task(tg_id, lesson_date):
+    job_id = f'payment_reminder_{tg_id}_{lesson_date.strftime("%Y%m%d%H%M")}'
+    existing_job = scheduler.get_job(job_id)
+
+    if existing_job:
+        logger.info(
+            f'Задача для отправки напоминания пользователю {tg_id} на {lesson_date} уже существует.')
+        return
+
+    trigger = CronTrigger(year=lesson_date.year, month=lesson_date.month, day=lesson_date.day, hour=10, minute=0)
+    scheduler.add_job(
+        send_payment_reminder_message,
+        trigger,
+        args=[tg_id],
+        id=job_id,
+        misfire_grace_time=3600,
+    )
+
+    logger.info(f'Задача для отправки напоминания пользователю {tg_id} на {lesson_date} создана.')
+
+
+async def send_payment_reminder_message(tg_id):
+    logger.info(f'Отправляю напоминание пользователю {tg_id} о необходимости оплаты занятий.')
+
+    reminder_message = ("Уважаемый клиент!\n"
+                        "Во избежание просрочки оплаты за обучение, просим произвести оплату через ЕРИП по ссылке https://clck.ru/36h7Df или оплатить на месте.)\n"
+                        "Ваш KIBERone!")
+    async with bot:
+        await bot.send_message(chat_id=tg_id, text=reminder_message)
+    logger.info(f'Напоминание пользователю {tg_id} о необходимости оплаты занятий отправлено.')
 
 
 async def check_user_trial_lesson():
@@ -126,7 +175,7 @@ def setup_scheduler():
     start_scheduler()
     try:
         logger.info("Setting up scheduler...")
-        job_ids = ['test_check_user_balance', 'check_user_trial_lesson']
+        job_ids = ['update_users_info', 'check_user_trial_lesson']
 
         for job in job_ids:
             existing_job = scheduler.get_job(job)
@@ -139,18 +188,18 @@ def setup_scheduler():
             else:
                 logger.info(f"No existing job with ID '{job}' found.")
 
-        # scheduler.add_job(
-        #     test_check_user_balance,
-        #     IntervalTrigger(minutes=30, start_date=datetime.now() + timedelta(seconds=10)),
-        #     id=job,
-        #     misfire_grace_time=None,
-        # )
+        scheduler.add_job(
+            update_users_info,
+            IntervalTrigger(minutes=120, start_date=datetime.now() + timedelta(minutes=40)),
+            id='update_users_info',
+            misfire_grace_time=3600,
+        )
 
         scheduler.add_job(
             check_user_trial_lesson,
-            IntervalTrigger(minutes=60, start_date=datetime.now() + timedelta(minutes=5)),
+            IntervalTrigger(minutes=60, start_date=datetime.now() + timedelta(minutes=10)),
             id='check_user_trial_lesson',
-            misfire_grace_time=None,
+            misfire_grace_time=3600,
         )
         logger.info("Jobs added successfully.")
     except Exception as e:
