@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 from aiogram import Router, F
 from aiogram.filters import CommandStart
@@ -119,6 +120,7 @@ async def handle_contact(message: Message, session: AsyncSession):
         else:
             find_client = await find_user_by_phone(user_data.get("phone_number", ""))
             if find_client:
+                user_data["customer_data"] = json.dumps(find_client)
                 logger.debug(f"Пользователь с номером {user_data.get('phone_number', '')} в ЦРМ уже существует.")
 
                 user_branch_ids: list = find_client.get("items", [])[0].get("branch_ids", [])
@@ -135,6 +137,7 @@ async def handle_contact(message: Message, session: AsyncSession):
 
                 logger.debug(f"Заношу данные пользователя в свою БД..")
                 await orm_add_user(session, data=user_data)
+
                 if user_data["user_lessons"]:
                     logger.debug("Пользователь в ЦРМ есть и он обучался. Подготовка ссылок и отправка..")
                     await message.answer("Сейчас мы немножко поколдуем.. Ожидайте!")
@@ -159,6 +162,7 @@ async def handle_contact(message: Message, session: AsyncSession):
                 user_data["user_crm_id"] = user_crm_id
                 user_data["user_lessons"] = False
                 user_data["is_study"] = 0
+                user_data["customer_data"] = json.dumps(find_client)
                 logger.debug("Заношу данные пользователя в свою БД..", user_data)
                 await orm_add_user(session, data=user_data)
                 await message.answer(greeting_message, reply_markup=main_menu_button_keyboard)

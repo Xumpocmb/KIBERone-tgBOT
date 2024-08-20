@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime, func, JSON
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -25,6 +25,8 @@ class User(Base):
     user_branch_ids: Mapped[str] = mapped_column(nullable=True)
     user_crm_id: Mapped[int] = mapped_column(nullable=True)
     user_lessons: Mapped[bool] = mapped_column(nullable=True)
+
+    customer_data: Mapped[str] = mapped_column(nullable=True)
 
     notified: Mapped[bool] = mapped_column(default=False, nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
