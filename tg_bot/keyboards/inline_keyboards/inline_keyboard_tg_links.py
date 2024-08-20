@@ -52,7 +52,10 @@ async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int) -> In
                     logger.debug("Получение ссылки на группу из БД..")
                     group_link = await get_group_link_from_crm(branch_id, group_id)
                     logger.debug("Формирование кнопки..")
-                    buttons.append(InlineKeyboardButton(text="Чат группы", url=f"{str(group_link)}"))
+                    if group_link:
+                        buttons.append(InlineKeyboardButton(text="Чат группы", url=f"{str(group_link)}"))
+                    else:
+                        logger.error(f"Не удалось получить ссылку на группу {group_id} для пользователя {user.phone_number}")
             else:
                 logger.error(f"Не удалось получить список групп пользователя {user.phone_number}")
     else:
@@ -103,7 +106,10 @@ async def make_tg_links_inline_keyboard_without_back(session: AsyncSession, tg_i
                     logger.debug("Получение ссылки на группу из БД..")
                     group_link = await get_group_link_from_crm(branch_id, group_id)
                     logger.debug("Формирование кнопки..")
-                    buttons.append(InlineKeyboardButton(text="Чат группы", url=f"{str(group_link)}"))
+                    if group_link:
+                        buttons.append(InlineKeyboardButton(text="Чат группы", url=f"{str(group_link)}"))
+                    else:
+                        logger.error(f"Не удалось получить ссылку на группу {group_id} для пользователя {user.phone_number}")
             else:
                 logger.error(f"Не удалось получить список групп пользователя {user.phone_number}")
     else:

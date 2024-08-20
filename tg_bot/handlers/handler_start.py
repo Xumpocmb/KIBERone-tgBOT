@@ -24,6 +24,21 @@ logger.add(
 start_router: Router = Router()
 
 
+greeting_message = ("Вас приветствует Международная КиберШкола программирования KIBERone!\n"
+                    "Если вы зашли в этот чат-бот, то мы уверены, что вы заинтересованы в будущем вашего ребенка и знаете, что изучать программирование сегодня –это даже уже не модно, а НУЖНО! И Вы на правильном пути, ведь мы точно знаем, чему учить детей, чтобы это было актуально через 20 лет!\n"
+                    "Мы уже получили ваш контакт, и наши лучшие менеджеры уже спорят, кто первый Вам позвонит!\n"
+                    "Но, вы можете сами нам позвонить по номеру +375(29)633-27-79 и уточнить все интересующие вопросы о KIBERone.")
+
+tg_links_message = ("Канал-общий**: Хотите быть в курсе свежих новостей в мире IT и узнавать новости от KIBERone? "
+                    "Присоединяйтесь к нашей дружной команде и будете на волне!\n"
+                    "Канал-города**: Чтобы не пропустить акции от KIBERone в вашем городе, "
+                    "быть в курсе всех мероприятий для детей и родителей, не упускать информацию о переносах занятий "
+                    "на каникулах и многое другое, то мы настоятельно рекомендуем вступить в группу и "
+                    "быть в центре событий жизни KIBERone!\n"
+                    "Чат-группы**: Мы НЕ РЕКОМЕНДУЕМ вступать в этот чат, если вы не хотите быть на связи с вашим "
+                    "тьютором и ассистентом, быть в группе ответственных родителей, кто интересуется успехами детей, "
+                    "то вам точно не нужен этот чат. P.S – все резиденты должны быть в этом чате))")
+
 async def handle_existing_user(message: Message, session: AsyncSession, is_admin: bool):
     user_data = {
         "tg_id": message.from_user.id,
@@ -116,26 +131,21 @@ async def handle_contact(message: Message, session: AsyncSession):
                 user_data ["user_crm_id"] = user_crm_id
                 user_data["is_study"] = is_study
                 user_data["user_branch_ids"] = ','.join(map(str, user_branch_ids))
-                user_data["user_lessons"] = True if user_lessons else False
+                user_data["user_lessons"] = True if user_lessons.get("total") > 0 else False
 
                 logger.debug(f"Заношу данные пользователя в свою БД..")
                 await orm_add_user(session, data=user_data)
                 if user_data["user_lessons"]:
                     logger.debug("Пользователь в ЦРМ есть и он обучался. Подготовка ссылок и отправка..")
                     await message.answer("Сейчас мы немножко поколдуем.. Ожидайте!")
-                    formatted_text = """
-                        **Канал-общий**: Хотите быть в курсе свежих новостей в мире IT и узнавать новости от KIBERone? Присоединяйтесь к нашей дружной команде и будете на волне!
 
-    **Канал-города**: Чтобы не пропустить акции от KIBERone в вашем городе, быть в курсе всех мероприятий для детей и родителей, не упускать информацию о переносах занятий на каникулах и многое другое, то мы настоятельно рекомендуем вступить в группу и быть в центре событий жизни KIBERone!
-
-    **Чат-группы**: Мы НЕ РЕКОМЕНДУЕМ вступать в этот чат, если вы не хотите быть на связи с вашим тьютором и ассистентом, быть в группе ответственных родителей, кто интересуется успехами детей, то вам точно не нужен этот чат. P.S – все резиденты должны быть в этом чате))
-        """
-                    await message.answer(formatted_text,
+                    await message.answer(tg_links_message,
                                          reply_markup=await make_tg_links_inline_keyboard_without_back(session,
                                                                                           message.contact.user_id))
                     await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
                 else:
                     logger.debug("Пользователь в ЦРМ есть, но он не обучался")
+                    await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
             else:
                 logger.info(f"Пользователь с номером {user_data.get('phone_number', '')} в црм не найден.")
                 logger.info("Создание новой карточки в ЦРМ..")
@@ -151,13 +161,7 @@ async def handle_contact(message: Message, session: AsyncSession):
                 user_data["is_study"] = 0
                 logger.debug("Заношу данные пользователя в свою БД..", user_data)
                 await orm_add_user(session, data=user_data)
-                formatted_text = """
-                Вас приветствует Международная КиберШкола программирования KIBERone! 
-            Если вы зашли в этот чат-бот, то мы уверены, что вы заинтересованы в будущем вашего ребенка и знаете, что изучать программирование сегодня –это даже уже не модно, а НУЖНО! И Вы на правильном пути, ведь мы точно знаем, чему учить детей, чтобы это было актуально через 20 лет
-            Мы уже получили ваш контакт, и наши лучшие менеджеры уже спорят, кто первый Вам позвонит!
-            Но, вы можете сами нам позвонить по номеру +375(29)633-27-79 и уточнить все интересующие вопросы о KIBERone.
-                """
-                await message.answer(formatted_text, reply_markup=main_menu_button_keyboard)
+                await message.answer(greeting_message, reply_markup=main_menu_button_keyboard)
     except Exception as e:
         logger.exception("Произошла ошибка при обработке контакта.")
 
