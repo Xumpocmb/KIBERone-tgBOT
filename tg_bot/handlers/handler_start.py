@@ -7,11 +7,10 @@ from aiogram.types import Message
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.orm_query import orm_add_user, orm_get_user, orm_update_user
+from database.orm_query import orm_add_user, orm_get_user_by_tg_id, orm_update_user
 from tg_bot.filters.filter_admin import check_admin
 from crm_logic.alfa_crm_api import create_user_in_alfa_crm, find_user_by_phone, get_client_lessons
-from tg_bot.keyboards.inline_keyboards.inline_keyboard_tg_links import make_tg_links_inline_keyboard, \
-    make_tg_links_inline_keyboard_without_back
+from tg_bot.keyboards.inline_keyboards.inline_keyboard_tg_links import make_tg_links_inline_keyboard
 from tg_bot.keyboards.keyboard_send_contact import contact_keyboard
 from tg_bot.keyboards.keyboard_start import main_menu_button_keyboard
 
@@ -30,13 +29,13 @@ greeting_message = ("Вас приветствует Международная 
                     "Мы уже получили ваш контакт, и наши лучшие менеджеры уже спорят, кто первый Вам позвонит!\n"
                     "Но, вы можете сами нам позвонить по номеру +375(29)633-27-79 и уточнить все интересующие вопросы о KIBERone.")
 
-tg_links_message = ("Канал-общий**: Хотите быть в курсе свежих новостей в мире IT и узнавать новости от KIBERone? "
+tg_links_message = ("\t<b>Канал-общий:</b> Хотите быть в курсе свежих новостей в мире IT и узнавать новости от KIBERone? "
                     "Присоединяйтесь к нашей дружной команде и будете на волне!\n"
-                    "Канал-города**: Чтобы не пропустить акции от KIBERone в вашем городе, "
+                    "\n\t<b>Канал-города:</b> Чтобы не пропустить акции от KIBERone в вашем городе, "
                     "быть в курсе всех мероприятий для детей и родителей, не упускать информацию о переносах занятий "
                     "на каникулах и многое другое, то мы настоятельно рекомендуем вступить в группу и "
                     "быть в центре событий жизни KIBERone!\n"
-                    "Чат-группы**: Мы НЕ РЕКОМЕНДУЕМ вступать в этот чат, если вы не хотите быть на связи с вашим "
+                    "\n\t<b>Чат-группы:</b> Мы НЕ РЕКОМЕНДУЕМ вступать в этот чат, если вы не хотите быть на связи с вашим "
                     "тьютором и ассистентом, быть в группе ответственных родителей, кто интересуется успехами детей, "
                     "то вам точно не нужен этот чат. P.S – все резиденты должны быть в этом чате))")
 
@@ -50,14 +49,24 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
     try:
         logger.debug("Обновление данных пользователя в БД..")
         await orm_update_user(session, user_data=user_data)
-        user = await orm_get_user(session, tg_id=message.from_user.id)
-        user_phone = user.get("phone_number")
-        crm_client = await find_user_by_phone(user_phone)
-        if crm_client:
-            await process_existing_user(crm_client, session, message, user_data)
+        user = await orm_get_user_by_tg_id(session, tg_id=message.from_user.id)
+        user_data["phone_number"] = user.phone_number
+        if user:
+            user_phone = user.phone_number
+            logger.debug(f"Номер телефона пользователя: {user_phone}")
+            if user_phone:
+                crm_client = await find_user_by_phone(user_phone)
+                if crm_client:
+                    await process_existing_user(crm_client, session, message, user_data)
+            else:
+                logger.error(f"У пользователя с tg_id {message.from_user.id} нет номера телефона.")
+        else:
+            logger.error(f"Пользователь с tg_id {message.from_user.id} не найден.")
+
         logger.debug("Данные пользователя обновлены в БД.")
     except Exception as e:
-        logger.error(e)
+        logger.error(f"Произошла ошибка: {e}")
+
     if is_admin:
         greeting = f'Привет, {"администратор " if is_admin else ""}{message.from_user.username}!'
     else:
@@ -95,7 +104,7 @@ async def handle_new_user(message: Message):
 async def start_handler(message: Message, session: AsyncSession):
     is_admin = check_admin(message.from_user.id)
     logger.debug("Проверка пользователя в БД..")
-    user = await orm_get_user(session, tg_id=message.from_user.id)
+    user = await orm_get_user_by_tg_id(session, tg_id=message.from_user.id)
     if user:
         logger.debug("Пользователь найден в БД")
         await handle_existing_user(message, session, is_admin)
@@ -142,29 +151,29 @@ async def process_existing_user(crm_client, session, message, user_data):
     logger.debug(f"Пользователь с номером {user_data['phone_number']} найден в ЦРМ.")
     user_info = crm_client.get("items", [])[0]
     user_data.update({
-        "customer_data": json.dumps(crm_client),
+        "customer_data": json.dumps(crm_client.get("items", [])),
         "user_crm_id": user_info.get("id"),
         "is_study": user_info.get("is_study"),
         "user_branch_ids": ','.join(map(str, user_info.get("branch_ids", []))),
     })
 
     user_lessons = await get_client_lessons(user_data["user_crm_id"], user_info.get("branch_ids", []))
-    user_data["user_lessons"] = user_lessons.get("total", 0) > 0
+    user_data["user_lessons"] = True if user_lessons.get("total", 0) > 0 else False
 
     await save_user_data(session, user_data)
 
     if user_data["user_lessons"]:
-        await send_lesson_links(message, session, user_data["tg_id"])
+        await send_tg_links(message, session, user_data["tg_id"])
     else:
         await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
 
 
-async def send_lesson_links(message, session, user_id):
-    logger.debug("Отправка ссылок на уроки.")
+async def send_tg_links(message, session, user_id):
+    logger.debug("Отправка ссылок на TG.")
     await message.answer("Подготавливаем ссылки... Ожидайте!")
     await message.answer(
         tg_links_message,
-        reply_markup=await make_tg_links_inline_keyboard_without_back(session, user_id)
+        reply_markup=await make_tg_links_inline_keyboard(session, user_id, include_back_button=False)
     )
     await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
 
@@ -172,7 +181,6 @@ async def send_lesson_links(message, session, user_id):
 async def create_new_user_in_crm(user_data, session, message):
     logger.debug(f"Создание нового пользователя с номером {user_data['phone_number']} в ЦРМ.")
     response = await create_user_in_alfa_crm(user_data)
-
     new_user_info = response.get("model", {})
     user_data.update({
         "user_crm_id": new_user_info.get("id", -1),

@@ -20,7 +20,7 @@ from tg_bot.handlers.inline_handlers import (inline_handler_tg_links, inline_han
 from tg_bot.middlewares.middleware_antiflood import AntiFloodMiddleware
 from tg_bot.middlewares.middleware_chat_action import ChatActionMiddleware
 from tg_bot.middlewares.middleware_database import DataBaseSession
-from tg_bot.scheduler import setup_scheduler, stop_scheduler
+from tg_bot.scheduler_config import setup_scheduler, stop_scheduler
 
 logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
 
@@ -32,20 +32,17 @@ else:
     BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 
-# kiberone1221
-
-
 async def on_startup(bot: Bot):
     logger.info('Starting bot..')
     logger.info('Creating DB..')
     await create_db()
-    # setup_scheduler()
+    setup_scheduler()
     logger.info('DB created. Bot started.')
 
 
 async def on_shutdown(bot: Bot):
     logger.info('Processing shutdown..')
-    # stop_scheduler()
+    stop_scheduler()
 
 
 async def main():

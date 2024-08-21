@@ -4,7 +4,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from aiogram.filters import Command
 from crm_logic.alfa_crm_api import find_user_by_phone, get_client_lessons
-from database.orm_query import orm_get_user
+from database.orm_query import orm_get_user_by_tg_id
 from tg_bot.filters.filter_admin import check_admin
 from tg_bot.keyboards.inline_keyboards.inline_admin_main_menu import admin_main_menu_inline_keyboard
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_main_menu import main_menu_inline_keyboard_for_client, \
@@ -39,7 +39,7 @@ async def get_user_keyboard(session: AsyncSession, tg_id: int):
         return admin_main_menu_inline_keyboard
     else:
         try:
-            user_in_db = await orm_get_user(session, tg_id)
+            user_in_db = await orm_get_user_by_tg_id(session, tg_id)
             if user_in_db is None:
                 logger.warning(f"Пользователь с tg_id={tg_id} не найден в базе данных.")
                 return main_menu_inline_keyboard_for_lead_without_group

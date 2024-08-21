@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from crm_logic.alfa_crm_api import get_client_lessons
 from database.engine import session_maker
-from database.orm_query import orm_get_user, get_manager_info
+from database.orm_query import orm_get_user_by_tg_id, get_manager_info
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
 logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
@@ -22,14 +22,16 @@ async def process_button_manager_contact_press(callback: CallbackQuery, session:
     try:
         logger.info(f"Начало обработки нажатия кнопки от пользователя {callback.from_user.id}")
         await callback.message.answer(text='Секундочку, сейчас мы поищем подходящего.. 😁')
-        user = await orm_get_user(session, callback.from_user.id)
+        user = await orm_get_user_by_tg_id(session, callback.from_user.id)
         if not user:
             logger.warning(f"Пользователь с tg_id {callback.from_user.id} не найден.")
             await callback.message.answer(text="Пользователь не найден в системе.")
             return
+
         user_branch_ids = list(map(int, user.user_branch_ids.split(',')))
         user_crm_id = user.user_crm_id
         logger.debug(f"Извлечены branch_ids: {user_branch_ids} и user_crm_id: {user_crm_id}")
+
         user_lessons = await get_client_lessons(user_crm_id, user_branch_ids)
         if not user_lessons.get("items"):
             logger.info(f"Уроки для пользователя с crm_id {user_crm_id} не найдены.")

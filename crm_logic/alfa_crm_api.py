@@ -131,7 +131,6 @@ async def find_user_by_phone(phone_number: str) -> dict | None:
     for response_data in results:
         if isinstance(response_data, dict) and response_data.get("total") != 0:
             return response_data
-
     return None
 
 

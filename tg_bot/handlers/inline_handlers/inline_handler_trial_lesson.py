@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from crm_logic.alfa_crm_api import get_user_trial_lesson
 from database.engine import session_maker
-from database.orm_query import orm_get_user
+from database.orm_query import orm_get_user_by_tg_id
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
 logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
@@ -52,7 +52,7 @@ async def tg_links_handler(callback: CallbackQuery, session: AsyncSession):
     try:
         await callback.message.edit_text(text="Ожидайте пожалуйста, проверяю Ваше расписание..")
 
-        user = await orm_get_user(session, user_id)
+        user = await orm_get_user_by_tg_id(session, user_id)
         user_branch_ids = list(map(int, user.user_branch_ids.split(',')))
         user_crm_id = user.user_crm_id
         user_lessons = await get_user_trial_lesson(user_crm_id, user_branch_ids)

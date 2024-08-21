@@ -9,7 +9,7 @@ from sqlalchemy.sql.operators import eq
 from loguru import logger
 from database.engine import session_maker
 from database.models import Partner
-from database.orm_query import orm_get_user
+from database.orm_query import orm_get_user_by_tg_id
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_partner import make_inline_partner_kb
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
@@ -64,7 +64,7 @@ async def process_button_partner_question_press(callback: CallbackQuery, session
         if partner:
             logger.debug(f"Получена информация о партнере: {partner.description}")
             if partner_id == 1:
-                user_from_db = await orm_get_user(session, user_id)
+                user_from_db = await orm_get_user_by_tg_id(session, user_id)
                 if user_from_db.is_study:
                     await callback.message.answer(text="Промокод: КИБЕР")
             await callback.message.answer( text=partner.description, reply_markup=await make_inline_partner_kb(session))
