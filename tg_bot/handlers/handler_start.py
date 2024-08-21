@@ -50,6 +50,11 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
     try:
         logger.debug("Обновление данных пользователя в БД..")
         await orm_update_user(session, user_data=user_data)
+        user = await orm_get_user(session, tg_id=message.from_user.id)
+        user_phone = user.get("phone_number")
+        crm_client = await find_user_by_phone(user_phone)
+        if crm_client:
+            await process_existing_user(crm_client, session, message, user_data)
         logger.debug("Данные пользователя обновлены в БД.")
     except Exception as e:
         logger.error(e)
@@ -101,71 +106,82 @@ async def start_handler(message: Message, session: AsyncSession):
 
 @start_router.message(F.contact)
 async def handle_contact(message: Message, session: AsyncSession):
-    user_data = {
-        "tg_id": message.contact.user_id,
-        "first_name": message.contact.first_name,
-        "last_name": message.contact.last_name,
-        "username": message.from_user.username,
-        "phone_number": str(message.contact.phone_number),
-    }
     try:
-        logger.debug("Получен контакт. Работаю с данными..")
-        await message.answer("Ваш контакт получен.\nИдет обработка данных.. \nОжидайте, мы немножко поколдуем, чтобы подготовить всё для Вас :)")
+        logger.debug("Получен контакт. Обрабатываю данные...")
+        user_data = {
+            "tg_id": message.contact.user_id,
+            "first_name": message.contact.first_name,
+            "last_name": message.contact.last_name,
+            "username": message.from_user.username,
+            "phone_number": str(message.contact.phone_number),
+        }
 
-        is_admin = check_admin(message.from_user.id)
-        if is_admin:
-            logger.debug("Пользователь является администратором.")
-            await orm_add_user(session, data=user_data)
-            await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
+        await message.answer("Ваш контакт получен. Идет обработка данных...")
+
+        if check_admin(message.from_user.id):
+            await save_user_data(session, user_data)
+            return await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
+
+        crm_client = await find_user_by_phone(user_data["phone_number"])
+        if crm_client:
+            await process_existing_user(crm_client, session, message, user_data)
         else:
-            find_client = await find_user_by_phone(user_data.get("phone_number", ""))
-            if find_client:
-                user_data["customer_data"] = json.dumps(find_client)
-                logger.debug(f"Пользователь с номером {user_data.get('phone_number', '')} в ЦРМ уже существует.")
+            await create_new_user_in_crm(user_data, session, message)
 
-                user_branch_ids: list = find_client.get("items", [])[0].get("branch_ids", [])
-                is_study = find_client.get("items", [])[0].get("is_study")
-                user_crm_id: int = find_client.get("items", [])[0].get("id", None)
-
-                logger.debug(f"Проверяю, есть ли у пользователя уроки в ЦРМ..")
-                user_lessons = await get_client_lessons(user_crm_id, user_branch_ids)
-
-                user_data ["user_crm_id"] = user_crm_id
-                user_data["is_study"] = is_study
-                user_data["user_branch_ids"] = ','.join(map(str, user_branch_ids))
-                user_data["user_lessons"] = True if user_lessons.get("total") > 0 else False
-
-                logger.debug(f"Заношу данные пользователя в свою БД..")
-                await orm_add_user(session, data=user_data)
-
-                if user_data["user_lessons"]:
-                    logger.debug("Пользователь в ЦРМ есть и он обучался. Подготовка ссылок и отправка..")
-                    await message.answer("Сейчас мы немножко поколдуем.. Ожидайте!")
-
-                    await message.answer(tg_links_message,
-                                         reply_markup=await make_tg_links_inline_keyboard_without_back(session,
-                                                                                          message.contact.user_id))
-                    await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
-                else:
-                    logger.debug("Пользователь в ЦРМ есть, но он не обучался")
-                    await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
-            else:
-                logger.info(f"Пользователь с номером {user_data.get('phone_number', '')} в црм не найден.")
-                logger.info("Создание новой карточки в ЦРМ..")
-                response = await create_user_in_alfa_crm(user_data)
-                logger.debug("Получаю branch_ids в ответе от ЦРМ..")
-                user_branch_ids: list = response.get("model", {}).get("branch_ids", [])
-                logger.debug("user_branch_ids:", user_branch_ids)
-                user_crm_id: int = response.get("model", {}).get("id", -1)
-                logger.debug("user_crm_id:", user_crm_id)
-                user_data["user_branch_ids"] = ','.join(map(str, user_branch_ids))
-                user_data["user_crm_id"] = user_crm_id
-                user_data["user_lessons"] = False
-                user_data["is_study"] = 0
-                user_data["customer_data"] = json.dumps(find_client)
-                logger.debug("Заношу данные пользователя в свою БД..", user_data)
-                await orm_add_user(session, data=user_data)
-                await message.answer(greeting_message, reply_markup=main_menu_button_keyboard)
     except Exception as e:
         logger.exception("Произошла ошибка при обработке контакта.")
+        await message.answer("Произошла ошибка при обработке вашего контакта. Попробуйте позже.")
+
+
+async def save_user_data(session, user_data):
+    logger.debug("Сохраняю данные пользователя в БД.")
+    await orm_add_user(session, data=user_data)
+
+
+async def process_existing_user(crm_client, session, message, user_data):
+    logger.debug(f"Пользователь с номером {user_data['phone_number']} найден в ЦРМ.")
+    user_info = crm_client.get("items", [])[0]
+    user_data.update({
+        "customer_data": json.dumps(crm_client),
+        "user_crm_id": user_info.get("id"),
+        "is_study": user_info.get("is_study"),
+        "user_branch_ids": ','.join(map(str, user_info.get("branch_ids", []))),
+    })
+
+    user_lessons = await get_client_lessons(user_data["user_crm_id"], user_info.get("branch_ids", []))
+    user_data["user_lessons"] = user_lessons.get("total", 0) > 0
+
+    await save_user_data(session, user_data)
+
+    if user_data["user_lessons"]:
+        await send_lesson_links(message, session, user_data["tg_id"])
+    else:
+        await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
+
+
+async def send_lesson_links(message, session, user_id):
+    logger.debug("Отправка ссылок на уроки.")
+    await message.answer("Подготавливаем ссылки... Ожидайте!")
+    await message.answer(
+        tg_links_message,
+        reply_markup=await make_tg_links_inline_keyboard_without_back(session, user_id)
+    )
+    await message.answer("Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard)
+
+
+async def create_new_user_in_crm(user_data, session, message):
+    logger.debug(f"Создание нового пользователя с номером {user_data['phone_number']} в ЦРМ.")
+    response = await create_user_in_alfa_crm(user_data)
+
+    new_user_info = response.get("model", {})
+    user_data.update({
+        "user_crm_id": new_user_info.get("id", -1),
+        "user_branch_ids": ','.join(map(str, new_user_info.get("branch_ids", []))),
+        "user_lessons": False,
+        "is_study": 0,
+        "customer_data": json.dumps(new_user_info)
+    })
+
+    await save_user_data(session, user_data)
+    await message.answer(greeting_message, reply_markup=main_menu_button_keyboard)
 

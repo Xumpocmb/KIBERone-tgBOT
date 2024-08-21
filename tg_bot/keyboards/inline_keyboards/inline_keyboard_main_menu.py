@@ -10,7 +10,7 @@ button_2: InlineKeyboardButton = InlineKeyboardButton(
 
 button_3: InlineKeyboardButton = InlineKeyboardButton(
     text='Назначить отработку',
-    callback_data='work_off')
+    callback_data='contact_manager')
 
 button_4: InlineKeyboardButton = InlineKeyboardButton(
     text='Платформа английского Lim English',

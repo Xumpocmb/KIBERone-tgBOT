@@ -75,7 +75,7 @@ async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int) -> In
 async def make_tg_links_inline_keyboard_without_back(session: AsyncSession, tg_id: int) -> InlineKeyboardMarkup:
     buttons = [
         InlineKeyboardButton(
-            text="Главный новостной канал KIBERone", url="https://google.com"
+            text="Главный новостной канал KIBERone", url="https://t.me/kiberone_bel"
         )
     ]
 
