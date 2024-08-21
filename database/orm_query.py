@@ -16,7 +16,8 @@ async def orm_add_user(session: AsyncSession, data: dict):
             user_branch_ids = data.get("user_branch_ids"),
             user_crm_id = data.get("user_crm_id"),
             user_lessons = data.get("user_lessons"),
-            is_study = data.get("is_study")
+            is_study = data.get("is_study"),
+            customer_data = data.get("customer_data")
         )
         session.add(user)
         await session.commit()
