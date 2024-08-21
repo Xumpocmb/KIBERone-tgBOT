@@ -39,6 +39,10 @@ tg_links_message = ("\t<b>Канал-общий:</b> Хотите быть в к
                     "тьютором и ассистентом, быть в группе ответственных родителей, кто интересуется успехами детей, "
                     "то вам точно не нужен этот чат. P.S – все резиденты должны быть в этом чате))")
 
+
+
+# TODO: брать лучший items из alfa_crm
+
 async def handle_existing_user(message: Message, session: AsyncSession, is_admin: bool):
     user_data = {
         "tg_id": message.from_user.id,
