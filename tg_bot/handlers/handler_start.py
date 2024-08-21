@@ -124,7 +124,8 @@ async def handle_contact(message: Message, session: AsyncSession):
             "username": message.from_user.username,
             "phone_number": str(message.contact.phone_number),
         }
-
+        await save_user_data(session, user_data)
+        logger.debug("Основные данные сохранены в БД.")
         await message.answer("Ваш контакт получен. Идет обработка данных...")
 
         if check_admin(message.from_user.id):
@@ -147,6 +148,11 @@ async def save_user_data(session, user_data):
     await orm_add_user(session, data=user_data)
 
 
+async def update_user_data(session, user_data):
+    logger.debug("Обновляю данные пользователя в БД.")
+    await orm_update_user(session, user_data=user_data)
+
+
 async def process_existing_user(crm_client, session, message, user_data):
     logger.debug(f"Пользователь с номером {user_data['phone_number']} найден в ЦРМ.")
     user_info = crm_client.get("items", [])[0]
@@ -160,7 +166,7 @@ async def process_existing_user(crm_client, session, message, user_data):
     user_lessons = await get_client_lessons(user_data["user_crm_id"], user_info.get("branch_ids", []))
     user_data["user_lessons"] = True if user_lessons.get("total", 0) > 0 else False
 
-    await save_user_data(session, user_data)
+    await update_user_data(session, user_data)
 
     if user_data["user_lessons"]:
         await send_tg_links(message, session, user_data["tg_id"])
