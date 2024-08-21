@@ -56,8 +56,7 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
             logger.debug(f"Номер телефона пользователя: {user_phone}")
             if user_phone:
                 crm_client = await find_user_by_phone(user_phone)
-                if crm_client:
-                    await process_existing_user(crm_client, session, message, user_data)
+                await process_existing_user(crm_client, session, message, user_data)
             else:
                 logger.error(f"У пользователя с tg_id {message.from_user.id} нет номера телефона.")
         else:

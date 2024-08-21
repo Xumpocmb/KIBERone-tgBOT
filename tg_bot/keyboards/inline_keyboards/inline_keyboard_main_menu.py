@@ -52,7 +52,11 @@ button_13: InlineKeyboardButton = InlineKeyboardButton(
     text='Дата пробного занятия',
     callback_data='user_trial_date')
 
-# Создаем объект inline-клавиатуры
+button_14: InlineKeyboardButton = InlineKeyboardButton(
+    text='Главный новостной канал KIBERone',
+    url='https://t.me/kiberone_bel')
+
+
 main_menu_inline_keyboard_for_client: InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[
         [
@@ -143,6 +147,8 @@ main_menu_inline_keyboard_for_lead_without_group: InlineKeyboardMarkup = InlineK
         [
             button_13
         ],
-
+        [
+            button_14
+        ],
     ]
 )

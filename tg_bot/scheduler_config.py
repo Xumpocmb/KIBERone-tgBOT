@@ -39,6 +39,26 @@ async def get_users_from_db():
 
 
 
+"""
+------------------------
+"""
+
+# TODO: баланс пользователя в день урока
+
+
+
+"""
+------------------------
+"""
+
+# TODO: когда у лида появляется группа, то выслать ссылки на ТГ
+
+
+
+"""
+------------------------
+"""
+
 async def check_user_trial_lesson():
     users = await get_users_from_db()
     for user in users:
@@ -221,14 +241,14 @@ def setup_scheduler():
 
         scheduler.add_job(
             check_user_trial_lesson,
-            IntervalTrigger(minutes=60, start_date=datetime.now() + timedelta(minutes=40)),
+            IntervalTrigger(minutes=60, start_date=datetime.now() + timedelta(minutes=80)),
             id='check_user_trial_lesson',
             misfire_grace_time=3600,
         )
 
         scheduler.add_job(
             check_user_birthday,
-            IntervalTrigger(days=1, start_date=datetime.now() + timedelta(minutes=80)),
+            IntervalTrigger(days=1, start_date=datetime.now() + timedelta(minutes=40)),
             id='check_user_birthday',
             misfire_grace_time=3600,
         )
