@@ -53,7 +53,7 @@ async def get_users_from_db():
 # TODO: когда у лида появляется группа, то выслать ссылки на ТГ
 
 
-"""
+""" TRIAL LESSONS
 ------------------------
 """
 
@@ -119,8 +119,12 @@ async def send_reminder_message(tg_id, lesson_datetime):
         await bot.send_message(chat_id=tg_id, text=reminder_message)
     logger.info(f'Напоминание пользователю {tg_id} о пробном занятии на {lesson_datetime} отправлено.')
 
+    job_id = f'reminder_{tg_id}_{lesson_datetime.strftime("%Y%m%d%H%M")}'
+    scheduler.remove_job(job_id)
+    logger.info(f'Задача с ID {job_id} удалена из планировщика.')
 
-"""
+
+""" BIRTHDAY
 ------------------------
 """
 
@@ -203,6 +207,11 @@ async def send_birthday_message(tg_id, b_date):
         await bot.send_message(chat_id=tg_id, text=birthday_message)
 
     logger.info(f'Напоминание пользователю {tg_id} о дне рождения отправлено.')
+
+    reminder_time = b_date.replace(year=datetime.now().year, hour=10, minute=0)
+    job_id = f'birthday_reminder_{tg_id}_{reminder_time.strftime("%Y%m%d%H%M")}'
+    scheduler.remove_job(job_id)
+    logger.info(f'Задача с ID {job_id} удалена из планировщика.')
 
 
 """
