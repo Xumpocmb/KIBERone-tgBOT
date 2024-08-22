@@ -69,7 +69,11 @@ async def check_user_trial_lesson():
                 user_lessons = await get_user_trial_lesson(user_crm_id, user_branch_ids)
                 if user_lessons.get("items", []):
                     trial_lesson = user_lessons.get("items", [])[0]
+                    logger.debug(f"Пробное занятие для пользователя с ID {user_crm_id}: {trial_lesson}")
+
                     lesson_date = trial_lesson.get("date", None)
+                    logger.debug(f"Дата занятия для пользователя с ID {user_crm_id}: {lesson_date}")
+
                     lesson_time = f"{trial_lesson.get('time_from').split(' ')[1][:-3]}"
                     logger.debug(f'У пользователя {user.phone_number} есть запланированные пробные занятия на {lesson_date, lesson_time} | {type(lesson_date)}.')
                     if lesson_date and lesson_time:
@@ -107,10 +111,10 @@ async def create_trial_lesson_reminder_task(tg_id, lesson_date):
 async def send_reminder_message(tg_id, lesson_datetime):
     logger.info(f'Отправляю напоминание пользователю {tg_id} о пробном занятии на {lesson_datetime}.')
 
-    lesson_date_str = lesson_datetime.strftime('%Y-%m-%d')
+    lesson_date_str = lesson_datetime.strftime('%d.%m')
     lesson_time_str = lesson_datetime.strftime('%H:%M')
 
-    reminder_message = f"KIBERone\nНапоминание: ваше пробное занятие состоится {lesson_date_str} в {lesson_time_str}."
+    reminder_message = f"KIBERone\nНапоминание: Ваше пробное занятие состоится {lesson_date_str} в {lesson_time_str}."
     async with bot:
         await bot.send_message(chat_id=tg_id, text=reminder_message)
     logger.info(f'Напоминание пользователю {tg_id} о пробном занятии на {lesson_datetime} отправлено.')
@@ -201,19 +205,10 @@ async def send_birthday_message(tg_id, b_date):
     logger.info(f'Напоминание пользователю {tg_id} о дне рождения отправлено.')
 
 
-def remove_expired_jobs():
-    now = datetime.now(tz)
-    jobs = scheduler.get_jobs()
-    for job in jobs:
-        if job.next_run_time is None:
-            logger.warning(f'Задача {job.id} не имеет запланированного времени выполнения. Пропуск.')
-            continue
+"""
+------------------------
+"""
 
-        if isinstance(job.trigger, CronTrigger) and job.next_run_time < now:
-            logger.info(f'Удаление просроченной задачи: {job.id}')
-            scheduler.remove_job(job.id)
-
-    logger.info("Удаление просроченных задач завершено.")
 
 def setup_scheduler():
     start_scheduler()
@@ -221,14 +216,14 @@ def setup_scheduler():
         logger.info("Setting up scheduler...")
         job_ids = ['check_user_birthday']
 
-        for job in job_ids:
-            existing_job = scheduler.get_job(job)
-            if existing_job:
-                logger.info(f"Job with ID '{job}' already exists. Removing...")
-                scheduler.remove_job(job)
-                logger.info("Existing job removed.")
-            else:
-                logger.info(f"No existing job with ID '{job}' found.")
+        existing_jobs = scheduler.get_jobs()
+        if existing_jobs:
+            for job in existing_jobs:
+                logger.info(f"Removing existing job with ID '{job.id}'...")
+                scheduler.remove_job(job.id)
+            logger.info("All existing jobs removed.")
+        else:
+            logger.info("No existing jobs found.")
 
         # scheduler.add_job(
         #     update_users_info,
@@ -239,7 +234,7 @@ def setup_scheduler():
 
         scheduler.add_job(
             check_user_trial_lesson,
-            IntervalTrigger(minutes=60, start_date=datetime.now() + timedelta(minutes=80)),
+            IntervalTrigger(minutes=60, start_date=datetime.now() + timedelta(minutes=5)),
             id='check_user_trial_lesson',
             misfire_grace_time=3600,
         )
@@ -250,8 +245,6 @@ def setup_scheduler():
             id='check_user_birthday',
             misfire_grace_time=3600,
         )
-
-        remove_expired_jobs()
 
         logger.info("Jobs added successfully.")
     except Exception as e:

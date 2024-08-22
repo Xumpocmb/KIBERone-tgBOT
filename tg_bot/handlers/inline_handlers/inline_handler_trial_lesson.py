@@ -45,7 +45,7 @@ BARANOVICHI = {
 
 
 @trial_lesson_router.callback_query(F.data == 'user_trial_date')
-async def tg_links_handler(callback: CallbackQuery, session: AsyncSession):
+async def user_trial_handler(callback: CallbackQuery, session: AsyncSession):
     user_id = callback.from_user.id
     logger.debug(f"Начало обработки запроса на пробное занятие от пользователя с ID: {user_id}")
 
@@ -98,7 +98,7 @@ async def tg_links_handler(callback: CallbackQuery, session: AsyncSession):
                 logger.debug(f"Адрес занятия для пользователя с ID {user_id} после обработки: {lesson_address}")
 
             await callback.message.answer(
-                text=f'Ближайший урок: \n{lesson_day}: {lesson_time}\n{lesson_address}'
+                text=f'Пробный урок: \n{lesson_day}: {lesson_time}\n{lesson_address}'
             )
             logger.debug(f"Отправлено расписание пользователю с ID {user_id}: {lesson_day}, {lesson_time}, {lesson_address}")
         else:

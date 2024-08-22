@@ -29,20 +29,20 @@ DEBUG = os.environ.get('DEBUG')
 if DEBUG == 'dev':
     BOT_TOKEN = os.environ.get("BOT_TOKEN2")
 else:
-    BOT_TOKEN = os.environ.get("BOT_TOKEN2")
+    BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 
 async def on_startup(bot: Bot):
     logger.info('Starting bot..')
     logger.info('Creating DB..')
     await create_db()
-    # setup_scheduler()
+    setup_scheduler()
     logger.info('DB created. Bot started.')
 
 
 async def on_shutdown(bot: Bot):
     logger.info('Processing shutdown..')
-    # stop_scheduler()
+    stop_scheduler()
 
 
 async def main():
