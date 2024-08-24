@@ -5,11 +5,11 @@ button_1: InlineKeyboardButton = InlineKeyboardButton(
 )
 
 button_2: InlineKeyboardButton = InlineKeyboardButton(
-    text="Список пользователей в БД", callback_data="admin_user_list"
+    text="Список пользователей", callback_data="admin_user_list"
 )
 
 button_3: InlineKeyboardButton = InlineKeyboardButton(
-    text="Список пользователей в БД", callback_data="tasks_list"
+    text="Список задач", callback_data="tasks_list"
 )
 
 admin_main_menu_inline_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
