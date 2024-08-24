@@ -11,42 +11,61 @@ from loguru import logger
 from database.engine import create_db, session_maker
 from tg_bot.handlers import handler_main_menu
 from tg_bot.handlers import handler_start, handler_help
-from tg_bot.handlers.admin_handlers import admin_handler_user_list, admin_handler_send_all
+from tg_bot.handlers.admin_handlers import (
+    admin_handler_user_list,
+    admin_handler_send_all,
+)
 from tg_bot.handlers.inline_handlers import inline_handler_link
-from tg_bot.handlers.inline_handlers import (inline_handler_tg_links, inline_handler_main, inline_handler_faq,
-                                             inline_handler_promo, inline_handler_partner, inline_handler_contact,
-                                             inline_handler_english_platform, inline_handler_erip,
-                                             inline_handler_user_scheduler, inline_handler_trial_lesson)
+from tg_bot.handlers.inline_handlers import (
+    inline_handler_tg_links,
+    inline_handler_main,
+    inline_handler_faq,
+    inline_handler_promo,
+    inline_handler_partner,
+    inline_handler_contact,
+    inline_handler_english_platform,
+    inline_handler_erip,
+    inline_handler_user_scheduler,
+    inline_handler_trial_lesson,
+)
 from tg_bot.middlewares.middleware_antiflood import AntiFloodMiddleware
 from tg_bot.middlewares.middleware_chat_action import ChatActionMiddleware
 from tg_bot.middlewares.middleware_database import DataBaseSession
 from tg_bot.scheduler_config import setup_scheduler, stop_scheduler
 
-logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
+logger.add(
+    "debug.log",
+    format="{time} {level} {message}",
+    level="ERROR",
+    rotation="1 MB",
+    compression="zip",
+)
 
 load_dotenv()
-DEBUG = os.environ.get('DEBUG')
-if DEBUG == 'dev':
+DEBUG = os.environ.get("DEBUG")
+if DEBUG == "dev":
     BOT_TOKEN = os.environ.get("BOT_TOKEN2")
 else:
-    BOT_TOKEN = os.environ.get("BOT_TOKEN")
+    BOT_TOKEN = os.environ.get("BOT_TOKEN2")
 
 
 async def on_startup(bot: Bot):
-    logger.info('Starting bot..')
-    logger.info('Creating DB..')
+    logger.info("Starting bot..")
+    logger.info("Creating DB..")
     await create_db()
     setup_scheduler()
-    logger.info('DB created. Bot started.')
+    logger.info("DB created. Bot started.")
 
 
 async def on_shutdown(bot: Bot):
-    logger.info('Processing shutdown..')
+    logger.info("Processing shutdown..")
     stop_scheduler()
 
 
 async def main():
-    bot: Bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    bot: Bot = Bot(
+        token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+    )
     dp: Dispatcher = Dispatcher(storage=MemoryStorage())
 
     dp.startup.register(on_startup)
@@ -70,11 +89,9 @@ async def main():
         inline_handler_erip.erip_router,
         inline_handler_user_scheduler.user_scheduler_router,
         inline_handler_trial_lesson.trial_lesson_router,
-
         # admin
         admin_handler_user_list.admin_user_list_router,
         admin_handler_send_all.admin_send_all_router,
-
         # last router
         inline_handler_main.inline_main_router,
     )
