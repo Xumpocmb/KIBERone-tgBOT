@@ -140,43 +140,11 @@ async def find_user_by_phone(phone_number: str) -> dict | None:
 
             if 'items' in result:
                 all_items.extend(result['items'])
-    
-    logger.debug(f"Результат поиска: {all_items}")
     return {
             "total": total_sum,
             "count": count_sum,
             "items": all_items
         }
-
-    # if all_items:
-    #     logger.debug(f"Результат поиска: {all_items}")
-    #     return {
-    #         "total": total_sum,
-    #         "count": count_sum,
-    #         "items": all_items
-    #     }
-    # else:
-    #     return None
-
-    # for result in results:
-    #     if isinstance(result, dict) and result.get("total") != 0:
-
-    # result_dict = [result for result in results if isinstance(result, dict) and result.get("total") != 0]
-    #
-    # for response_data in results:
-    #     logger.debug(f"Результат поиска: {response_data}")
-    #     if isinstance(response_data, dict) and response_data.get("total") != 0:
-    #         return response_data
-    # return None
-
-# combined_items = json1["items"] + json2["items"]
-#
-# combined_json = {
-#     "total": json1["total"] + json2["total"],
-#     "count": len(combined_items),
-#     "page": 0,
-#     "items": combined_items
-# }
 
 
 async def send_request_to_crm(url: str, data: str, params: dict | None, token: str | None, retries: int = 3, delay: int = 5) -> dict | None:

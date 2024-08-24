@@ -68,7 +68,7 @@ async def check_user_trial_lesson():
                 for item in items:
                     if item.get("is_study", 0) == 0:
                         user_crm_id = item.get("id", None)
-                        user_branch_ids = list(map(int, item.get("branch_ids", []).split(",")))
+                        user_branch_ids: list = item.get("branch_ids", [])
                         user_lessons = await get_user_trial_lesson(user_crm_id, user_branch_ids)
                         if user_lessons.get("total", 0) > 0:
                             trial_lesson = user_lessons.get("items", [])[0]
