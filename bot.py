@@ -14,6 +14,7 @@ from tg_bot.handlers import handler_start, handler_help
 from tg_bot.handlers.admin_handlers import (
     admin_handler_user_list,
     admin_handler_send_all,
+    admin_handler_check_tasks,
 )
 from tg_bot.handlers.inline_handlers import inline_handler_link
 from tg_bot.handlers.inline_handlers import (
@@ -46,7 +47,7 @@ DEBUG = os.environ.get("DEBUG")
 if DEBUG == "dev":
     BOT_TOKEN = os.environ.get("BOT_TOKEN2")
 else:
-    BOT_TOKEN = os.environ.get("BOT_TOKEN2")
+    BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 
 async def on_startup(bot: Bot):
@@ -92,6 +93,7 @@ async def main():
         # admin
         admin_handler_user_list.admin_user_list_router,
         admin_handler_send_all.admin_send_all_router,
+        admin_handler_check_tasks.admin_tasks_list_router,
         # last router
         inline_handler_main.inline_main_router,
     )

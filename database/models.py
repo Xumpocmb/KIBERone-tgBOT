@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from sqlalchemy import LargeBinary
 from sqlalchemy import DateTime, func, JSON
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -31,7 +31,6 @@ class User(Base):
     notified: Mapped[bool] = mapped_column(default=False, nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
 
-
     def __repr__(self):
         return f"<User(id={self.id}, tg_id={self.tg_id}, username={self.username})>"
 
@@ -57,6 +56,7 @@ class FAQ(Base):
     def __repr__(self):
         return f"<FAQ(id={self.id}, question={self.question}, answer={self.answer})>"
 
+
 class Promotion(Base):
     __tablename__ = "Promotion"
 
@@ -65,7 +65,9 @@ class Promotion(Base):
     answer: Mapped[str] = mapped_column()
 
     def __repr__(self):
-        return f"<Promotion(id={self.id}, title={self.question}, content={self.answer})>"
+        return (
+            f"<Promotion(id={self.id}, title={self.question}, content={self.answer})>"
+        )
 
 
 class Partner(Base):
@@ -112,3 +114,14 @@ class Manager(Base):
 
     def __repr__(self):
         return f"<Manager(id={self.id}, city={self.branch}, manager={self.manager}, link={self.link})>"
+
+
+class SchedulerTask(Base):
+    __tablename__ = "apscheduler_jobs"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    next_run_time: Mapped[float] = mapped_column()
+    job_state: Mapped[bytes] = mapped_column(LargeBinary)
+
+    def __repr__(self):
+        return f"<Tasks(id={self.id}, name={self.task_name}, link={self.task_link})>"

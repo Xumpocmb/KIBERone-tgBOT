@@ -71,6 +71,7 @@ async def user_trial_handler(callback: CallbackQuery, session: AsyncSession):
             items = user_in_crm.get("items", [])
             for item in items:
                 if item.get("is_study", 0) == 0:
+                    user_crm_name = item.get("name", None)
                     user_crm_id = item.get("id", None)
                     user_branch_ids = item.get("branch_ids", [])
                     user_lessons = await get_user_trial_lesson(
@@ -132,14 +133,14 @@ async def user_trial_handler(callback: CallbackQuery, session: AsyncSession):
                                 )
 
                             await callback.message.answer(
-                                text=f"Пробный урок: \n{lesson_day}: {lesson_time}\n{lesson_address}"
+                                text=f"{user_crm_name} записан на пробный урок: \n{lesson_day}: {lesson_time}\n{lesson_address}"
                             )
                             logger.debug(
                                 f"Отправлено расписание пользователю с ID {user_id}: {lesson_day}, {lesson_time}, {lesson_address}"
                             )
                         else:
                             await callback.message.answer(
-                                text="В настоящее время у Вас нет занятий"
+                                text=f"У {user_crm_name} в настоящее время нет занятий."
                             )
                             logger.debug(
                                 f"Пользователь с ID {user_id} не имеет запланированных занятий"

@@ -113,10 +113,13 @@ async def find_user_in_crm(phone_number: str, callback: CallbackQuery):
 async def process_user_schedule(user_in_crm, callback: CallbackQuery, user_id: int):
     """Обработка расписания пользователя на основе данных из CRM."""
     user_crm_items = user_in_crm.get("items", [])
+    user_name_in_crm = user_in_crm.get("name", "")
     logger.debug(f"Найдено {len(user_crm_items)} записей в CRM.")
 
     if not user_crm_items:
-        await callback.message.answer('В настоящее время у Вас нет занятий')
+        await callback.message.answer(
+            f"У {user_name_in_crm} в настоящее время нет занятий."
+        )
         return
 
     for item in user_crm_items:
@@ -136,7 +139,9 @@ async def process_single_crm_item(item, callback: CallbackQuery, user_id: int):
 
     if not lessons:
         logger.debug(f"Нет занятий для CRM ID {user_crm_id}")
-        await callback.message.answer('В настоящее время у Вас нет занятий')
+        await callback.message.answer(
+            f"У {student_name} в настоящее время нет занятий."
+        )
         return
 
     await send_lesson_info(lessons[-1], student_name, callback, user_id)
@@ -185,5 +190,3 @@ def format_lesson_info(lesson, lesson_date: str) -> tuple:
             lesson_address = BARANOVICHI[lesson_address]
 
     return lesson_day, lesson_time, lesson_address
-
-

@@ -77,9 +77,6 @@ async def get_best_items(crm_client):
             # Получение уроков для клиента по элементу
             try:
                 user_lessons = await get_client_lessons(item_id, branch_ids)
-                logger.debug(
-                    f"Уроки пользователя для элемента {item_id}: {user_lessons}"
-                )
             except Exception as e:
                 logger.exception(
                     f"Ошибка при получении уроков для элемента {item_id}: {e}"

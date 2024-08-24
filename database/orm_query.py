@@ -2,7 +2,7 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
-from database.models import User, BranchesTelegramLink, Manager
+from database.models import SchedulerTask, User, BranchesTelegramLink, Manager
 
 
 async def orm_add_user(session: AsyncSession, data: dict):
@@ -123,3 +123,18 @@ async def get_manager_info(session: AsyncSession, location_id: int):
     except SQLAlchemyError as e:
         logger.error(f"Ошибка при выполнении запроса: {e}")
         return None
+
+
+async def get_tasks(session: AsyncSession):
+    try:
+        query = select(SchedulerTask)
+        result = await session.execute(query)
+        tasks = result.scalars().all()
+        logger.info(f"Получено {len(tasks)} задач.")
+        return tasks
+    except SQLAlchemyError as e:
+        logger.error(f"Ошибка при выполнении запроса: {e}")
+        return []
+    except Exception as e:
+        logger.error(f"Неизвестная ошибка при получении задач: {e}")
+        return []
