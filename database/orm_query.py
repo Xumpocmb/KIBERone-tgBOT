@@ -10,8 +10,6 @@ async def orm_add_user(session: AsyncSession, data: dict):
         user = User(
             tg_id=data.get('tg_id'),
             username=data.get('username'),
-            first_name=data.get('first_name', None),
-            last_name=data.get('last_name', None),
             phone_number=data.get('phone_number'),
             user_branch_ids = data.get("user_branch_ids"),
             user_crm_id = data.get("user_crm_id"),

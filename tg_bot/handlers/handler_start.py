@@ -146,7 +146,7 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
                     logger.debug(f"Лучшие товары для клиента: {item}")
 
                     logger.debug(
-                        "Обработка существующего пользователя.."
+                        "Обработка существующего пользователя с лучшими элементом.."
                     )
                     await process_existing_user(item, session, message, user_data)
                 else:
@@ -215,6 +215,8 @@ async def handle_contact(message: Message, session: AsyncSession):
             user_data = {
                 "tg_id": message.contact.user_id,
                 "username": message.from_user.username,
+                "first_name": message.contact.first_name,
+                "last_name": message.contact.last_name,
                 "phone_number": str(message.contact.phone_number),
             }
         except AttributeError as e:
@@ -225,7 +227,7 @@ async def handle_contact(message: Message, session: AsyncSession):
 
         # Сохранение данных в базу
         try:
-            user = orm_get_user_by_tg_id(session, tg_id=message.contact.user_id)
+            user = await orm_get_user_by_tg_id(session, tg_id=message.contact.user_id)
             if not user:
                 await save_user_data(session, user_data)
             else:
@@ -266,13 +268,13 @@ async def handle_contact(message: Message, session: AsyncSession):
         try:
             item = await get_best_items(crm_client)
         except TimeoutError as e:
-            logger.exception(f"Превышено время ожидания при получении товаров: {e}")
+            logger.exception(f"Превышено время ожидания при получении элементов: {e}")
             return await message.answer(
                 "Произошла ошибка с получением информации. Попробуйте позже."
             )
 
         # Обработка существующего клиента или создание нового
-        if crm_client:
+        if item:
             try:
                 await process_existing_user(item, session, message, user_data)
             except Exception as e:
@@ -334,10 +336,6 @@ async def process_existing_user(item, session, message, user_data):
 
     if user_data["user_lessons"]:
         await send_tg_links(message, session, user_data["tg_id"])
-    else:
-        await message.answer(
-            "Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard
-        )
 
 
 async def send_tg_links(message, session, user_id):
@@ -370,5 +368,5 @@ async def create_new_user_in_crm(user_data, session, message):
         }
     )
 
-    await save_user_data(session, user_data)
+    await update_user_data(session, user_data)
     await message.answer(greeting_message, reply_markup=main_menu_button_keyboard)

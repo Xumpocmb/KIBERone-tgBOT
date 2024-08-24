@@ -140,20 +140,26 @@ async def find_user_by_phone(phone_number: str) -> dict | None:
 
             if 'items' in result:
                 all_items.extend(result['items'])
-
-    if all_items:
-        return {
+    
+    logger.debug(f"Результат поиска: {all_items}")
+    return {
             "total": total_sum,
             "count": count_sum,
             "items": all_items
         }
-    else:
-        return None
+
+    # if all_items:
+    #     logger.debug(f"Результат поиска: {all_items}")
+    #     return {
+    #         "total": total_sum,
+    #         "count": count_sum,
+    #         "items": all_items
+    #     }
+    # else:
+    #     return None
 
     # for result in results:
     #     if isinstance(result, dict) and result.get("total") != 0:
-
-
 
     # result_dict = [result for result in results if isinstance(result, dict) and result.get("total") != 0]
     #
