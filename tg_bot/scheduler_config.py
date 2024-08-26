@@ -1,14 +1,14 @@
+import asyncio
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from apscheduler.triggers.cron import CronTrigger
-from pytz import timezone
 from aiogram import Bot
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.date import DateTrigger
+from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from loguru import logger
+from pytz import timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -38,11 +38,77 @@ async def get_users_from_db():
         return result.scalars().all()
 
 
-"""
+""" BALANCE
 ------------------------
 """
 
-# TODO: баланс пользователя в день урока
+
+async def check_user_balance():
+    all_users = await get_users_from_db()
+    for user in all_users:
+        is_admin = check_admin(int(user.tg_id))
+        if not is_admin:
+            user_in_crm = await find_user_by_phone(user.phone_number)
+            if user_in_crm.get("total", 0):
+                items = user_in_crm.get("items", [])
+                for item in items:
+                    if item.get("is_study", 0):
+                        user_balance: float = float(item.get("balance", 0.0))
+                        user.balance = user_balance
+                        user_id = item.get("id", None)
+                        next_lesson_date = item.get("next_lesson_date", None)
+                        if next_lesson_date:
+                            next_lesson_date = datetime.strptime(next_lesson_date, '%Y-%m-%d')
+                            if user_balance <= 0:
+                                await create_balance_reminder_task(user.tg_id, user_id, next_lesson_date)
+                            else:
+                                job_id = f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date}'
+                                existing_job = scheduler.get_job(job_id)
+                                if existing_job:
+                                    scheduler.remove_job(f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date}')
+
+        await asyncio.sleep(15)
+
+
+async def create_balance_reminder_task(tg_id, user_id, next_lesson_date):
+    logger.info(f'Создание задачи для пользователя {tg_id} с ID {user_id}')
+    job_id = f'balance_reminder_{tg_id}_{user_id}_{next_lesson_date}'
+    existing_job = scheduler.get_job(job_id)
+    if existing_job:
+        logger.info(
+            f'Задача для отправки напоминания пользователю {tg_id} на {next_lesson_date} уже существует.')
+        return
+
+    trigger = CronTrigger(year=next_lesson_date.year, month=next_lesson_date.month, day=next_lesson_date.day,
+                          hour=9, minute=0)
+
+    scheduler.add_job(
+        send_balance_reminder_message,
+        trigger,
+        args=[tg_id, user_id, next_lesson_date],
+        id=job_id,
+        misfire_grace_time=3600,
+    )
+
+    logger.info(f'Задача для отправки напоминания пользователю {tg_id} на {next_lesson_date} создана.')
+
+
+async def send_balance_reminder_message(tg_id, user_id, lesson_datetime):
+    logger.info(f'Отправляю напоминание пользователю {tg_id} о пробном занятии на {lesson_datetime}.')
+
+    next_lesson_date = lesson_datetime.strftime('%d.%m')
+
+    reminder_message = (
+        "Уважаемый клиент!\n"
+        "Во избежание просрочки оплаты за обучение, просим произвести оплату через ЕРИП по ссылке https://clck.ru/36h7Df или оплатить на месте.\n"
+        "Ваш KIBERone!")
+    async with bot:
+        await bot.send_message(chat_id=tg_id, text=reminder_message)
+    logger.info(f'Напоминание пользователю {tg_id} о пробном занятии на {next_lesson_date} отправлено.')
+
+    job_id = f'balance_reminder_{tg_id}_{user_id}_{next_lesson_date}'
+    scheduler.remove_job(job_id)
+    logger.info(f'Задача с ID {job_id} удалена из планировщика.')
 
 
 """
@@ -55,6 +121,7 @@ async def get_users_from_db():
 """ TRIAL LESSONS
 ------------------------
 """
+
 
 async def check_user_trial_lesson():
     users = await get_users_from_db()
@@ -78,16 +145,20 @@ async def check_user_trial_lesson():
                             logger.debug(f"Дата занятия для пользователя с ID {user_crm_id}: {lesson_date}")
 
                             lesson_time = f"{trial_lesson.get('time_from').split(' ')[1][:-3]}"
-                            logger.debug(f'У пользователя {user.phone_number} есть запланированные пробные занятия на {lesson_date, lesson_time} | {type(lesson_date)}.')
+                            logger.debug(
+                                f'У пользователя {user.phone_number} есть запланированные пробные занятия на {lesson_date, lesson_time} | {type(lesson_date)}.')
                             if lesson_date and lesson_time:
                                 lesson_datetime_str = f"{lesson_date} {lesson_time}"
                                 lesson_datetime = datetime.strptime(lesson_datetime_str, '%Y-%m-%d %H:%M')
                                 await create_trial_lesson_reminder_task(user.tg_id, user_crm_id, lesson_datetime)
-                                logger.debug(f'Задача для отправки напоминания пользователю {user.phone_number} на {lesson_date} создана.')
+                                logger.debug(
+                                    f'Задача для отправки напоминания пользователю {user.phone_number} на {lesson_date} создана.')
                             else:
-                                logger.info(f'Не удалось получить дату и время пробного занятия пользователя {user.phone_number}')
+                                logger.info(
+                                    f'Не удалось получить дату и время пробного занятия пользователя {user.phone_number}')
                         else:
                             logger.info(f'У пользователя {user.phone_number} нет запланированных пробных занятий.')
+        await asyncio.sleep(10)
 
 
 async def create_trial_lesson_reminder_task(tg_id, user_crm_id, lesson_date):
@@ -133,6 +204,7 @@ async def send_reminder_message(tg_id, lesson_datetime):
 ------------------------
 """
 
+
 async def check_user_birthday():
     """Проверка пользователей на наличие дня рождения."""
     logger.info("Запуск проверки дней рождения пользователей.")
@@ -169,10 +241,9 @@ async def check_user_birthday():
                     logger.info(f'Для пользователя {user.phone_number} нет записей о дне рождения в ЦРМ.')
             else:
                 logger.warning(f'Пользователь {user.phone_number} не найден в ЦРМ.')
-
+            await asyncio.sleep(15)
         except Exception as e:
             logger.error(f'Ошибка при обработке пользователя с телефоном {user.phone_number}: {e}')
-
     logger.info("Проверка дней рождения завершена.")
 
 
@@ -211,8 +282,8 @@ async def send_birthday_message(tg_id, b_date, crm_name):
     logger.info(f'Отправляю напоминание пользователю {tg_id} о дне рождения.')
 
     birthday_message = (f"Поздравляем {crm_name} с Днём Рождения!\n"
-        "Пусть всё получается, всё удается, ничего не зависает и не стоит на месте. Желаем, чтобы жизнь была интересной и захватывающей, чтоб не было времени на грусть и тоску, обиды и разочарования!\n"
-        "Ваш KIBERone!")
+                        "Пусть всё получается, всё удается, ничего не зависает и не стоит на месте. Желаем, чтобы жизнь была интересной и захватывающей, чтоб не было времени на грусть и тоску, обиды и разочарования!\n"
+                        "Ваш KIBERone!")
 
     async with bot:
         await bot.send_message(chat_id=tg_id, text=birthday_message)
@@ -245,23 +316,23 @@ def setup_scheduler():
         else:
             logger.info("No existing jobs found.")
 
-        # scheduler.add_job(
-        #     update_users_info,
-        #     IntervalTrigger(minutes=120, start_date=datetime.now() + timedelta(minutes=40)),
-        #     id='update_users_info',
-        #     misfire_grace_time=3600,
-        # )
+        scheduler.add_job(
+            check_user_balance,
+            IntervalTrigger(hours=24, start_date=datetime.now().replace(hour=23, minute=30)),
+            id='check_user_balance',
+            misfire_grace_time=3600,
+        )
 
         scheduler.add_job(
             check_user_trial_lesson,
-            IntervalTrigger(minutes=60, start_date=datetime.now() + timedelta(minutes=5)),
+            IntervalTrigger(hours=24, start_date=datetime.now().replace(hour=2, minute=35)),
             id='check_user_trial_lesson',
             misfire_grace_time=3600,
         )
 
         scheduler.add_job(
             check_user_birthday,
-            IntervalTrigger(days=1, start_date=datetime.now() + timedelta(minutes=40)),
+            IntervalTrigger(hours=24, start_date=datetime.now().replace(hour=5, minute=45)),
             id='check_user_birthday',
             misfire_grace_time=3600,
         )

@@ -50,44 +50,28 @@ tg_links_message = (
 
 async def get_best_items(crm_client):
     try:
-        logger.debug("Начало поиска лучших элементов для клиента.")
-
-        # Проверка на наличие элементов у клиента
         items = crm_client.get("items", [])
         if not items:
-            logger.info("У клиента отсутствуют элементы.")
             return None
 
-        # Перебор элементов и попытка найти лучший
         for item in items:
             item_id = item.get("id")
             branch_ids = item.get("branch_ids", [])
             is_study = item.get("is_study", 0)
 
-            logger.debug(
-                f"Обрабатываю элемент с ID: {item_id}, branch_ids: {branch_ids}, is_study: {is_study}"
-            )
-
-            # Получение уроков для клиента по элементу
             try:
                 user_lessons = await get_client_lessons(item_id, branch_ids)
             except Exception as e:
                 logger.exception(
                     f"Ошибка при получении уроков для элемента {item_id}: {e}"
                 )
-                continue  # Пропускаем этот элемент и идем к следующему
+                continue
 
-            # Проверка, является ли элемент обучающим
             if is_study == 1:
-                logger.info(f"Найден элемент с обучением (is_study = 1): {item_id}")
                 return item
-            # Проверка, есть ли уроки у пользователя по элементу
             elif user_lessons.get("total", 0) > 0:
-                logger.info(f"Найден элемент с уроками для пользователя: {item_id}")
                 return item
 
-        # Возврат первого элемента, если ничего подходящего не найдено
-        logger.info("Подходящие элементы не найдены, возвращаю первый элемент.")
         return items[0]
 
     except KeyError as e:
@@ -101,8 +85,8 @@ async def get_best_items(crm_client):
         return None
 
 
+
 async def handle_existing_user(message: Message, session: AsyncSession, is_admin: bool):
-    logger.debug("Начало выполнения функции handle_existing_user")
     if is_admin:
         greeting = f'Привет, {"администратор " if is_admin else ""}{message.from_user.username}!'
     else:
@@ -111,50 +95,23 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
             "tg_id": message.from_user.id,
             "username": message.from_user.username,
         }
-        logger.debug(f"Данные пользователя из сообщения: {user_data}")
-
         try:
-            logger.debug("Обновление данных пользователя в БД начинается..")
             await orm_update_user(session, user_data=user_data)
-            logger.debug(f"Пользователь с tg_id {message.from_user.id} обновлен в БД")
-
             user = await orm_get_user_by_tg_id(session, tg_id=message.from_user.id)
-            logger.debug(f"Получен пользователь из БД: {user}")
-
             if user:
                 user_data["phone_number"] = user.phone_number
-                logger.debug(f"Номер телефона пользователя: {user.phone_number}")
-
                 if user.phone_number:
-                    logger.debug(
-                        f"Поиск пользователя в CRM по номеру телефона: {user.phone_number}"
-                    )
                     crm_client = await find_user_by_phone(user.phone_number)
-                    logger.debug(f"Клиент из CRM: {crm_client}")
-
-                    logger.debug("Получение лучших элементов для пользователя..")
                     item = await get_best_items(crm_client)
-                    logger.debug(f"Лучшие товары для клиента: {item}")
-
-                    logger.debug(
-                        "Обработка существующего пользователя с лучшими элементом.."
-                    )
                     await process_existing_user(item, session, message, user_data)
                 else:
-                    logger.error(
-                        f"У пользователя с tg_id {message.from_user.id} нет номера телефона."
-                    )
+                    logger.error(f"У пользователя с tg_id {message.from_user.id} нет номера телефона.")
             else:
                 logger.error(f"Пользователь с tg_id {message.from_user.id} не найден.")
-
-            logger.debug("Данные пользователя успешно обновлены в БД.")
-
         except Exception as e:
             logger.error(f"Произошла ошибка: {e}")
-
-    logger.debug(f"Отправка приветственного сообщения: {greeting}")
     await message.answer(greeting, reply_markup=main_menu_button_keyboard)
-    logger.debug("Приветственное сообщение отправлено")
+
 
 
 async def handle_new_user(message: Message):
@@ -186,22 +143,16 @@ async def handle_new_user(message: Message):
 @start_router.message(CommandStart())
 async def start_handler(message: Message, session: AsyncSession):
     is_admin = check_admin(message.from_user.id)
-    logger.debug("Проверка пользователя в БД..")
     user = await orm_get_user_by_tg_id(session, tg_id=message.from_user.id)
     if user:
-        logger.debug("Пользователь найден в БД")
         await handle_existing_user(message, session, is_admin)
     else:
-        logger.debug("Пользователь не найден в БД")
         await handle_new_user(message)
 
 
 @start_router.message(F.contact)
 async def handle_contact(message: Message, session: AsyncSession):
     try:
-        logger.debug("Получен контакт. Обрабатываю данные...")
-
-        # Попытка собрать данные пользователя
         try:
             user_data = {
                 "tg_id": message.contact.user_id,
@@ -212,50 +163,38 @@ async def handle_contact(message: Message, session: AsyncSession):
             }
         except AttributeError as e:
             logger.exception(f"Ошибка при доступе к полям контакта: {e}")
-            return await message.answer(
-                "Произошла ошибка при обработке вашего контакта. Неверный формат данных."
-            )
+            return await message.answer("Произошла ошибка при обработке вашего контакта. Неверный формат данных.")
 
-        # Сохранение данных в базу
         try:
             user = await orm_get_user_by_tg_id(session, tg_id=message.contact.user_id)
             if not user:
                 await save_user_data(session, user_data)
             else:
                 await update_user_data(session, user_data)
-            logger.debug("Основные данные сохранены в БД.")
             await message.answer("Ваш контакт получен. Идет обработка данных...")
         except IntegrityError as e:
             logger.exception(f"Ошибка целостности данных при сохранении в БД: {e}")
-            return await message.answer(
-                "Произошла ошибка при сохранении ваших данных. Попробуйте позже."
-            )
+            return await message.answer("Произошла ошибка при сохранении ваших данных. Попробуйте позже.")
         except OperationalError as e:
             logger.exception(f"Ошибка доступа к базе данных: {e}")
-            return await message.answer(
-                "Произошла ошибка с базой данных. Попробуйте позже."
-            )
+            return await message.answer("Произошла ошибка с базой данных. Попробуйте позже.")
 
-        # Проверка, является ли пользователь администратором
         try:
             if check_admin(message.from_user.id):
                 await save_user_data(session, user_data)
                 return await message.answer(
                     "Спасибо! Ваш контакт сохранен.",
-                    reply_markup=main_menu_button_keyboard,
-                )
+                    reply_markup=main_menu_button_keyboard)
         except Exception as e:
             logger.exception(f"Ошибка при проверке пользователя на администратора: {e}")
             return await message.answer("Произошла ошибка при проверке вашего статуса.")
 
-        # Обработка CRM клиента
         try:
             crm_client = await find_user_by_phone(user_data["phone_number"])
         except ConnectionError as e:
             logger.exception(f"Ошибка при подключении к CRM: {e}")
             return await message.answer("Ошибка связи с CRM. Попробуйте позже.")
 
-        # Получение лучших элементов для клиента
         try:
             item = await get_best_items(crm_client)
         except TimeoutError as e:
@@ -264,7 +203,6 @@ async def handle_contact(message: Message, session: AsyncSession):
                 "Произошла ошибка с получением информации. Попробуйте позже."
             )
 
-        # Обработка существующего клиента или создание нового
         if item:
             try:
                 await process_existing_user(item, session, message, user_data)
@@ -297,6 +235,7 @@ async def handle_contact(message: Message, session: AsyncSession):
         await message.answer(
             "Произошла ошибка при обработке вашего контакта. Попробуйте позже."
         )
+
 
 
 async def save_user_data(session, user_data):

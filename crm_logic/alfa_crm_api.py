@@ -107,7 +107,6 @@ async def find_user_by_phone(phone_number: str) -> dict | None:
     token = await login_to_alfa_crm()
 
     async def fetch_data(branch: str, status: int) -> dict | None:
-        logger.debug(f"Поиск пользователя в филиале: {branch}")
         data = {"is_study": status, "page": 0, "phone": phone_number}
         data = json.dumps(data)
         url = f"https://{CRM_HOSTNAME}/v2api/{branch}/customer/index"
@@ -127,10 +126,8 @@ async def find_user_by_phone(phone_number: str) -> dict | None:
 
     for result in results:
         if isinstance(result, dict):
-
             total_sum += result.get('total', 0)
             count_sum += result.get('count', 0)
-
             if 'items' in result:
                 all_items.extend(result['items'])
     return {
@@ -154,6 +151,9 @@ async def send_request_to_crm(url: str, data: str, params: dict | None, token: s
                             return await response.json()
                         elif response.status == 401:
                             logger.error(f"Неверный токен: {response.status} - {await response.text()}")
+                            return None
+                        elif response.status == 429:
+                            logger.error(f"Слишком много запросов: {response.status} - {await response.text()}")
                             return None
                         else:
                             logger.error(f"Ошибка запроса: {response.status} - {await response.text()}")
