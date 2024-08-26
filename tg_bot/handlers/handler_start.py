@@ -255,7 +255,7 @@ async def handle_contact(message: Message, session: AsyncSession):
             logger.exception(f"Ошибка при подключении к CRM: {e}")
             return await message.answer("Ошибка связи с CRM. Попробуйте позже.")
 
-        # Получение лучших товаров для клиента
+        # Получение лучших элементов для клиента
         try:
             item = await get_best_items(crm_client)
         except TimeoutError as e:
@@ -327,6 +327,10 @@ async def process_existing_user(item, session, message, user_data):
 
     if user_data["user_lessons"]:
         await send_tg_links(message, session, user_data["tg_id"])
+    else:
+        await message.answer(
+            "Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard
+        )
 
 
 async def send_tg_links(message, session, user_id):
