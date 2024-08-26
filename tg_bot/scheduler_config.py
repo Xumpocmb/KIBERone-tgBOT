@@ -178,7 +178,11 @@ async def check_user_birthday():
 
 async def create_birthday_reminder_task(tg_id, b_date, crm_name, crm_id):
     """Создание задачи для напоминания о дне рождения."""
+
+    now = datetime.now()
     reminder_time = b_date.replace(year=datetime.now().year, hour=10, minute=0)
+    if reminder_time < now:
+        reminder_time = reminder_time.replace(year=now.year + 1)
     job_id = f'birthday_reminder_{tg_id}_{crm_id}_{reminder_time.strftime("%Y%m%d%H%M")}'
     existing_job = scheduler.get_job(job_id)
 
