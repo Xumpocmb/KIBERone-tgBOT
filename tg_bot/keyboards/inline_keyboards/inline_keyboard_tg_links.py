@@ -10,14 +10,6 @@ from crm_logic.alfa_crm_api import (
 )
 from database.orm_query import get_branch_tg_link, orm_get_user_by_tg_id
 
-logger.add(
-    "debug.log",
-    format="{time} {level} {message}",
-    level="ERROR",
-    rotation="1 MB",
-    compression="zip",
-)
-
 
 async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int, include_back_button: bool = True) -> InlineKeyboardMarkup:
     buttons = [

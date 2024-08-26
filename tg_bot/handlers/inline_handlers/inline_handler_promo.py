@@ -14,7 +14,6 @@ from tg_bot.middlewares.middleware_database import DataBaseSession
 
 from loguru import logger
 
-logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
 
 promo_router: Router = Router()
 promo_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))

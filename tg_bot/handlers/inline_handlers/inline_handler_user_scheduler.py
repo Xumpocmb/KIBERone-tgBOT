@@ -14,7 +14,6 @@ from tg_bot.filters.filter_admin import check_admin
 from tg_bot.handlers.handler_main_menu import get_user_keyboard
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
-logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
 
 user_scheduler_router: Router = Router()
 user_scheduler_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))

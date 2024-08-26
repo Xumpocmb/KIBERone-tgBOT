@@ -28,6 +28,7 @@ from tg_bot.handlers.inline_handlers import (
     inline_handler_erip,
     inline_handler_user_scheduler,
     inline_handler_trial_lesson,
+    inline_handler_crm_balance,
 )
 from tg_bot.middlewares.middleware_antiflood import AntiFloodMiddleware
 from tg_bot.middlewares.middleware_chat_action import ChatActionMiddleware
@@ -90,6 +91,7 @@ async def main():
         inline_handler_erip.erip_router,
         inline_handler_user_scheduler.user_scheduler_router,
         inline_handler_trial_lesson.trial_lesson_router,
+        inline_handler_crm_balance.crm_balance_router,
         # admin
         admin_handler_user_list.admin_user_list_router,
         admin_handler_send_all.admin_send_all_router,

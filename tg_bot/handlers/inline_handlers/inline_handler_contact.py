@@ -10,7 +10,6 @@ from database.engine import session_maker
 from database.orm_query import orm_get_user_by_tg_id, get_manager_info
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
-logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
 
 
 manager_contact_router: Router = Router()

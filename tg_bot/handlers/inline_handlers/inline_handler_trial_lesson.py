@@ -10,13 +10,6 @@ from database.engine import session_maker
 from database.orm_query import orm_get_user_by_tg_id
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
-logger.add(
-    "debug.log",
-    format="{time} {level} {message}",
-    level="ERROR",
-    rotation="1 MB",
-    compression="zip",
-)
 
 trial_lesson_router: Router = Router()
 trial_lesson_router.callback_query.middleware(

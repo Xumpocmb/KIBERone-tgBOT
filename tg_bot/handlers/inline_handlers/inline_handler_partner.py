@@ -16,9 +16,7 @@ from tg_bot.middlewares.middleware_database import DataBaseSession
 partner_router: Router = Router()
 partner_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))
 
-logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
 
-# главное меню раздела Partner
 @partner_router.callback_query(F.data == 'partner')
 async def process_button_partner_press(callback: CallbackQuery, session: AsyncSession):
     user_id = callback.from_user.id
@@ -45,7 +43,6 @@ async def process_button_partner_press(callback: CallbackQuery, session: AsyncSe
         logger.error(f"Неизвестная ошибка при обработке запроса партнера от пользователя с ID {user_id}: {e}")
 
 
-# пункт раздела наши партнеры
 @partner_router.callback_query(F.data.startswith('partner-'))
 async def process_button_partner_question_press(callback: CallbackQuery, session: AsyncSession):
     user_id = callback.from_user.id

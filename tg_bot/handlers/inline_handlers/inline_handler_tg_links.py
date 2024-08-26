@@ -13,7 +13,7 @@ from tg_bot.middlewares.middleware_database import DataBaseSession
 
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_tg_links import make_tg_links_inline_keyboard
 
-logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
+
 inline_tg_links_router: Router = Router()
 inline_tg_links_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))
 

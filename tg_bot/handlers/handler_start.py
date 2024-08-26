@@ -24,13 +24,7 @@ from tg_bot.keyboards.inline_keyboards.inline_keyboard_tg_links import (
 from tg_bot.keyboards.keyboard_send_contact import contact_keyboard
 from tg_bot.keyboards.keyboard_start import main_menu_button_keyboard
 
-logger.add(
-    "debug.log",
-    format="{time} {level} {message}",
-    level="DEBUG",
-    rotation="1 MB",
-    compression="zip",
-)
+
 start_router: Router = Router()
 
 

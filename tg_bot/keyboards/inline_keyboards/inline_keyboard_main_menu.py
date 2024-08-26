@@ -56,6 +56,9 @@ button_14: InlineKeyboardButton = InlineKeyboardButton(
     text='Главный новостной канал KIBERone',
     url='https://t.me/kiberone_bel')
 
+button_15: InlineKeyboardButton = InlineKeyboardButton(
+    text='Узнать баланс',
+    callback_data='crm_balance')
 
 main_menu_inline_keyboard_for_client: InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -88,6 +91,9 @@ main_menu_inline_keyboard_for_client: InlineKeyboardMarkup = InlineKeyboardMarku
         ],
         [
             button_12
+        ],
+        [
+            button_15
         ],
     ]
 )

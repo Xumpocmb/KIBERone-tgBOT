@@ -13,7 +13,6 @@ from tg_bot.middlewares.middleware_database import DataBaseSession
 inline_main_router: Router = Router()
 inline_main_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))
 
-logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
 
 
 @inline_main_router.callback_query(F.data == 'inline_main')

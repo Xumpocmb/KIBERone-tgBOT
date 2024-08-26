@@ -7,7 +7,6 @@ from tg_bot.keyboards.inline_keyboards.inline_back_to_main import back_to_main_i
 
 english_platform_router: Router = Router()
 
-logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
 
 
 @english_platform_router.callback_query(F.data == 'english_platform')

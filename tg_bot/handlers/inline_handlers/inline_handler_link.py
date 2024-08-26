@@ -8,7 +8,6 @@ from tg_bot.keyboards.inline_keyboards.inline_keyboard_link import make_inline_l
 
 button_link_router: Router = Router()
 
-logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
 
 
 @button_link_router.callback_query(F.data == 'link')
