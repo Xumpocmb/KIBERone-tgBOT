@@ -82,7 +82,7 @@ async def check_user_trial_lesson():
                             if lesson_date and lesson_time:
                                 lesson_datetime_str = f"{lesson_date} {lesson_time}"
                                 lesson_datetime = datetime.strptime(lesson_datetime_str, '%Y-%m-%d %H:%M')
-                                await create_trial_lesson_reminder_task(user.tg_id, lesson_datetime)
+                                await create_trial_lesson_reminder_task(user.tg_id, user_crm_id, lesson_datetime)
                                 logger.debug(f'Задача для отправки напоминания пользователю {user.phone_number} на {lesson_date} создана.')
                             else:
                                 logger.info(f'Не удалось получить дату и время пробного занятия пользователя {user.phone_number}')
@@ -90,8 +90,8 @@ async def check_user_trial_lesson():
                             logger.info(f'У пользователя {user.phone_number} нет запланированных пробных занятий.')
 
 
-async def create_trial_lesson_reminder_task(tg_id, lesson_date):
-    job_id = f'reminder_{tg_id}_{lesson_date.strftime("%Y%m%d%H%M")}'
+async def create_trial_lesson_reminder_task(tg_id, user_crm_id, lesson_date):
+    job_id = f'trial_reminder_{tg_id}_{user_crm_id}_{lesson_date.strftime("%Y%m%d%H%M")}'
     existing_job = scheduler.get_job(job_id)
 
     if existing_job:
@@ -158,10 +158,11 @@ async def check_user_birthday():
                     for item in crm_user_items:
                         crm_user_birthday_str = item.get("dob", "")
                         crm_name = item.get("name", "")
+                        crm_id = item.get("id", 0)
                         if crm_user_birthday_str:
                             crm_user_birthday = datetime.strptime(crm_user_birthday_str, '%d.%m.%Y')
                             logger.info(f'Дата рождения для пользователя {user.phone_number}: {crm_user_birthday}')
-                            await create_birthday_reminder_task(user.tg_id, crm_user_birthday, crm_name)
+                            await create_birthday_reminder_task(user.tg_id, crm_user_birthday, crm_name, crm_id)
                         else:
                             logger.warning(f'Пользователь {user.phone_number} не имеет даты рождения в ЦРМ.')
                 else:
@@ -175,10 +176,10 @@ async def check_user_birthday():
     logger.info("Проверка дней рождения завершена.")
 
 
-async def create_birthday_reminder_task(tg_id, b_date, crm_name):
+async def create_birthday_reminder_task(tg_id, b_date, crm_name, crm_id):
     """Создание задачи для напоминания о дне рождения."""
     reminder_time = b_date.replace(year=datetime.now().year, hour=10, minute=0)
-    job_id = f'birthday_reminder_{tg_id}_{reminder_time.strftime("%Y%m%d%H%M")}'
+    job_id = f'birthday_reminder_{tg_id}_{crm_id}_{reminder_time.strftime("%Y%m%d%H%M")}'
     existing_job = scheduler.get_job(job_id)
 
     if existing_job:
