@@ -58,7 +58,7 @@ async def check_user_balance():
                         user_id = item.get("id", None)
                         next_lesson_date = item.get("next_lesson_date", None)
                         if next_lesson_date:
-                            next_lesson_date = datetime.strptime(next_lesson_date, '%Y-%m-%d')
+                            next_lesson_date = datetime.strptime(next_lesson_date, '%Y-%m-%d %H:%M:%S')
                             if user_balance <= 0:
                                 await create_balance_reminder_task(user.tg_id, user_id, next_lesson_date)
                             else:
