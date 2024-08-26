@@ -8,10 +8,6 @@ button_2: InlineKeyboardButton = InlineKeyboardButton(
     text='Оплата по ЕРИП',
     callback_data='erip_payment')
 
-button_3: InlineKeyboardButton = InlineKeyboardButton(
-    text='Назначить отработку',
-    callback_data='contact_manager')
-
 button_4: InlineKeyboardButton = InlineKeyboardButton(
     text='Платформа английского Lim English',
     callback_data='english_platform')
@@ -69,9 +65,6 @@ main_menu_inline_keyboard_for_client: InlineKeyboardMarkup = InlineKeyboardMarku
             button_2
         ],
         [
-            button_3
-        ],
-        [
             button_4
         ],
         [
@@ -105,9 +98,6 @@ main_menu_inline_keyboard_for_lead_with_group: InlineKeyboardMarkup = InlineKeyb
         ],
         [
             button_2
-        ],
-        [
-            button_3
         ],
         [
             button_5

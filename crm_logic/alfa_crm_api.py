@@ -22,13 +22,6 @@ else:
     CRM_EMAIL = os.getenv("CRM_EMAIL")
     CRM_API_KEY = os.getenv("CRM_API_KEY")
 
-logger.add(
-    "debug.log",
-    format="{time} {level} {message}",
-    level="ERROR",
-    rotation="1 MB",
-    compression="zip",
-)
 
 headers = {
     "Content-Type": "application/json",

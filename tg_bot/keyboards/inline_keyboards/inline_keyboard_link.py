@@ -7,7 +7,6 @@ from database.engine import session_maker
 from database.models import Link
 
 from loguru import logger
-logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
 
 
 async def make_inline_link_kb() -> InlineKeyboardMarkup:

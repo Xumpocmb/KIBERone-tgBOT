@@ -62,7 +62,11 @@ async def add_group_links(session: AsyncSession, user_branch_ids: list, user_crm
                 logger.debug("Получение ссылки на группу из БД..")
                 group_link = await get_group_link_from_crm(branch_id, group_id)
                 if group_link:
-                    buttons.append(InlineKeyboardButton(text="Чат группы", url=str(group_link)))
+                    logger.debug("Формирование кнопки..")
+                    if group_link.startswith("https://t.me/"):
+                        buttons.append(InlineKeyboardButton(text="Чат группы", url=str(group_link)))
+                    else:
+                        logger.error(f"Не сформировать кнопку на группу {group_id} для пользователя {phone_number}")
                 else:
                     logger.error(f"Не удалось получить ссылку на группу {group_id} для пользователя {phone_number}")
         else:

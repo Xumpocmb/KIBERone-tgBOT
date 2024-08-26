@@ -30,19 +30,15 @@ async def balance_handler(callback: CallbackQuery, session: AsyncSession):
                     user_balance = item.get("balance", 0)
                     user_paid_count = item.get("paid_count", 0)
                     user_paid_till = item.get("paid_till", None)
-                    user_next_lesson_date = item.get("next_lesson_date", None)
 
                     text_message = (
                         f"<b>{user_name}</b>\n"
                         f"Ваш баланс: <b>{user_balance}</b> руб.\n"
                         f"Количество оплаченных занятий: <b>{user_paid_count}</b>\n"
-                        f"'Оплачено до: <b>{user_paid_till}</b>'\n"
                     )
 
                     if user_paid_till:
-                        text_message += f"Оплачено до: <b>{user_paid_till}</b>\n"
-                    else:
-                        text_message += f"Вам необходимо оплатить занятия до: <b>{user_next_lesson_date}</b>\n"
+                        text_message += f"'Оплачено до: <b>{user_paid_till}</b>'\n"
 
                     await callback.message.answer(text_message, reply_markup=main_menu_button_keyboard)
     except Exception as e:

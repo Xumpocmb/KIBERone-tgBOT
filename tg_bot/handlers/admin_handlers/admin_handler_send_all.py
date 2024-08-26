@@ -15,13 +15,6 @@ from aiogram.fsm.state import StatesGroup, State
 class BroadcastStates(StatesGroup):
     waiting_for_text = State()
 
-logger.add(
-    "debug.log",
-    format="{time} {level} {message}",
-    level="ERROR",
-    rotation="1 MB",
-    compression="zip",
-)
 
 admin_send_all_router: Router = Router()
 admin_send_all_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))

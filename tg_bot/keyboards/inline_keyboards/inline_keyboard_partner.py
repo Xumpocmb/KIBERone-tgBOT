@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import Partner
 
 from loguru import logger
-logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
+
 
 
 async def make_inline_partner_kb(session: AsyncSession) -> InlineKeyboardMarkup:
