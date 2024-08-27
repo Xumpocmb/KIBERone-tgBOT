@@ -264,7 +264,7 @@ async def create_birthday_reminder_task(tg_id, b_date, crm_name, crm_id):
     # trigger_time = datetime.now() + timedelta(seconds=10)
     # trigger = DateTrigger(run_date=trigger_time)
 
-    trigger = CronTrigger(year=datetime.now().year, month=reminder_time.month, day=reminder_time.day,
+    trigger = CronTrigger(year=reminder_time.year, month=reminder_time.month, day=reminder_time.day,
                           hour=reminder_time.hour, minute=reminder_time.minute)
     scheduler.add_job(
         send_birthday_message,
