@@ -40,9 +40,6 @@ async def process_button_erip_press(callback: CallbackQuery):
         await callback.message.answer(text=formatted_text, reply_markup=back_to_main_inline)
         logger.info(f"Отправлено сообщение пользователю {callback.from_user.id} с инструкциями по оплате через ЕРИП.")
 
-        await callback.message.delete()
-        logger.info(f"Сообщение удалено у пользователя {callback.from_user.id}.")
-
         await callback.answer()
         logger.debug(f"Подтверждение нажатия кнопки отправлено пользователю {callback.from_user.id}.")
     except Exception as e:
