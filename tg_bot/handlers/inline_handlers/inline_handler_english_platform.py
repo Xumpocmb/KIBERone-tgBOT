@@ -1,12 +1,13 @@
 from aiogram import F
 from aiogram import Router
 from aiogram.types import CallbackQuery, FSInputFile
-from loguru import logger
 
+from logger_config import get_logger
 from tg_bot.keyboards.inline_keyboards.inline_back_to_main import back_to_main_inline
 
-english_platform_router: Router = Router()
+logger = get_logger()
 
+english_platform_router: Router = Router()
 
 
 @english_platform_router.callback_query(F.data == 'english_platform')

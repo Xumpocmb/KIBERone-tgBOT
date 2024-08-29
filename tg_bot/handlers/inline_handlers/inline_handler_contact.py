@@ -1,22 +1,22 @@
 from aiogram import F
 from aiogram import Router
 from aiogram.types import CallbackQuery
-from loguru import logger
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from crm_logic.alfa_crm_api import get_client_lessons
 from database.engine import session_maker
 from database.orm_query import orm_get_user_by_tg_id, get_manager_info
+from logger_config import get_logger
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
-
+logger = get_logger()
 
 manager_contact_router: Router = Router()
 manager_contact_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))
 
 
-@manager_contact_router.callback_query(F.data=='contact_manager' or F.data == 'work_off')
+@manager_contact_router.callback_query(F.data == 'contact_manager' or F.data == 'work_off')
 async def process_button_manager_contact_press(callback: CallbackQuery, session: AsyncSession):
     try:
         logger.info(f"Начало обработки нажатия кнопки от пользователя {callback.from_user.id}")

@@ -1,11 +1,13 @@
+from aiogram import F
 from aiogram import Router
 from aiogram.types import CallbackQuery
-from loguru import logger
-from aiogram import F
+
+from logger_config import get_logger
 from tg_bot.keyboards.inline_keyboards.inline_back_to_main import back_to_main_inline
 
-erip_router: Router = Router()
+logger = get_logger()
 
+erip_router: Router = Router()
 
 
 @erip_router.callback_query(F.data == "erip_payment")

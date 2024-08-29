@@ -1,6 +1,5 @@
 from aiogram import Router, F
 from aiogram.types import Message
-from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from aiogram.filters import Command
 from crm_logic.alfa_crm_api import find_user_by_phone, get_client_lessons
@@ -10,6 +9,10 @@ from tg_bot.keyboards.inline_keyboards.inline_admin_main_menu import admin_main_
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_main_menu import main_menu_inline_keyboard_for_client, \
     main_menu_inline_keyboard_for_lead_with_group, main_menu_inline_keyboard_for_lead_without_group
 
+
+from logger_config import get_logger
+
+logger = get_logger()
 
 main_menu_router: Router = Router()
 

@@ -1,12 +1,12 @@
-from aiogram.types import (
-    InlineKeyboardButton, InlineKeyboardMarkup,
-)
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy import select
 
 from database.engine import session_maker
 from database.models import Link
 
-from loguru import logger
+from logger_config import get_logger
+
+logger = get_logger()
 
 
 async def make_inline_link_kb() -> InlineKeyboardMarkup:

@@ -9,11 +9,11 @@ from sqlalchemy.sql.operators import eq
 
 from database.engine import session_maker
 from database.models import Promotion
+from logger_config import get_logger
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_promo import make_inline_promo_kb
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
-from loguru import logger
-
+logger = get_logger()
 
 promo_router: Router = Router()
 promo_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))
@@ -90,5 +90,3 @@ async def process_button_promo_question_press(callback: CallbackQuery, session: 
         logger.error(f"Неизвестная ошибка при обработке запроса на акцию от пользователя с ID {user_id}: {e}")
         await callback.message.answer(text="Произошла непредвиденная ошибка. Пожалуйста, попробуйте позже.")
         await callback.answer()
-
-

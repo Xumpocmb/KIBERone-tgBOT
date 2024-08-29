@@ -6,7 +6,6 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from dotenv import load_dotenv
-from loguru import logger
 
 from database.engine import create_db, session_maker
 from tg_bot.handlers import handler_main_menu
@@ -35,13 +34,9 @@ from tg_bot.middlewares.middleware_chat_action import ChatActionMiddleware
 from tg_bot.middlewares.middleware_database import DataBaseSession
 from tg_bot.scheduler_config import setup_scheduler, stop_scheduler
 
-logger.add(
-    "debug.log",
-    format="{time} {level} {message}",
-    level="ERROR",
-    rotation="1 MB",
-    compression="zip",
-)
+from logger_config import get_logger
+
+logger = get_logger()
 
 load_dotenv()
 DEBUG = os.environ.get("DEBUG")

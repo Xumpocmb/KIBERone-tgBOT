@@ -4,7 +4,6 @@ from aiogram import F
 from aiogram import Router
 from aiogram.types import CallbackQuery
 
-from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from crm_logic.alfa_crm_api import find_user_by_phone, get_client_lessons
@@ -14,6 +13,10 @@ from tg_bot.filters.filter_admin import check_admin
 from tg_bot.handlers.handler_main_menu import get_user_keyboard
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
+
+from logger_config import get_logger
+
+logger = get_logger()
 
 user_scheduler_router: Router = Router()
 user_scheduler_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))

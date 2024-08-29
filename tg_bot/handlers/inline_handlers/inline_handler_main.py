@@ -2,17 +2,18 @@ from aiogram import F
 from aiogram import Router
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import CallbackQuery
-from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import session_maker
+from logger_config import get_logger
 from tg_bot.filters.filter_admin import check_admin
 from tg_bot.handlers.handler_main_menu import get_user_keyboard
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
+logger = get_logger()
+
 inline_main_router: Router = Router()
 inline_main_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))
-
 
 
 @inline_main_router.callback_query(F.data == 'inline_main')
@@ -41,7 +42,6 @@ async def process_button_inline_back_to_main(callback: CallbackQuery, session: A
             logger.debug(f"Подтверждение нажатия кнопки отправлено пользователю {user_id}.")
         except Exception as e:
             logger.error(f"Ошибка при обработке кнопки 'inline_back_to_main' для пользователя {user_id}: {e}")
-
 
 
 @inline_main_router.callback_query()

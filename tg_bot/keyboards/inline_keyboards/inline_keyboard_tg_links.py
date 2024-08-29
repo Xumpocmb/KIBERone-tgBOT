@@ -1,14 +1,13 @@
-from aiogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
-from loguru import logger
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from crm_logic.alfa_crm_api import (
-    get_user_groups_from_crm, get_group_link_from_crm,
-)
+from crm_logic.alfa_crm_api import get_user_groups_from_crm, get_group_link_from_crm
 from database.orm_query import get_branch_tg_link, orm_get_user_by_tg_id
+
+from logger_config import get_logger
+
+logger = get_logger()
 
 
 async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int, include_back_button: bool = True) -> InlineKeyboardMarkup:

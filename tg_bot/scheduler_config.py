@@ -7,7 +7,6 @@ from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
-from loguru import logger
 from pytz import timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -17,6 +16,10 @@ from crm_logic.alfa_crm_api import find_user_by_phone, get_user_trial_lesson
 from database.engine import session_maker
 from database.models import User
 from tg_bot.filters.filter_admin import check_admin
+
+from logger_config import get_logger
+
+logger = get_logger()
 
 engine = create_async_engine("sqlite+aiosqlite:///tg_bot_Database.db", echo=True)
 Session = async_sessionmaker(bind=engine, expire_on_commit=False)

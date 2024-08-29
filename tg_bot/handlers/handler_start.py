@@ -5,7 +5,7 @@ from sqlite3 import IntegrityError, OperationalError
 from aiogram import Router, F
 from aiogram.filters import CommandStart
 from aiogram.types import Message
-from loguru import logger
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from aiogram.exceptions import TelegramBadRequest, TelegramNetworkError
 from sqlalchemy.exc import IntegrityError, OperationalError
@@ -24,13 +24,19 @@ from tg_bot.keyboards.inline_keyboards.inline_keyboard_tg_links import (
 from tg_bot.keyboards.keyboard_send_contact import contact_keyboard
 from tg_bot.keyboards.keyboard_start import main_menu_button_keyboard
 
+from logger_config import get_logger
+
+logger = get_logger()
+
 
 start_router: Router = Router()
 
 
 greeting_message = (
     "Вас приветствует Международная КиберШкола программирования KIBERone!\n"
-    "Если вы зашли в этот чат-бот, то мы уверены, что вы заинтересованы в будущем вашего ребенка и знаете, что изучать программирование сегодня –это даже уже не модно, а НУЖНО! И Вы на правильном пути, ведь мы точно знаем, чему учить детей, чтобы это было актуально через 20 лет!\n"
+    "Если вы зашли в этот чат-бот, то мы уверены, что вы заинтересованы в будущем вашего ребенка и знаете, "
+    "что изучать программирование сегодня –это даже уже не модно, а НУЖНО! И Вы на правильном пути, ведь мы точно "
+    "знаем, чему учить детей, чтобы это было актуально через 20 лет!\n"
     "Мы уже получили ваш контакт, и наши лучшие менеджеры уже спорят, кто первый Вам позвонит!\n"
     "Но, вы можете сами нам позвонить по номеру +375(29)633-27-79 и уточнить все интересующие вопросы о KIBERone."
 )

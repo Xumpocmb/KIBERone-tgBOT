@@ -1,13 +1,12 @@
-from aiogram.types import (
-    InlineKeyboardButton, InlineKeyboardMarkup,
-)
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import FAQ
 
-from loguru import logger
-logger.add("debug.log", format="{time} {level} {message}", level="ERROR", rotation="1 MB", compression="zip")
+from logger_config import get_logger
+
+logger = get_logger()
 
 
 async def make_inline_faq_kb(session: AsyncSession) -> InlineKeyboardMarkup:

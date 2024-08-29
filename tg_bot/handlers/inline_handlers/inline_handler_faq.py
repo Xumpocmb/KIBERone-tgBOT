@@ -2,19 +2,20 @@ from aiogram import F
 from aiogram import Router
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import CallbackQuery, FSInputFile
-from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import session_maker
 from database.models import FAQ
+from logger_config import get_logger
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_faq import make_inline_faq_kb
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
+logger = get_logger()
+
 faq_router: Router = Router()
 faq_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))
-
 
 
 @faq_router.callback_query(F.data == 'FAQ')

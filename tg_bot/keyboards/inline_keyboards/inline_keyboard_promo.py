@@ -1,13 +1,13 @@
-from aiogram.types import (
-    InlineKeyboardButton, InlineKeyboardMarkup,
-)
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Promotion
 
-from loguru import logger
+from logger_config import get_logger
+
+logger = get_logger()
 
 
 
