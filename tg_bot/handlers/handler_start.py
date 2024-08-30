@@ -324,7 +324,10 @@ async def process_existing_user(item, session, message, user_data):
 
 async def send_tg_links(message, session, user_id):
     logger.debug("Отправка ссылок на TG.")
-    await message.answer("Подготавливаем ссылки... Ожидайте!")
+    await message.answer("Сейчас мы для Вас подготавливаем ссылки... Ожидайте!😊\n"
+                         "Это займет немного времени (меньше 30 секунд)\n"
+                         "Если бот не ответил за это время - нажмите команду /start еще раз, пожалуйста!⚡️")
+
     await message.answer(
         tg_links_message,
         reply_markup=await make_tg_links_inline_keyboard(
@@ -332,7 +335,7 @@ async def send_tg_links(message, session, user_id):
         ),
     )
     await message.answer(
-        "Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard
+        "Мы поколдовали, и все готово! ✨", reply_markup=main_menu_button_keyboard
     )
 
 
