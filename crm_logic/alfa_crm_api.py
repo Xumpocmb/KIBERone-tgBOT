@@ -42,7 +42,8 @@ async def login_to_alfa_crm() -> str | None:
 
     data = json.dumps(data)
     url = f"https://{CRM_HOSTNAME}/v2api/auth/login"
-
+    delay = random.uniform(0.3, 0.7)
+    await asyncio.sleep(delay)
     async with aiohttp.ClientSession() as session:
         try:
             async with session.post(url, headers=headers, data=data) as response:
@@ -53,7 +54,6 @@ async def login_to_alfa_crm() -> str | None:
                 if token_from_response:
                     logger.debug(f"Токен получен: {token_from_response}")
                     logger.debug("Пауза между запросами в 0.5 сек..")
-                    await asyncio.sleep(0.5)
                     return token_from_response
                 else:
                     logger.debug("Токен не найден в ответе сервера.")
@@ -113,7 +113,7 @@ async def find_user_by_phone(phone_number: str) -> dict | None:
         data = json.dumps(data)
         url = f"https://{CRM_HOSTNAME}/v2api/{branch}/customer/index"
 
-        delay = random.uniform(0.5, 1.0)
+        delay = random.uniform(0.3, 0.7)
         logger.debug(f"Задержка перед запросом: {delay:.2f} секунд.")
         await asyncio.sleep(delay)
 
