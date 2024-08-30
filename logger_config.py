@@ -6,7 +6,7 @@ logger.remove()
 logger.add(
     sys.stderr,
     format="{time} {level} {file}:{line} {message}",
-    level="INFO"
+    level="DEBUG",
 )
 logger.add(
     "bot.log",

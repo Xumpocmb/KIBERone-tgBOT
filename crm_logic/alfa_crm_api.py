@@ -1,7 +1,7 @@
 import asyncio
 import json
 import os
-from time import sleep
+import random
 
 import aiohttp
 from dotenv import load_dotenv
@@ -59,20 +59,13 @@ async def login_to_alfa_crm() -> str | None:
                     logger.debug("Токен не найден в ответе сервера.")
                     return None
         except aiohttp.ClientResponseError as e:
-            logger.error(f"Произошла ошибка HTTP-ответа: {e.status} {e.message}")
-            return None
+            logger.error(f"HTTP ошибка: {e.status} {e.message}")
         except aiohttp.ClientError as e:
-            logger.error(f"Произошла ошибка клиента aiohttp: {e}")
-            return None
-        except aiohttp.ClientConnectorError as e:
-            logger.error(f"Произошла ошибка соединения клиента aiohttp: {e}")
-            return None
-        except aiohttp.ClientOSError as e:
-            logger.error(f"Произошла ошибка ОС клиента aiohttp: {e}")
-            return None
+            logger.error(f"Ошибка клиента aiohttp: {e}")
         except Exception as e:
-            logger.error(f"Произошла непредвиденная ошибка: {e}")
-            return None
+            logger.error(f"Непредвиденная ошибка: {e}")
+        return None
+
 
 
 async def create_user_in_alfa_crm(user_data: dict):
@@ -104,19 +97,40 @@ async def create_user_in_alfa_crm(user_data: dict):
 
 
 async def find_user_by_phone(phone_number: str) -> dict | None:
+    logger.debug(f"Ищем пользователя по номеру телефона: {phone_number}")
+
     token = await login_to_alfa_crm()
+    if not token:
+        logger.error("Не удалось получить токен.")
+        return None
+
+    logger.debug("Токен успешно получен.")
 
     async def fetch_data(branch: str, status: int) -> dict | None:
+        logger.debug(f"Запрос данных для филиала: {branch}, статус: {status}")
+
         data = {"is_study": status, "page": 0, "phone": phone_number}
         data = json.dumps(data)
         url = f"https://{CRM_HOSTNAME}/v2api/{branch}/customer/index"
-        return await send_request_to_crm(url=url, data=data, params=None, token=token)
+
+        delay = random.uniform(0.5, 1.0)
+        logger.debug(f"Задержка перед запросом: {delay:.2f} секунд.")
+        await asyncio.sleep(delay)
+
+        response = await send_request_to_crm(url=url, data=data, params=None, token=token)
+        if response:
+            logger.debug(f"Успешно получен ответ от филиала {branch}, статус: {status}")
+        else:
+            logger.error(f"Ошибка при запросе к филиалу {branch}, статус: {status}")
+        return response
 
     tasks = [
         fetch_data(str(branch), status)
         for status in client_is_study_statuses
         for branch in branches
     ]
+
+    logger.debug(f"Отправлено {len(tasks)} запросов для получения данных по телефону.")
 
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -130,61 +144,47 @@ async def find_user_by_phone(phone_number: str) -> dict | None:
             count_sum += result.get('count', 0)
             if 'items' in result:
                 all_items.extend(result['items'])
+        else:
+            logger.error(f"Ошибка в одном из запросов: {result}")
+
+    logger.debug(f"Итоги: всего найдено {total_sum} записей, количество: {count_sum}")
+
     return {
-            "total": total_sum,
-            "count": count_sum,
-            "items": all_items
-        }
+        "total": total_sum,
+        "count": count_sum,
+        "items": all_items
+    }
 
 
-async def send_request_to_crm(url: str, data: str, params: dict | None, token: str | None, retries: int = 3, delay: int = 5) -> dict | None:
-    token = token
+async def send_request_to_crm(url: str, data: str, params: dict | None, token: str | None) -> dict | None:
     if token:
         logger.debug("Токен получен.")
         logger.debug("Обновление заголовков..")
         headers.update({"X-ALFACRM-TOKEN": token})
-        for attempt in range(retries):
-            async with aiohttp.ClientSession() as session:
-                try:
-                    async with session.post(url, headers=headers, data=data, params=params, timeout=10) as response:
-                        if response.status == 200:
-                            return await response.json()
-                        elif response.status == 401:
-                            logger.error(f"Неверный токен: {response.status} - {await response.text()}")
-                            return None
-                        elif response.status == 429:
-                            logger.error(f"Слишком много запросов: {response.status} - {await response.text()}")
-                            return None
-                        else:
-                            logger.error(f"Ошибка запроса: {response.status} - {await response.text()}")
-                            return None
-                except aiohttp.ClientResponseError as e:
-                    logger.error(f"Произошла ошибка HTTP-ответа: {e.status} {e.message}")
-                    return None
-                except aiohttp.ClientError as e:
-                    logger.error(f"Ошибка запроса: {e} (попытка {attempt + 1} из {retries})")
-                    if attempt < retries - 1:
-                        await asyncio.sleep(delay)
-                    else:
-                        logger.error("Все попытки отправки запроса исчерпаны.")
+
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.post(url, headers=headers, data=data, params=params, timeout=10) as response:
+                    if response.status == 200:
+                        return await response.json()
+                    elif response.status == 401:
+                        logger.error(f"Неверный токен: {response.status} - {await response.text()}")
                         return None
-                except aiohttp.ClientConnectorError as e:
-                    logger.error(f"Произошла ошибка соединения клиента aiohttp: {e}")
-                    if attempt < retries - 1:
-                        await asyncio.sleep(delay)
-                    else:
-                        logger.error("Все попытки отправки запроса исчерпаны.")
+                    elif response.status == 429:
+                        logger.error(f"Слишком много запросов: {response.status} - {await response.text()}")
                         return None
-                except aiohttp.ClientOSError as e:
-                    logger.error(f"Произошла ошибка ОС клиента aiohttp: {e}")
-                    if attempt < retries - 1:
-                        await asyncio.sleep(delay)
                     else:
-                        logger.error("Все попытки отправки запроса исчерпаны.")
+                        logger.error(f"Ошибка запроса: {response.status} - {await response.text()}")
                         return None
-                except Exception as e:
-                    logger.error(f"Произошла непредвиденная ошибка: {e}")
-                    return None
+            except aiohttp.ClientError as e:
+                logger.error(f"Ошибка запроса: {e}")
+            except Exception as e:
+                logger.error(f"Непредвиденная ошибка: {e}")
+    else:
+        logger.error("Токен отсутствует. Запрос не может быть выполнен.")
+
+    return None
+
 
 
 async def get_user_groups_from_crm(branch_id: int, user_crm_id: int, session: AsyncSession) -> list | None:

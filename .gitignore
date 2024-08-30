@@ -68,3 +68,4 @@ venv.bak/
 *.pdf
 /debug.log
 /files/
+/bot.log

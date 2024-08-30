@@ -54,30 +54,44 @@ tg_links_message = (
 )
 
 
-async def get_best_items(crm_client):
+async def get_best_items(crm_client: dict) -> dict | None:
     try:
+        # Получаем элементы из CRM-клиента
         items = crm_client.get("items", [])
         if not items:
+            logger.info("Нет доступных элементов в ответе CRM-клиента.")
             return None
+
+        logger.debug(f"Найдено {len(items)} элементов.")
 
         for item in items:
             item_id = item.get("id")
             branch_ids = item.get("branch_ids", [])
             is_study = item.get("is_study", 0)
 
+            if item_id is None:
+                logger.warning("Пропуск элемента без ID.")
+                continue
+
+            logger.debug(f"Обрабатываем элемент ID: {item_id}, branch_ids: {branch_ids}, is_study: {is_study}")
+
             try:
                 user_lessons = await get_client_lessons(item_id, branch_ids)
+                if user_lessons is None:
+                    logger.warning(f"Не удалось получить уроки для элемента ID: {item_id}. Пропуск.")
+                    continue
             except Exception as e:
-                logger.exception(
-                    f"Ошибка при получении уроков для элемента {item_id}: {e}"
-                )
+                logger.exception(f"Ошибка при получении уроков для элемента ID {item_id}: {e}")
                 continue
 
             if is_study == 1:
+                logger.info(f"Элемент ID {item_id} помечен как 'is_study'. Возврат этого элемента.")
                 return item
             elif user_lessons.get("total", 0) > 0:
+                logger.info(f"Элемент ID {item_id} имеет уроки. Возврат этого элемента.")
                 return item
 
+        logger.info("Ни один элемент не подходит по условиям. Возврат первого элемента.")
         return items[0]
 
     except KeyError as e:
@@ -91,8 +105,11 @@ async def get_best_items(crm_client):
         return None
 
 
-
 async def handle_existing_user(message: Message, session: AsyncSession, is_admin: bool):
+    await message.answer("Добро пожаловать в KIBERone!☺️\n"
+                         "Мы рады видеть вас снова!☺️\n"
+                         "Сейчас мы немножечко поколдуем для Вас ✨ Ожидайте\n"
+                         "")
     if is_admin:
         greeting = f'Привет, {"администратор " if is_admin else ""}{message.from_user.username}!'
     else:
@@ -104,20 +121,38 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
         try:
             await orm_update_user(session, user_data=user_data)
             user = await orm_get_user_by_tg_id(session, tg_id=message.from_user.id)
+
             if user:
                 user_data["phone_number"] = user.phone_number
+
                 if user.phone_number:
-                    crm_client = await find_user_by_phone(user.phone_number)
+                    crm_client: dict = await find_user_by_phone(user.phone_number)
+
+                    if crm_client is None:
+                        logger.error(f"CRM клиент с номером {user.phone_number} не найден.")
+                        await message.answer("Не удалось найти данные в CRM.")
+                        return
+
                     item = await get_best_items(crm_client)
+
+                    if item is None:
+                        logger.error(f"Не удалось найти лучшие элементы для клиента {user.phone_number}.")
+                        return
+
                     await process_existing_user(item, session, message, user_data)
+
                 else:
                     logger.error(f"У пользователя с tg_id {message.from_user.id} нет номера телефона.")
+                    await message.answer("У вас не указан номер телефона. Пожалуйста, добавьте его.")
             else:
                 logger.error(f"Пользователь с tg_id {message.from_user.id} не найден.")
+                await message.answer("Пользователь не найден в базе данных.")
+
         except Exception as e:
             logger.error(f"Произошла ошибка: {e}")
-    await message.answer(greeting, reply_markup=main_menu_button_keyboard)
+            await message.answer("Произошла ошибка при обработке вашего запроса.")
 
+    await message.answer(greeting, reply_markup=main_menu_button_keyboard)
 
 
 async def handle_new_user(message: Message):
@@ -158,6 +193,15 @@ async def start_handler(message: Message, session: AsyncSession):
 
 @start_router.message(F.contact)
 async def handle_contact(message: Message, session: AsyncSession):
+    # TODO: нонтайп где то проскакивает через бест айтемс
+    await message.answer("Добро пожаловать в KIBERone!☺️\n"
+                         "Мы рады видеть вас!☺️\n"
+                         "Сейчас мы немножечко поколдуем для Вас ✨ Ожидайте\n"
+                         "Это не займет много времени (меньше минуты)\n"
+                         "Если бот Вам не отвечает - нажмите снова /start\n"
+                         "Наши сервера могут быть очень нагружены..⚡️")
+    await asyncio.sleep(0.5)
+    await message.answer("Ваш контакт получен. 😊 Идет обработка данных...")
     try:
         try:
             user_data = {
@@ -177,7 +221,7 @@ async def handle_contact(message: Message, session: AsyncSession):
                 await save_user_data(session, user_data)
             else:
                 await update_user_data(session, user_data)
-            await message.answer("Ваш контакт получен. Идет обработка данных...")
+            await message.answer("Ваш контакт сохранен! 😊\nМы подготавливаем для Вас данные.\nЕще пару секундочек..")
         except IntegrityError as e:
             logger.exception(f"Ошибка целостности данных при сохранении в БД: {e}")
             return await message.answer("Произошла ошибка при сохранении ваших данных. Попробуйте позже.")
@@ -274,7 +318,7 @@ async def process_existing_user(item, session, message, user_data):
         await send_tg_links(message, session, user_data["tg_id"])
     else:
         await message.answer(
-            "Спасибо! Ваш контакт сохранен.", reply_markup=main_menu_button_keyboard
+            "Спасибо! Ваш контакт обновлен.", reply_markup=main_menu_button_keyboard
         )
 
 

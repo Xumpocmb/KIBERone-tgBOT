@@ -55,12 +55,10 @@ async def user_trial_handler(callback: CallbackQuery, session: AsyncSession):
     )
 
     try:
-        await callback.message.edit_text(
+        await callback.message.answer(
             text="Ожидайте пожалуйста, проверяю Ваше расписание.."
         )
         logger.debug(f"Сообщение пользователю с ID {user_id} изменено на 'Ожидайте...'")
-
-        # Получаем информацию о пользователе
         user_in_db = await orm_get_user_by_tg_id(session, user_id)
         user_in_crm = await find_user_by_phone(user_in_db.phone_number)
 
@@ -71,10 +69,9 @@ async def user_trial_handler(callback: CallbackQuery, session: AsyncSession):
                     user_crm_name = item.get("name", None)
                     user_crm_id = item.get("id", None)
                     user_branch_ids = item.get("branch_ids", [])
-                    user_lessons = await get_user_trial_lesson(
-                        user_crm_id, user_branch_ids
-                    )
+                    user_lessons = await get_user_trial_lesson(user_crm_id, user_branch_ids)
                     if user_lessons.get("total", 0) > 0:
+                        has_lessons = True  # Занятие найдено
                         trial_lesson = user_lessons.get("items", [])[0]
                         logger.debug(
                             f"Пробное занятие для пользователя с ID {user_crm_id}: {trial_lesson}"
@@ -82,9 +79,6 @@ async def user_trial_handler(callback: CallbackQuery, session: AsyncSession):
 
                         lesson_date = trial_lesson.get("date", None)
                         if lesson_date:
-                            logger.debug(
-                                f"Дата занятия для пользователя с ID {user_crm_id}: {lesson_date}"
-                            )
                             lesson_date = lesson_date.split("-")
                             lesson_date_splitted = datetime(
                                 int(lesson_date[0]),
@@ -92,32 +86,13 @@ async def user_trial_handler(callback: CallbackQuery, session: AsyncSession):
                                 int(lesson_date[2]),
                             )
                             lesson_day = week[str(lesson_date_splitted.weekday())]
-                            logger.debug(
-                                f"День недели занятия для пользователя с ID {user_id}: {lesson_day}"
-                            )
                             lesson_time = (
-                                f"{trial_lesson.get('time_from').split(' ')[1][:-3]}"
-                            )
-                            logger.debug(
-                                f"У пользователя {user_in_db.phone_number} есть запланированные пробные занятия на {lesson_date, lesson_time} | {type(lesson_date)}."
-                            )
-
-                            lesson_day = week[str(lesson_date_splitted.weekday())]
-                            logger.debug(
-                                f"День недели занятия для пользователя с ID {user_id}: {lesson_day}"
-                            )
-
-                            lesson_time = f"{trial_lesson.get('time_from').split(' ')[1][:-3]} - {trial_lesson.get('time_to').split(' ')[1][:-3]}"
-                            logger.debug(
-                                f"Время занятия для пользователя с ID {user_id}: {lesson_time}"
+                                f"{trial_lesson.get('time_from').split(' ')[1][:-3]} - "
+                                f"{trial_lesson.get('time_to').split(' ')[1][:-3]}"
                             )
 
                             # Получаем адрес занятия
                             lesson_address = str(trial_lesson.get("room_id", None))
-                            logger.debug(
-                                f"Адрес занятия для пользователя с ID {user_id}: {lesson_address}"
-                            )
-
                             if lesson_address:
                                 if lesson_address in MINSK:
                                     lesson_address = MINSK[lesson_address]
@@ -125,15 +100,9 @@ async def user_trial_handler(callback: CallbackQuery, session: AsyncSession):
                                     lesson_address = BORISOV[lesson_address]
                                 elif lesson_address in BARANOVICHI:
                                     lesson_address = BARANOVICHI[lesson_address]
-                                logger.debug(
-                                    f"Адрес занятия для пользователя с ID {user_id} после обработки: {lesson_address}"
-                                )
 
                             await callback.message.answer(
                                 text=f"{user_crm_name} записан на пробный урок: \n{lesson_day}: {lesson_time}\n{lesson_address}"
-                            )
-                            logger.debug(
-                                f"Отправлено расписание пользователю с ID {user_id}: {lesson_day}, {lesson_time}, {lesson_address}"
                             )
                         else:
                             await callback.message.answer(
@@ -142,19 +111,25 @@ async def user_trial_handler(callback: CallbackQuery, session: AsyncSession):
                             logger.debug(
                                 f"Пользователь с ID {user_id} не имеет запланированных занятий"
                             )
+
+                    else:
+                        await callback.message.answer(
+                            text="У вас нет запланированных пробных занятий."
+                        )
+                        logger.debug(f"Пользователь с ID {user_id} не имеет пробных занятий.")
+
         await callback.answer()
         logger.debug(
             f"Обработка запроса на пробное занятие завершена для пользователя с ID {user_id}"
         )
+
     except Exception as e:
         logger.error(
-            f"Ошибка при обработке запроса на пробное занятие от пользователя с ID {user_id}: {e}"
-        )
+            f"Ошибка при обработке запроса на пробное занятие от пользователя с ID {user_id}: {e}")
         await callback.message.answer(
-            "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже."
-        )
+            "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже.")
         await callback.answer()
 
     logger.debug(
-        f"Завершение обработки запроса на пробное занятие от пользователя с ID: {user_id}"
-    )
+        f"Завершение обработки запроса на пробное занятие от пользователя с ID: {user_id}")
+
