@@ -162,6 +162,8 @@ async def send_request_to_crm(url: str, data: str, params: dict | None, token: s
         logger.debug("Обновление заголовков..")
         headers.update({"X-ALFACRM-TOKEN": token})
 
+        delay = random.uniform(0.2, 0.6)
+        await asyncio.sleep(delay)
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.post(url, headers=headers, data=data, params=params, timeout=10) as response:
@@ -184,7 +186,6 @@ async def send_request_to_crm(url: str, data: str, params: dict | None, token: s
         logger.error("Токен отсутствует. Запрос не может быть выполнен.")
 
     return None
-
 
 
 async def get_user_groups_from_crm(branch_id: int, user_crm_id: int, session: AsyncSession) -> list | None:
@@ -292,6 +293,8 @@ async def get_user_trial_lesson(user_crm_id: int, branch_ids: list) -> dict | No
     }
     data = json.dumps(data)
     for branch in branch_ids:
+        delay = random.uniform(0.5, 1.2)
+        await asyncio.sleep(delay)
         url = f"https://{CRM_HOSTNAME}/v2api/{branch}/lesson/index"
         response_data = await send_request_to_crm(url, data, params=None, token=token)
         if response_data.get("total") != 0:

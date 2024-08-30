@@ -318,7 +318,7 @@ async def process_existing_user(item, session, message, user_data):
         await send_tg_links(message, session, user_data["tg_id"])
     else:
         await message.answer(
-            "Спасибо! Ваш контакт обновлен.", reply_markup=main_menu_button_keyboard
+            "Мы поколдовали, и все готово!", reply_markup=main_menu_button_keyboard
         )
 
 
