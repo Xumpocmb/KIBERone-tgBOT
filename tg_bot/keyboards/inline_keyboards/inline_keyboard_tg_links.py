@@ -21,16 +21,20 @@ async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int, inclu
     user_branch_ids: list = list(map(int, user.user_branch_ids.split(',')))
     logger.debug(f"Список городов пользователя: {user_branch_ids}")
 
-    if user_branch_ids:
-        await add_city_links(session, user_branch_ids, buttons)
+    if not user.user_branch_ids:
+        logger.warning(f"user_branch_ids is None for user {user.phone_number}")
+        logger.error(f"Не удалось получить ИД города пользователя {user.phone_number}")
     else:
+        user_branch_ids: list = list(map(int, user.user_branch_ids.split(',')))
+        await add_city_links(session, user_branch_ids, buttons)
         logger.error(f"Не удалось получить ИД города пользователя {user.phone_number}")
 
     user_crm_id: int = user.user_crm_id
     if user_crm_id:
         await add_group_links(session, user_branch_ids, user_crm_id, buttons, user.phone_number)
     else:
-        logger.error(f"Не удалось получить ID пользователя в ЦРМ {user.phone_number}")
+        logger.error(f"Не удалось получить ID пользователя в ЦРМ чтобы сформировать ссылку "
+                     f"на группу пользователя {user.phone_number}")
 
     if include_back_button:
         buttons.append(InlineKeyboardButton(text='<< Назад', callback_data='inline_main'))
@@ -41,6 +45,7 @@ async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int, inclu
         input_field_placeholder="Перейдите по ссылкам для вступления в группы..",
     )
     logger.debug("Клавиатура готова! Отправка..")
+
     return keyboard
 
 

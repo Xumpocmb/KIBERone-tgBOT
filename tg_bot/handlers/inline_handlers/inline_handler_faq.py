@@ -33,9 +33,6 @@ async def process_button_faq_press(callback: CallbackQuery, session: AsyncSessio
         )
         logger.info(f"Пользователю с ID {user_id} отправлено сообщение с FAQ.")
 
-        await callback.message.delete()
-        logger.debug(f"Исходное сообщение удалено для пользователя с ID {user_id}.")
-
         await callback.answer()
         logger.debug(f"Обработка запроса FAQ завершена для пользователя с ID {user_id}.")
     except Exception as e:
