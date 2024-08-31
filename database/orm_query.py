@@ -48,9 +48,9 @@ async def orm_get_user_by_crm_id(session: AsyncSession, crm_id: int):
         result = await session.execute(query)
         user = result.scalar()
         if user:
-            logger.info(f"Пользователь с tg_id {crm_id} найден: {user}")
+            logger.info(f"Пользователь с crm_id {crm_id} найден: {user}")
         else:
-            logger.info(f"Пользователь с tg_id {crm_id} не найден.")
+            logger.info(f"Пользователь с crm_id {crm_id} не найден.")
         return user
     except SQLAlchemyError as e:
         logger.error(f"Ошибка SQLAlchemy при получении пользователя с tg_id {crm_id}: {e}")
@@ -66,7 +66,7 @@ async def orm_update_user(session: AsyncSession, user_data: dict):
         query = update(User).where(User.tg_id == tg_id).values(**user_data)
         await session.execute(query)
         await session.commit()
-        logger.info(f"Пользователь с tg_id {tg_id} успешно обновлен.")
+        logger.info(f"Пользователь с tg_id {tg_id} успешно обновлен данными: {user_data}")
 
     except IntegrityError as e:
         logger.error(f"Ошибка целостности данных: {e}")

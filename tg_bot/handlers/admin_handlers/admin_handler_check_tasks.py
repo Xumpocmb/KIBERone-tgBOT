@@ -5,7 +5,6 @@ from datetime import datetime
 
 from aiogram import Router, F, types
 from aiogram.types import CallbackQuery
-from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import session_maker

@@ -10,31 +10,31 @@ from logger_config import get_logger
 logger = get_logger()
 
 
-async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int, include_back_button: bool = True) -> InlineKeyboardMarkup:
+async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int, user_crm_id, include_back_button: bool = True) -> InlineKeyboardMarkup:
     buttons = [
         InlineKeyboardButton(
             text="Главный новостной канал KIBERone", url="https://t.me/kiberone_bel"
         )
     ]
 
-    user = await orm_get_user_by_tg_id(session, tg_id)
-    user_branch_ids: list = list(map(int, user.user_branch_ids.split(',')))
-    logger.debug(f"Список городов пользователя: {user_branch_ids}")
+    user_from_bd = await orm_get_user_by_tg_id(session, tg_id)
+    logger.debug(f"Пользователь получен из БД, функция make_tg_links_inline_keyboard {user_from_bd}")
 
-    if not user.user_branch_ids:
-        logger.warning(f"user_branch_ids is None for user {user.phone_number}")
-        logger.error(f"Не удалось получить ИД города пользователя {user.phone_number}")
+    user_branch_ids = []
+
+    if not user_from_bd.user_branch_ids:
+        logger.warning(f"user_branch_ids is None for user {user_from_bd.phone_number}")
+        logger.error(f"Не удалось получить ИД города пользователя {user_from_bd.phone_number}")
     else:
-        user_branch_ids: list = list(map(int, user.user_branch_ids.split(',')))
+        user_branch_ids: list = list(map(int, user_from_bd.user_branch_ids.split(',')))
+        logger.debug(f"Список городов: {user_branch_ids}")
         await add_city_links(session, user_branch_ids, buttons)
-        logger.error(f"Не удалось получить ИД города пользователя {user.phone_number}")
 
-    user_crm_id: int = user.user_crm_id
     if user_crm_id:
-        await add_group_links(session, user_branch_ids, user_crm_id, buttons, user.phone_number)
+        await add_group_links(session, user_branch_ids, user_crm_id, buttons, user_from_bd.phone_number)
     else:
         logger.error(f"Не удалось получить ID пользователя в ЦРМ чтобы сформировать ссылку "
-                     f"на группу пользователя {user.phone_number}")
+                     f"на группу пользователя {user_from_bd.phone_number}")
 
     if include_back_button:
         buttons.append(InlineKeyboardButton(text='<< Назад', callback_data='inline_main'))

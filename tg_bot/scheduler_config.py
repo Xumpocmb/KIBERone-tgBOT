@@ -103,7 +103,8 @@ async def send_balance_reminder_message(tg_id, user_id, lesson_datetime):
 
     reminder_message = (
         "Уважаемый клиент!\n"
-        "Во избежание просрочки оплаты за обучение, просим произвести оплату через ЕРИП по ссылке https://clck.ru/36h7Df или оплатить на месте.\n"
+        "Во избежание просрочки оплаты за обучение, просим произвести оплату через ЕРИП по "
+        "ссылке https://clck.ru/36h7Df или оплатить на месте.\n"
         "Ваш KIBERone!")
     async with bot:
         await bot.send_message(chat_id=tg_id, text=reminder_message)
@@ -155,7 +156,8 @@ async def check_user_trial_lesson():
                                 lesson_datetime = datetime.strptime(lesson_datetime_str, '%Y-%m-%d %H:%M')
                                 await create_trial_lesson_reminder_task(user.tg_id, user_crm_id, lesson_datetime)
                                 logger.debug(
-                                    f'Задача для отправки напоминания пользователю {user.phone_number} на {lesson_date} создана.')
+                                    f'Задача для отправки напоминания пользователю {user.phone_number} на {lesson_date} '
+                                    f'создана.')
                             else:
                                 logger.info(
                                     f'Не удалось получить дату и время пробного занятия пользователя {user.phone_number}')
@@ -285,8 +287,9 @@ async def send_birthday_message(tg_id, b_date, crm_name):
     logger.info(f'Отправляю напоминание пользователю {tg_id} о дне рождения.')
 
     birthday_message = (f"Поздравляем {crm_name} с Днём Рождения!\n"
-                        "Пусть всё получается, всё удается, ничего не зависает и не стоит на месте. Желаем, чтобы жизнь была интересной и захватывающей, чтоб не было времени на грусть и тоску, обиды и разочарования!\n"
-                        "Ваш KIBERone!")
+                        "Пусть всё получается, всё удается, ничего не зависает и не стоит на месте. Желаем, чтобы "
+                        "жизнь была интересной и захватывающей, чтоб не было времени на грусть и тоску, обиды и "
+                        "разочарования!\n Ваш KIBERone!")
 
     async with bot:
         await bot.send_message(chat_id=tg_id, text=birthday_message)

@@ -121,10 +121,9 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
         try:
             await orm_update_user(session, user_data=user_data)
             user = await orm_get_user_by_tg_id(session, tg_id=message.from_user.id)
+            logger.debug(user.phone_number)
 
             if user:
-                user_data["phone_number"] = user.phone_number
-
                 if user.phone_number:
                     crm_client: dict = await find_user_by_phone(user.phone_number)
 
@@ -299,7 +298,7 @@ async def update_user_data(session, user_data):
 
 
 async def process_existing_user(item, session, message, user_data):
-    logger.debug(f"Пользователь с номером {user_data['phone_number']} найден в ЦРМ.")
+    logger.debug(f"Обработка существующего пользователя в БД из ЦРМ: {item.get("id")}")
 
     user_data.update(
         {
@@ -309,20 +308,20 @@ async def process_existing_user(item, session, message, user_data):
         }
     )
 
+    await update_user_data(session, user_data)
+
     user_lessons = await get_client_lessons(item.get("id"), item.get("branch_ids", []))
     user_data["user_lessons"] = True if user_lessons.get("total", 0) > 0 else False
 
-    await update_user_data(session, user_data)
-
     if user_data["user_lessons"]:
-        await send_tg_links(message, session, user_data["tg_id"])
+        await send_tg_links(message, session, user_data["tg_id"], user_crm_id=item.get("id"))
     else:
         await message.answer(
             "Мы поколдовали, и все готово!", reply_markup=main_menu_button_keyboard
         )
 
 
-async def send_tg_links(message, session, user_id):
+async def send_tg_links(message, session, user_id, user_crm_id):
     logger.debug("Отправка ссылок на TG.")
     await message.answer("Сейчас мы для Вас подготавливаем ссылки... Ожидайте!😊\n"
                          "Это займет немного времени (меньше 30 секунд)\n"
@@ -330,9 +329,7 @@ async def send_tg_links(message, session, user_id):
 
     await message.answer(
         tg_links_message,
-        reply_markup=await make_tg_links_inline_keyboard(
-            session, user_id, include_back_button=False
-        ),
+        reply_markup=await make_tg_links_inline_keyboard(session, user_id, user_crm_id, include_back_button=False),
     )
     await message.answer(
         "Мы поколдовали, и все готово! ✨", reply_markup=main_menu_button_keyboard
@@ -354,6 +351,7 @@ async def create_new_user_in_crm(user_data, session, message):
             "customer_data": json.dumps(new_user_info),
         }
     )
+    logger.debug("Данные пользователя в бд обновлены после создания в ЦРМ.")
 
     await update_user_data(session, user_data)
     await message.answer(greeting_message, reply_markup=main_menu_button_keyboard)
