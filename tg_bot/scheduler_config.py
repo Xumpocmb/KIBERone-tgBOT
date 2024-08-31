@@ -209,6 +209,16 @@ async def send_reminder_message(tg_id, lesson_datetime):
 ------------------------
 """
 
+def check_reminder_time(b_date, year):
+    r_time = None
+    try:
+        r_time = b_date.replace(year=year, hour=10, minute=0)
+    except ValueError:
+        if b_date.day == 29 and b_date.month == 2:
+            r_time = b_date.replace(day=28, year=year, hour=10, minute=0)
+    logger.error(f"Время напоминания некорректное: {r_time}")
+    return r_time
+
 
 async def check_user_birthday():
     """Проверка пользователей на наличие дня рождения."""

@@ -192,7 +192,8 @@ async def start_handler(message: Message, session: AsyncSession):
 
 @start_router.message(F.contact)
 async def handle_contact(message: Message, session: AsyncSession):
-    # TODO: нонтайп где то проскакивает через бест айтемс
+
+
     await message.answer("Добро пожаловать в KIBERone!☺️\n"
                          "Мы рады видеть вас!☺️\n"
                          "Сейчас мы немножечко поколдуем для Вас ✨ Ожидайте\n"
@@ -214,6 +215,12 @@ async def handle_contact(message: Message, session: AsyncSession):
             logger.exception(f"Ошибка при доступе к полям контакта: {e}")
             return await message.answer("Произошла ошибка при обработке вашего контакта. Неверный формат данных.")
 
+        if check_admin(message.from_user.id):
+            await save_user_data(session, user_data)
+            return await message.answer(
+                "Спасибо! Ваш контакт сохранен.",
+                reply_markup=main_menu_button_keyboard)
+
         try:
             user = await orm_get_user_by_tg_id(session, tg_id=message.contact.user_id)
             if not user:
@@ -227,16 +234,6 @@ async def handle_contact(message: Message, session: AsyncSession):
         except OperationalError as e:
             logger.exception(f"Ошибка доступа к базе данных: {e}")
             return await message.answer("Произошла ошибка с базой данных. Попробуйте позже.")
-
-        try:
-            if check_admin(message.from_user.id):
-                await save_user_data(session, user_data)
-                return await message.answer(
-                    "Спасибо! Ваш контакт сохранен.",
-                    reply_markup=main_menu_button_keyboard)
-        except Exception as e:
-            logger.exception(f"Ошибка при проверке пользователя на администратора: {e}")
-            return await message.answer("Произошла ошибка при проверке вашего статуса.")
 
         try:
             crm_client = await find_user_by_phone(user_data["phone_number"])
@@ -308,10 +305,11 @@ async def process_existing_user(item, session, message, user_data):
         }
     )
 
-    await update_user_data(session, user_data)
 
     user_lessons = await get_client_lessons(item.get("id"), item.get("branch_ids", []))
     user_data["user_lessons"] = True if user_lessons.get("total", 0) > 0 else False
+
+    await update_user_data(session, user_data)
 
     if user_data["user_lessons"]:
         await send_tg_links(message, session, user_data["tg_id"], user_crm_id=item.get("id"))
