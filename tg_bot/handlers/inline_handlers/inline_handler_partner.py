@@ -12,6 +12,7 @@ from database.orm_query import orm_get_user_by_tg_id
 from logger_config import get_logger
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_partner import make_inline_partner_kb
 from tg_bot.middlewares.middleware_database import DataBaseSession
+from tg_bot.utils.parthner_clicker_count import increment_click_count
 
 logger = get_logger()
 
@@ -49,10 +50,11 @@ async def process_button_partner_press(callback: CallbackQuery, session: AsyncSe
 async def process_button_partner_question_press(callback: CallbackQuery, session: AsyncSession):
     user_id = callback.from_user.id
     callback_data = callback.data
-    logger.info(
-        f"Получен запрос на информацию о партнере от пользователя с ID {user_id}. Данные колбэка: {callback_data}")
+    logger.info(f"Получен запрос на информацию о партнере от пользователя с ID {user_id}. Данные колбэка: {callback_data}")
 
     try:
+        increment_click_count(callback_data)
+
         partner_id = int(callback_data.split('-')[1])
         logger.debug(f"Извлечен ID партнера: {partner_id}")
 
@@ -85,3 +87,4 @@ async def process_button_partner_question_press(callback: CallbackQuery, session
 
     except Exception as e:
         logger.error(f"Неизвестная ошибка при обработке запроса от пользователя с ID {user_id}: {e}")
+

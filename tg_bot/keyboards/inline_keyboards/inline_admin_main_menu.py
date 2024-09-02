@@ -12,10 +12,15 @@ button_3: InlineKeyboardButton = InlineKeyboardButton(
     text="Список задач", callback_data="tasks_list"
 )
 
+button_4: InlineKeyboardButton = InlineKeyboardButton(
+    text="Статистика по партнерам", callback_data="parthner_statistic"
+)
+
 admin_main_menu_inline_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[
         [button_1],
         [button_2],
         [button_3],
+        [button_4],
     ]
 )

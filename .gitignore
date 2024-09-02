@@ -69,3 +69,4 @@ venv.bak/
 /debug.log
 /files/
 /bot.log
+/click_data.json

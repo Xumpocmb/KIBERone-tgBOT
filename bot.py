@@ -14,6 +14,7 @@ from tg_bot.handlers.admin_handlers import (
     admin_handler_user_list,
     admin_handler_send_all,
     admin_handler_check_tasks,
+    admin_handler_parthner_statistic,
 )
 from tg_bot.handlers.inline_handlers import inline_handler_link
 from tg_bot.handlers.inline_handlers import (
@@ -91,6 +92,7 @@ async def main():
         admin_handler_user_list.admin_user_list_router,
         admin_handler_send_all.admin_send_all_router,
         admin_handler_check_tasks.admin_tasks_list_router,
+        admin_handler_parthner_statistic.admin_handler_parthner_statistic_router,
         # last router
         inline_handler_main.inline_main_router,
     )
