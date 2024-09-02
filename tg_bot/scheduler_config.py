@@ -101,14 +101,27 @@ async def send_balance_reminder_message(tg_id, user_id, lesson_datetime):
 
     next_lesson_date = lesson_datetime.strftime('%d.%m')
 
-    reminder_message = (
-        "Уважаемый клиент!\n"
-        "Во избежание просрочки оплаты за обучение, просим произвести оплату через ЕРИП по "
-        "ссылке https://clck.ru/36h7Df или оплатить на месте.\n"
-        "Ваш KIBERone!")
-    async with bot:
-        await bot.send_message(chat_id=tg_id, text=reminder_message)
-    logger.info(f'Напоминание пользователю {tg_id} о пробном занятии на {next_lesson_date} отправлено.')
+    day = lesson_datetime.day
+    if day < 10:
+        reminder_message = (
+            "Уважаемый клиент!\n"
+            "Во избежание просрочки оплаты за обучение, просим произвести оплату через ЕРИП по "
+            "ссылке https://clck.ru/36h7Df или оплатить на месте.\n"
+            "Ваш KIBERone!")
+        async with bot:
+            await bot.send_message(chat_id=tg_id, text=reminder_message)
+        logger.info(f'Напоминание пользователю {tg_id} о необходимости оплаты занятий {next_lesson_date} отправлено.')
+    else:
+        reminder_message = (
+            "Уважаемый клиент!\n"
+            "У нас не отобразилась ваша оплата за занятия. Оплатить через ЕРИП можно "
+            "по ссылке https://clck.ru/36h7Df или оплатить на месте.\n"
+            "Ваш KIBERone!")
+        async with bot:
+            await bot.send_message(chat_id=tg_id, text=reminder_message)
+        logger.info(f'Напоминание пользователю {tg_id} о необходимости оплаты занятий {next_lesson_date} отправлено.')
+
+
 
     job_id = f'balance_reminder_{tg_id}_{user_id}_{next_lesson_date}'
     scheduler.remove_job(job_id)
@@ -266,9 +279,9 @@ async def create_birthday_reminder_task(tg_id, b_date, crm_name, crm_id):
     """Создание задачи для напоминания о дне рождения."""
 
     now = datetime.now()
-    reminder_time = b_date.replace(year=datetime.now().year, hour=10, minute=0)
+    reminder_time = check_reminder_time(b_date, now.year)
     if reminder_time < now:
-        reminder_time = reminder_time.replace(year=now.year + 1)
+        reminder_time = check_reminder_time(b_date, now.year + 1)
     job_id = f'birthday_reminder_{tg_id}_{crm_id}_{reminder_time.strftime("%Y%m%d%H%M")}'
     existing_job = scheduler.get_job(job_id)
 
