@@ -3,6 +3,7 @@ from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import session_maker
+from database.orm_query import orm_get_user_by_tg_id
 from logger_config import get_logger
 from tg_bot.filters.filter_admin import check_admin
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_tg_links import make_tg_links_inline_keyboard
@@ -28,8 +29,11 @@ tg_links_message = (
 
 @inline_tg_links_router.callback_query(F.data == 'tg_links')
 async def tg_links_handler(callback: CallbackQuery, session: AsyncSession):
+
+    logger.debug(f"Обработка запроса на получение ссылок..")
     user_tg_id = callback.from_user.id
-    logger.debug(f"Обработка запроса на получение ссылок от пользователя с ID: {user_tg_id}")
+    user_data_in_db = await orm_get_user_by_tg_id(session, user_tg_id)
+    user_crm_id= user_data_in_db.user_crm_id
 
     try:
         is_admin = check_admin(user_tg_id)
@@ -43,7 +47,7 @@ async def tg_links_handler(callback: CallbackQuery, session: AsyncSession):
         else:
             await callback.message.answer(
                 tg_links_message,
-                reply_markup=await make_tg_links_inline_keyboard(session, user_tg_id)
+                reply_markup=await make_tg_links_inline_keyboard(session, user_tg_id, user_crm_id)
             )
             logger.debug(f"Отправлены ссылки на телеграм-каналы пользователю с ID {user_tg_id}.")
 
