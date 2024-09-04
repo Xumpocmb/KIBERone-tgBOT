@@ -10,7 +10,7 @@ from logger_config import get_logger
 logger = get_logger()
 
 
-async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int, user_crm_id, include_back_button: bool = True) -> InlineKeyboardMarkup:
+async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int, user_crm_id, user_branch_ids, include_back_button: bool = True) -> InlineKeyboardMarkup:
     buttons = [
         InlineKeyboardButton(
             text="Главный новостной канал KIBERone", url="https://t.me/kiberone_bel"
@@ -18,9 +18,7 @@ async def make_tg_links_inline_keyboard(session: AsyncSession, tg_id: int, user_
     ]
 
     user_from_bd = await orm_get_user_by_tg_id(session, tg_id)
-    logger.debug(f"Пользователь получен из БД, функция make_tg_links_inline_keyboard {user_from_bd}")
-
-    user_branch_ids = []
+    user_branch_ids = user_branch_ids
 
     if not user_from_bd.user_branch_ids:
         logger.warning(f"user_branch_ids is None for user {user_from_bd.phone_number}")

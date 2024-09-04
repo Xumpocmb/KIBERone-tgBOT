@@ -120,22 +120,22 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
         }
         try:
             await orm_update_user(session, user_data=user_data)
-            user = await orm_get_user_by_tg_id(session, tg_id=message.from_user.id)
-            logger.debug(user.phone_number)
+            user_in_db = await orm_get_user_by_tg_id(session, tg_id=message.from_user.id)
+            logger.debug(user_in_db.phone_number)
 
-            if user:
-                if user.phone_number:
-                    crm_client: dict = await find_user_by_phone(user.phone_number)
+            if user_in_db:
+                if user_in_db.phone_number:
+                    crm_client: dict = await find_user_by_phone(user_in_db.phone_number)
 
                     if crm_client is None:
-                        logger.error(f"CRM клиент с номером {user.phone_number} не найден.")
+                        logger.error(f"CRM клиент с номером {user_in_db.phone_number} не найден.")
                         await message.answer("Не удалось найти данные в CRM.")
                         return
 
                     item = await get_best_items(crm_client)
 
                     if item is None:
-                        logger.error(f"Не удалось найти лучшие элементы для клиента {user.phone_number}.")
+                        logger.error(f"Не удалось найти лучшие элементы для клиента {user_in_db.phone_number}.")
                         return
 
                     await process_existing_user(item, session, message, user_data)
@@ -311,15 +311,16 @@ async def process_existing_user(item, session, message, user_data):
 
     await update_user_data(session, user_data)
 
+
     if user_data["user_lessons"]:
-        await send_tg_links(message, session, user_data["tg_id"], user_crm_id=item.get("id"))
+        await send_tg_links(message, session, user_data["tg_id"], user_crm_id=item.get("id"), user_branch_ids=user_data["user_branch_ids"])
     else:
         await message.answer(
             "Мы поколдовали, и все готово!", reply_markup=main_menu_button_keyboard
         )
 
 
-async def send_tg_links(message, session, user_id, user_crm_id):
+async def send_tg_links(message, session, user_id, user_crm_id, user_branch_ids):
     logger.debug("Отправка ссылок на TG.")
     await message.answer("Сейчас мы для Вас подготавливаем ссылки... Ожидайте!😊\n"
                          "Это займет немного времени (меньше 30 секунд)\n"
@@ -327,7 +328,7 @@ async def send_tg_links(message, session, user_id, user_crm_id):
 
     await message.answer(
         tg_links_message,
-        reply_markup=await make_tg_links_inline_keyboard(session, user_id, user_crm_id, include_back_button=False),
+        reply_markup=await make_tg_links_inline_keyboard(session, user_id, user_crm_id, user_branch_ids, include_back_button=False),
     )
     await message.answer(
         "Мы поколдовали, и все готово! ✨", reply_markup=main_menu_button_keyboard
@@ -349,7 +350,8 @@ async def create_new_user_in_crm(user_data, session, message):
             "customer_data": json.dumps(new_user_info),
         }
     )
+    await update_user_data(session, user_data)
     logger.debug("Данные пользователя в бд обновлены после создания в ЦРМ.")
 
-    await update_user_data(session, user_data)
+
     await message.answer(greeting_message, reply_markup=main_menu_button_keyboard)
