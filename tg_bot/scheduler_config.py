@@ -96,11 +96,11 @@ async def create_balance_reminder_task(tg_id, user_id, next_lesson_date):
             f'Задача для отправки напоминания пользователю {tg_id} на {next_lesson_date} уже существует.')
         return
 
-    trigger_time = datetime.now() + timedelta(seconds=10)
-    trigger = DateTrigger(run_date=trigger_time)
+    # trigger_time = datetime.now() + timedelta(seconds=10)
+    # trigger = DateTrigger(run_date=trigger_time)
 
-    # trigger = CronTrigger(year=next_lesson_date.year, month=next_lesson_date.month, day=next_lesson_date.day,
-    #                       hour=9, minute=0)
+    trigger = CronTrigger(year=next_lesson_date.year, month=next_lesson_date.month, day=next_lesson_date.day,
+                          hour=9, minute=0)
 
     scheduler.add_job(
         send_balance_reminder_message,
