@@ -352,7 +352,7 @@ def setup_scheduler():
 
         scheduler.add_job(
             check_user_balance,
-            IntervalTrigger(hours=24, start_date=datetime.now() + timedelta(seconds=30)),  # .replace(hour=23, minute=30)
+            IntervalTrigger(hours=24, start_date=datetime.now().replace(hour=23, minute=30)),  # .replace(hour=23, minute=30)
             id='check_user_balance',
             misfire_grace_time=3600,
         )

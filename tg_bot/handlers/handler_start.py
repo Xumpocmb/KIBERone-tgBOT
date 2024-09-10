@@ -2,7 +2,7 @@ import asyncio
 import json
 from sqlite3 import IntegrityError, OperationalError
 
-from aiogram import Router, F
+from aiogram import Router, F, types
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 
@@ -170,14 +170,17 @@ async def handle_new_user(message: Message):
         2. <b>Обработка персональных данных</b>: Ваши персональные данные будут использоваться только в рамках функциональности бота. Мы не передаем их третьим лицам и не используем для рекламных целей.
         3. <b>Информационная безопасность</b>: Мы прилагаем все усилия для обеспечения безопасности ваших данных. Однако, помните, что интернет не всегда безопасен, и мы не можем гарантировать абсолютную защиту.
         4. <b>Согласие</b>: Используя нашего бота, вы соглашаетесь с нашей политикой конфиденциальности и обработкой данных.
-
+        \n\n\n
         <b>Нажмите кнопку "Поделиться контактом", чтобы отправить свой контакт.</b>
 
         <b>С уважением, KIBERone!</b>
         """
     greeting = f"Привет, {message.from_user.username}!\n{formatted_message}"
     logger.debug("Запрашиваю у пользователя контакт..")
+    filename = "files/contact_image.png"
+    file = types.FSInputFile(filename)
     await message.answer(greeting, reply_markup=contact_keyboard)
+    await message.answer_photo(file, caption="Поделитесь своим контактом с KIBERone")
 
 
 @start_router.message(CommandStart())
