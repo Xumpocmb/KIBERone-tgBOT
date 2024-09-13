@@ -71,7 +71,6 @@ async def user_trial_handler(callback: CallbackQuery, session: AsyncSession):
                     user_branch_ids = item.get("branch_ids", [])
                     user_lessons = await get_user_trial_lesson(user_crm_id, user_branch_ids)
                     if user_lessons.get("total", 0) > 0:
-                        has_lessons = True  # Занятие найдено
                         trial_lesson = user_lessons.get("items", [])[0]
                         logger.debug(
                             f"Пробное занятие для пользователя с ID {user_crm_id}: {trial_lesson}"
@@ -117,6 +116,11 @@ async def user_trial_handler(callback: CallbackQuery, session: AsyncSession):
                             text="У вас нет запланированных пробных занятий."
                         )
                         logger.debug(f"Пользователь с ID {user_id} не имеет пробных занятий.")
+        else:
+            await callback.message.answer(
+                text="Пользователь не найден. Пожалуйста, обратитесь к администратору."
+            )
+            logger.debug(f"Пользователь с ID {user_id} не имеет пробных занятий.")
 
         await callback.answer()
         logger.debug(
