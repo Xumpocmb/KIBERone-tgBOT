@@ -79,17 +79,17 @@ async def check_user_balance():
                                 await create_balance_reminder_task(user.tg_id, user_id, next_lesson_date)
                                 logger.debug(f'Задача для отправки напоминания пользователю {user.tg_id} на {next_lesson_date} создана.')
                             else:
-                                job_id = f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date}'
+                                job_id = f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d%H%M")}'
                                 existing_job = scheduler.get_job(job_id)
                                 if existing_job:
-                                    scheduler.remove_job(f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date}')
+                                    scheduler.remove_job(f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d%H%M")}')
 
         await asyncio.sleep(5)
 
 
 async def create_balance_reminder_task(tg_id, user_id, next_lesson_date):
     logger.info(f'Создание задачи для пользователя {tg_id} с ID {user_id}')
-    job_id = f'balance_reminder_{tg_id}_{user_id}_{next_lesson_date}'
+    job_id = f'balance_reminder_{tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d%H%M")}'
     existing_job = scheduler.get_job(job_id)
     if existing_job:
         logger.info(
@@ -131,6 +131,7 @@ async def send_balance_reminder_message(tg_id, user_id, lesson_datetime):
         logger.info(f'Напоминание пользователю {tg_id} о необходимости оплаты занятий {next_lesson_date} отправлено.')
     else:
         reminder_message = (
+            "https://youtu.be/j-tUb1o6dVU \n"
             "Уважаемый клиент!\n"
             "У нас не отобразилась ваша оплата за занятия. Оплатить через ЕРИП можно "
             "по ссылке https://clck.ru/36h7Df или оплатить на месте.\n"
