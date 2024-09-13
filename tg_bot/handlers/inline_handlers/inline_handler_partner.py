@@ -50,7 +50,8 @@ async def process_button_partner_press(callback: CallbackQuery, session: AsyncSe
 async def process_button_partner_question_press(callback: CallbackQuery, session: AsyncSession):
     user_id = callback.from_user.id
     callback_data = callback.data
-    logger.info(f"Получен запрос на информацию о партнере от пользователя с ID {user_id}. Данные колбэка: {callback_data}")
+    logger.info(
+        f"Получен запрос на информацию о партнере от пользователя с ID {user_id}. Данные колбэка: {callback_data}")
 
     try:
         increment_click_count(callback_data)
@@ -64,17 +65,19 @@ async def process_button_partner_question_press(callback: CallbackQuery, session
 
         if partner:
             logger.debug(f"Получена информация о партнере: {partner.description}")
-            if partner_id == 1:
-                user_from_db = await orm_get_user_by_tg_id(session, user_id)
-                if user_from_db.is_study:
-                    await callback.message.answer(text="Промокод: КИБЕР")
+            user_from_db = await orm_get_user_by_tg_id(session, user_id)
+            if user_from_db.is_study:
+                match partner_id:
+                    case 1:
+                        await callback.message.answer(text="Промокод: КИБЕР")
+                    case 10:
+                        await callback.message.answer(text="Промокод: ФОРМУЛА")
+                    case 11:
+                        await callback.message.answer(text="Промокод: КИБЕР")
             await callback.message.answer(text=partner.description, reply_markup=await make_inline_partner_kb(session))
         else:
             logger.warning(f"Партнер с ID {partner_id} не найден.")
             await callback.message.answer(text="Партнер не найден.")
-
-        await callback.message.delete()
-        logger.debug(f"Исходное сообщение удалено для пользователя с ID {user_id}.")
 
         await callback.answer()
         logger.debug(f"Подтверждение кнопки отправлено пользователю с ID {user_id}.")
@@ -87,4 +90,3 @@ async def process_button_partner_question_press(callback: CallbackQuery, session
 
     except Exception as e:
         logger.error(f"Неизвестная ошибка при обработке запроса от пользователя с ID {user_id}: {e}")
-
