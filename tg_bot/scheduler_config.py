@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from crm_logic.alfa_crm_api import find_user_by_phone, get_user_trial_lesson
+from crm_logic.alfa_crm_api import find_user_by_phone, get_user_trial_lesson, get_client_lessons
 from database.engine import session_maker
 from database.models import User
 from database.orm_query import orm_update_user
@@ -70,26 +70,35 @@ async def check_user_balance():
                             }
                             await orm_update_user(session, user_data)
                         user_id = item.get("id", None)
-                        next_lesson_date = item.get("next_lesson_date", None)
+
+                        user_branch_ids = item.get("branch_ids", [])
+                        user_lessons = await get_client_lessons(user_id, user_branch_ids)
+                        if user_lessons['total'] > user_lessons['count']:
+                            page = user_lessons['total'] // user_lessons['count']
+                            user_lessons = await get_client_lessons(user_id, user_branch_ids, page=page)
+
+                        last_user_lesson = user_lessons.get("items", [])[-1]
+
+                        next_lesson_date = last_user_lesson.get("lesson_date") or last_user_lesson.get("date")
                         logger.debug(f'Дата следующего занятия для пользователя {user.phone_number}: {next_lesson_date}')
                         if next_lesson_date:
-                            next_lesson_date = datetime.strptime(next_lesson_date, '%Y-%m-%d %H:%M:%S')
+                            next_lesson_date = datetime.strptime(next_lesson_date, '%Y-%m-%d')
                             logger.debug(f'Дата следующего занятия для пользователя {user.phone_number}: {next_lesson_date}')
                             if user_paid_lesson_count <= 0:
                                 await create_balance_reminder_task(user.tg_id, user_id, next_lesson_date)
                                 logger.debug(f'Задача для отправки напоминания пользователю {user.tg_id} на {next_lesson_date} создана.')
                             else:
-                                job_id = f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d%H%M")}'
+                                job_id = f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d")}'
                                 existing_job = scheduler.get_job(job_id)
                                 if existing_job:
-                                    scheduler.remove_job(f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d%H%M")}')
+                                    scheduler.remove_job(f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d")}')
 
         await asyncio.sleep(5)
 
 
 async def create_balance_reminder_task(tg_id, user_id, next_lesson_date):
     logger.info(f'Создание задачи для пользователя {tg_id} с ID {user_id}')
-    job_id = f'balance_reminder_{tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d%H%M")}'
+    job_id = f'balance_reminder_{tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d")}'
     existing_job = scheduler.get_job(job_id)
     if existing_job:
         logger.info(

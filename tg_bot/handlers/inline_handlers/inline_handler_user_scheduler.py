@@ -69,7 +69,7 @@ async def process_button_inline_user_scheduler(callback: CallbackQuery, session:
     if not user_in_crm:
         return
 
-    await process_user_schedule(user_in_crm, callback, user_id)
+    await process_user_schedule(user_in_crm, callback)
 
 
 async def is_admin_user(user_id: int, callback: CallbackQuery) -> bool:
@@ -112,124 +112,54 @@ async def find_user_in_crm(phone_number: str, callback: CallbackQuery):
     return user_in_crm
 
 
-async def process_user_schedule(user_in_crm, callback: CallbackQuery, user_id: int):
+async def process_user_schedule(user_in_crm, callback: CallbackQuery):
     """Обработка расписания пользователя на основе данных из CRM."""
     user_crm_items = user_in_crm.get("items", [])
-    user_name_in_crm = user_in_crm.get("name", "")
     logger.debug(f"Найдено {len(user_crm_items)} записей в CRM.")
 
-    if not user_crm_items:
-        await callback.message.answer(
-            f"У {user_name_in_crm} в настоящее время нет занятий."
-        )
-        return
-
     for item in user_crm_items:
-        await process_single_crm_item(item, callback, user_id)
+        await process_single_crm_item(item, callback)
 
 
-
-async def process_single_crm_item(item, callback: CallbackQuery, user_id: int):
+async def process_single_crm_item(item, callback: CallbackQuery):
     """Обработка одной записи из CRM."""
+    user_name = item.get("name", None)
     user_branch_ids = item.get("branch_ids", [])
     user_crm_id = item.get("id")
-    student_name = item.get("name", "")
-    lesson_date = item.get("next_lesson_date", "")
-
-    if lesson_date:
-        lesson_date = lesson_date[:10]
-
-
-    logger.debug(f"CRM ID: {user_crm_id}, Имя студента: {student_name}, Филиалы: {user_branch_ids}")
-
     user_lessons = await get_client_lessons(user_crm_id, user_branch_ids)
-    lessons = user_lessons.get("items", [])
+    if user_lessons['total'] > user_lessons['count']:
+        page = user_lessons['total'] // user_lessons['count']
+        user_lessons = await get_client_lessons(user_crm_id, user_branch_ids, page=page)
 
-    if not lessons:
-        logger.debug(f"Нет занятий для CRM ID {user_crm_id}")
-        await callback.message.answer(
-            f"У {student_name} в настоящее время нет занятий."
-        )
-        return
+    last_user_lesson = user_lessons.get("items", [])[-1]
 
-    await send_lesson_info(lessons[-1], student_name, lesson_date, callback, user_id)
+    await send_lesson_info(last_user_lesson, user_name, callback)
 
 
-async def send_lesson_info(lesson, student_name: str, lesson_date: str, callback: CallbackQuery, user_id: int):
+async def send_lesson_info(last_user_lesson, student_name: str, callback: CallbackQuery):
     """Отправка информации о ближайшем занятии пользователю."""
-    # lesson_date = lesson.get("lesson_date") or lesson.get("date")
 
-    logger.debug(f"Дата урока: {lesson_date}")
-    if not lesson_date:
-        logger.error(f"Дата урока отсутствует для урока: {lesson}")
-        await callback.message.answer('Произошла ошибка при обработке расписания.. Мы обязательно это исправим!')
-        return
-
-    # Форматируем информацию о занятии
-    lesson_day, lesson_time, lesson_address = format_lesson_info(lesson, lesson_date)
+    lesson_day, lesson_time, lesson_address = format_lesson_info(last_user_lesson)
     logger.debug(f"День недели: {lesson_day}, Время: {lesson_time}, Адрес: {lesson_address}")
 
-    # Отправляем информацию пользователю
+    lesson_date = last_user_lesson.get("lesson_date") or last_user_lesson.get("date")
     date_obj = datetime.strptime(lesson_date, "%Y-%m-%d")
     new_date_str = date_obj.strftime("%d-%m-%Y")
 
     await callback.message.answer(
         text=f'{student_name}\nБлижайший урок: {new_date_str}\n{lesson_day}: {lesson_time}\n{lesson_address}'
     )
-    logger.debug(f"Отправлено расписание для пользователя с ID {user_id}")
+    logger.debug(f"Отправлено расписание для пользователя с ID {callback.from_user.id}.")
 
 
-
-
-
-
-# async def process_single_crm_item(item, callback: CallbackQuery, user_id: int):
-#     """Обработка одной записи из CRM."""
-#     user_branch_ids = item.get("branch_ids", [])
-#     user_crm_id = item.get("id")
-#     student_name = item.get("name", "")
-#
-#     logger.debug(f"CRM ID: {user_crm_id}, Имя студента: {student_name}, Филиалы: {user_branch_ids}")
-#
-#     user_lessons = await get_client_lessons(user_crm_id, user_branch_ids)
-#     lessons = user_lessons.get("items", [])
-#
-#     if not lessons:
-#         logger.debug(f"Нет занятий для CRM ID {user_crm_id}")
-#         await callback.message.answer(
-#             f"У {student_name} в настоящее время нет занятий."
-#         )
-#         return
-#
-#     await send_lesson_info(lessons[-1], student_name, callback, user_id)
-#
-#
-# async def send_lesson_info(lesson, student_name: str, callback: CallbackQuery, user_id: int):
-#     """Отправка информации о ближайшем занятии пользователю."""
-#     lesson_date = lesson.get("lesson_date") or lesson.get("date")
-#
-#     logger.debug(f"Дата урока: {lesson_date}")
-#     if not lesson_date:
-#         logger.error(f"Дата урока отсутствует для урока: {lesson}")
-#         await callback.message.answer('Произошла ошибка при обработке расписания.. Мы обязательно это исправим!')
-#         return
-#
-#     # Форматируем информацию о занятии
-#     lesson_day, lesson_time, lesson_address = format_lesson_info(lesson, lesson_date)
-#     logger.debug(f"День недели: {lesson_day}, Время: {lesson_time}, Адрес: {lesson_address}")
-#
-#     # Отправляем информацию пользователю
-#     await callback.message.answer(
-#         text=f'{student_name}\nБлижайший урок:\n{lesson_day}: {lesson_time}\n{lesson_address}'
-#     )
-#     logger.debug(f"Отправлено расписание для пользователя с ID {user_id}")
-
-
-def format_lesson_info(lesson, lesson_date: str) -> tuple:
+def format_lesson_info(lesson) -> tuple:
     """Форматирование данных урока для отображения."""
-    lesson_date_splitted = lesson_date.split("-")
+    lesson_date = lesson.get("lesson_date") or lesson.get("date")
+    lesson_date_splitted = lesson_date.split('-')
 
     # Определение дня недели
+    # lesson_day_of_the_week = datetime.strptime(lesson_date, "%Y-%m-%d").strftime("%A")
+
     lesson_day = week[str(datetime(int(lesson_date_splitted[0]), int(lesson_date_splitted[1]),
                                    int(lesson_date_splitted[2])).weekday())]
 
