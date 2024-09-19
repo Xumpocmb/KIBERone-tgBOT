@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import F
 from aiogram import Router
 from aiogram.exceptions import TelegramAPIError
@@ -41,50 +43,30 @@ async def process_button_faq_press(callback: CallbackQuery, session: AsyncSessio
 
 # пункт раздела FAQ
 @faq_router.callback_query(F.data.startswith('faq-'))
-async def process_button_faq_question_press(callback: CallbackQuery, session: AsyncSession):
-    user_id = callback.from_user.id
-    logger.debug(f"Получен запрос на FAQ от пользователя с ID: {user_id}, данные: {callback.data}")
-
+async def process_faq_question(callback: CallbackQuery, session: AsyncSession):
+    """Process a callback query to show a single FAQ question and answer."""
     try:
         faq_id = int(callback.data.split('-')[1])
-        logger.debug(f"Извлечен ID вопроса: {faq_id}")
-
         query = select(FAQ).where(FAQ.id == faq_id)
-        result = await session.execute(query)
-        faq = result.scalar()
-        logger.debug(f"Получен ответ FAQ для ID {faq_id}: {faq.answer}")
-
-        await callback.message.answer(
-            text=faq.answer,
-            reply_markup=await make_inline_faq_kb(session)
-        )
-        logger.info(f"Отправлен ответ на FAQ пользователю с ID {user_id}.")
-
-        if callback.data == 'faq-2':
-            document1 = FSInputFile(path='files/Программа (младшая группа) А3.pdf',
-                                    filename='Программа обучения младшая группа.pdf')
-            document2 = FSInputFile(path='files/Программа (средняя группа) А3.pdf',
-                                    filename='Программа обучения средняя группа.pdf')
-            document3 = FSInputFile(path='files/Программа (старшая группа) А3.pdf',
-                                    filename='Программа обучения старшая группа.pdf')
-
-            await callback.message.answer_document(document=document1, caption='Программа обучения младшая группа')
-            logger.debug(f"Документ 'Программа обучения младшая группа' отправлен пользователю с ID {user_id}.")
-
-            await callback.message.answer_document(document=document2, caption='Программа обучения средняя группа')
-            logger.debug(f"Документ 'Программа обучения средняя группа' отправлен пользователю с ID {user_id}.")
-
-            await callback.message.answer_document(document=document3, caption='Программа обучения старшая группа')
-            logger.debug(f"Документ 'Программа обучения старшая группа' отправлен пользователю с ID {user_id}.")
-
-        await callback.message.delete()
-        logger.debug(f"Исходное сообщение удалено для пользователя с ID {user_id}.")
-
+        faq = (await session.execute(query)).scalars().first()
+        if faq is None:
+            await callback.message.answer(
+                text="Вопрос FAQ не найден.",
+                reply_markup=await make_inline_faq_kb(session)
+            )
+        else:
+            await callback.message.answer(
+                text=faq.answer,
+                reply_markup=await make_inline_faq_kb(session)
+            )
+            if callback.data == 'faq-2':
+                for file in (
+                    ('files/Программа (младшая группа) А3.pdf', 'Программа обучения младшая группа.pdf'),
+                    ('files/Программа (средняя группа) А3.pdf', 'Программа обучения средняя группа.pdf'),
+                    ('files/Программа (старшая группа) А3.pdf', 'Программа обучения старшая группа.pdf'),
+                ):
+                    await callback.message.answer_document(document=FSInputFile(path=file[0], filename=file[1]))
+    except (TelegramAPIError, SQLAlchemyError) as e:
+        logger.error(f"An error occurred while processing the FAQ callback query: {e}")
+    finally:
         await callback.answer()
-        logger.debug(f"Обработка запроса FAQ завершена для пользователя с ID {user_id}.")
-    except TelegramAPIError as e:
-        logger.error(f"Ошибка API Telegram при обработке запроса FAQ от пользователя с ID {user_id}: {e}")
-    except SQLAlchemyError as e:
-        logger.error(f"Ошибка SQLAlchemy при выполнении запроса FAQ для пользователя с ID {user_id}: {e}")
-    except Exception as e:
-        logger.error(f"Неизвестная ошибка при обработке запроса FAQ от пользователя с ID {user_id}: {e}")

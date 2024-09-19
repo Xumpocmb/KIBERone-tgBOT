@@ -32,10 +32,17 @@ async def tg_links_handler(callback: CallbackQuery, session: AsyncSession):
 
     logger.debug(f"Обработка запроса на получение ссылок..")
     user_tg_id = callback.from_user.id
-    user_data_in_db = await orm_get_user_by_tg_id(session, user_tg_id)
-    user_crm_id= user_data_in_db.user_crm_id
-
     try:
+        user_data_in_db = await orm_get_user_by_tg_id(session, user_tg_id)
+        if user_data_in_db is None:
+            logger.error(f"Пользователь с ID {user_tg_id} не найден в базе данных.")
+            await callback.message.answer(
+                'Вы не зарегистрированы в нашем чате. Пожалуйста, зарегистрируйтесь через команду /start',
+                reply_markup=main_menu_button_keyboard
+            )
+            await callback.answer()
+            return
+
         is_admin = check_admin(user_tg_id)
         if is_admin:
             logger.info(f"Пользователь с ID {user_tg_id} является администратором.")
@@ -45,17 +52,26 @@ async def tg_links_handler(callback: CallbackQuery, session: AsyncSession):
             )
             logger.debug(f"Отправлено сообщение о запрете получения ссылок администратору с ID {user_tg_id}.")
         else:
+            user_crm_id = user_data_in_db.user_crm_id
+            if user_crm_id is None:
+                logger.error(f"ID пользователя {user_tg_id} не найден в CRM.")
+                await callback.message.answer(
+                    'Вы не зарегистрированы в CRM. Пожалуйста, зарегистрируйтесь через команду /start',
+                    reply_markup=main_menu_button_keyboard
+                )
+                await callback.answer()
+                return
+
             await callback.message.answer(
                 tg_links_message,
                 reply_markup=await make_tg_links_inline_keyboard(session, user_tg_id, user_crm_id)
             )
             logger.debug(f"Отправлены ссылки на телеграм-каналы пользователю с ID {user_tg_id}.")
-
-        await callback.answer()
-        logger.debug(f"Обработка запроса на получение ссылок завершена для пользователя с ID {user_tg_id}.")
     except Exception as e:
         logger.error(f"Ошибка при обработке запроса на получение ссылок от пользователя с ID {user_tg_id}: {e}")
         await callback.message.answer(
             'Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже.'
         )
+    finally:
         await callback.answer()
+        logger.debug(f"Обработка запроса на получение ссылок завершена для пользователя с ID {user_tg_id}.")
