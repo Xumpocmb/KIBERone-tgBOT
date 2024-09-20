@@ -53,6 +53,7 @@ async def tg_links_handler(callback: CallbackQuery, session: AsyncSession):
             logger.debug(f"Отправлено сообщение о запрете получения ссылок администратору с ID {user_tg_id}.")
         else:
             user_crm_id = user_data_in_db.user_crm_id
+            user_branch_ids = user_data_in_db.user_branch_ids
             if user_crm_id is None:
                 logger.error(f"ID пользователя {user_tg_id} не найден в CRM.")
                 await callback.message.answer(
@@ -64,7 +65,7 @@ async def tg_links_handler(callback: CallbackQuery, session: AsyncSession):
 
             await callback.message.answer(
                 tg_links_message,
-                reply_markup=await make_tg_links_inline_keyboard(session, user_tg_id, user_crm_id)
+                reply_markup=await make_tg_links_inline_keyboard(session, user_tg_id, user_crm_id, user_branch_ids, include_back_button=True)
             )
             logger.debug(f"Отправлены ссылки на телеграм-каналы пользователю с ID {user_tg_id}.")
     except Exception as e:
