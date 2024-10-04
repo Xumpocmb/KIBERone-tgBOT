@@ -12,7 +12,7 @@ logger.add(
     "bot.log",
     format="{time} {level} {file}:{line} {message}",
     level="DEBUG",
-    rotation="10 MB",
+    rotation="1 MB",
     compression="zip"
 )
 

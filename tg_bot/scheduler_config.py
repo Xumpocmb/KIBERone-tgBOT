@@ -191,7 +191,25 @@ async def check_user_trial_lesson():
                                 logger.info(
                                     f'Не удалось получить дату и время пробного занятия пользователя {user.phone_number}')
                         else:
-                            logger.info(f'У пользователя {user.phone_number} нет запланированных пробных занятий.')
+                            user_lessons = get_client_lessons(user_crm_id, user_branch_ids)
+                            if user_lessons.get("total", 0) > 0:
+                                user_taught_lessons = await get_client_lessons(user_crm_id, user_branch_ids, status=3)
+                                if user_taught_lessons.get("total", 0) == 0:
+                                    if user_lessons['total'] > user_lessons['count']:
+                                        page = user_lessons['total'] // user_lessons['count']
+                                        user_lessons = get_client_lessons(user_crm_id, user_branch_ids, page=page)
+                                    last_user_lesson = user_lessons.get("items", [])[-1]
+
+                                    next_lesson_date = last_user_lesson.get("lesson_date") \
+                                        if last_user_lesson.get("lesson_date") \
+                                        else last_user_lesson.get("date")
+                                    reminder_day = next_lesson_date.day - 1
+                                    lesson_time = f"{next_lesson_date.get('time_from').split(' ')[1][:-3]}"
+
+                                    lesson_datetime_str = f"{reminder_day} {lesson_time}"
+                                    lesson_datetime = datetime.strptime(lesson_datetime_str, '%Y-%m-%d %H:%M')
+                                    await create_trial_lesson_reminder_task(user.tg_id, user_crm_id, lesson_datetime)
+                            logger.info(f'У пользователя {user.phone_number} нет запланированных пробных занятий. Создан таск на обычное занятие.')
         await asyncio.sleep(10)
 
 

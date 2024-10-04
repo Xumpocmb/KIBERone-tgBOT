@@ -266,7 +266,7 @@ async def check_client_balance_from_crm(phone_number: str, branch_ids: list, is_
             return None
 
 
-async def get_client_lessons(user_crm_id: int, branch_ids: list, page: int | None = None) -> dict | None:
+async def get_client_lessons(user_crm_id: int, branch_ids: list, page: int | None = None, status: int = 1) -> dict | None:
     token = await login_to_alfa_crm()
     data = {
         "customer_id": user_crm_id,
@@ -274,6 +274,7 @@ async def get_client_lessons(user_crm_id: int, branch_ids: list, page: int | Non
         "lesson_type_id": 2,  # 3 - пробник, 2 - групповой
         "page": 0 if page is None else page
     }
+    data.update({"status": status})
     data = json.dumps(data)
     for branch in branch_ids:
         url = f"https://{CRM_HOSTNAME}/v2api/{branch}/lesson/index"
