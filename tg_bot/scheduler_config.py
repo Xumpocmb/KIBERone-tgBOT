@@ -191,13 +191,13 @@ async def check_user_trial_lesson():
                                 logger.info(
                                     f'Не удалось получить дату и время пробного занятия пользователя {user.phone_number}')
                         else:
-                            user_lessons = get_client_lessons(user_crm_id, user_branch_ids)
+                            user_lessons = await get_client_lessons(user_crm_id, user_branch_ids)
                             if user_lessons.get("total", 0) > 0:
                                 user_taught_lessons = await get_client_lessons(user_crm_id, user_branch_ids, status=3)
                                 if user_taught_lessons.get("total", 0) == 0:
                                     if user_lessons.get('total', 0) > user_lessons.get('count', 0):
                                         page = user_lessons.get('total', 0) // user_lessons.get('count', 1)
-                                        user_lessons = get_client_lessons(user_crm_id, user_branch_ids, page=page)
+                                        user_lessons = await get_client_lessons(user_crm_id, user_branch_ids, page=page)
                                     last_user_lesson = user_lessons.get("items", [])[-1]
 
                                     next_lesson_date = last_user_lesson.get("lesson_date") \
@@ -266,7 +266,7 @@ def check_reminder_time(b_date, year):
     except ValueError:
         if b_date.day == 29 and b_date.month == 2:
             r_time = b_date.replace(day=28, year=year, hour=10, minute=0)
-    logger.error(f"Время напоминания некорректное: {r_time}")
+    logger.info(f"Установлено время напоминания: {r_time}")
     return r_time
 
 
