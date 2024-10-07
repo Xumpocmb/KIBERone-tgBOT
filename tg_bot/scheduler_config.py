@@ -191,28 +191,46 @@ async def check_user_trial_lesson():
                                 logger.info(
                                     f'Не удалось получить дату и время пробного занятия пользователя {user.phone_number}')
                         else:
+                            logger.info("Не удалось получить пробное занятие. Попытка получить обычные занятия.")
                             user_lessons = await get_client_lessons(user_crm_id, user_branch_ids)
                             if user_lessons.get("total", 0) > 0:
+                                logger.debug(f"Обычные занятия для пользователя {user.phone_number}: {user_lessons}")
                                 user_taught_lessons = await get_client_lessons(user_crm_id, user_branch_ids, status=3)
+                                logger.debug(f"Занятия, посещенные пользователем {user.phone_number}: {user_taught_lessons}")
                                 if user_taught_lessons.get("total", 0) == 0:
+                                    logger.debug(f"Пользователь {user.phone_number} никогда не посещал занятия.")
                                     if user_lessons.get('total', 0) > user_lessons.get('count', 0):
+
                                         page = user_lessons.get('total', 0) // user_lessons.get('count', 1)
                                         user_lessons = await get_client_lessons(user_crm_id, user_branch_ids, page=page)
+
+                                        logger.debug(f"Обычные занятия для пользователя {user.phone_number}: {user_lessons}")
                                     last_user_lesson = user_lessons.get("items", [])[-1]
 
-                                    next_lesson_date = last_user_lesson.get("lesson_date") \
+                                    logger.debug(f"Последнее обычное занятие для пользователя {user.phone_number}: {last_user_lesson}")
+
+                                    next_lesson_date_str = last_user_lesson.get("lesson_date") \
                                         if last_user_lesson.get("lesson_date") \
                                         else last_user_lesson.get("date")
 
+                                    logger.debug(f"Дата следующего обычного занятия для пользователя {user.phone_number}: {next_lesson_date_str}")
+                                    lesson_time = f"{last_user_lesson.get('time_from').split(' ')[1][:-3]}"
+                                    lesson_datetime_str = f"{next_lesson_date_str} {lesson_time}"
+
+                                    next_lesson_date = datetime.strptime(lesson_datetime_str, '%Y-%m-%d %H:%M')
                                     reminder_date = next_lesson_date - timedelta(days=1)
 
-                                    reminder_time = time(16, 0)
+                                    logger.debug(f"Дата и время напоминания для пользователя {user.phone_number}: {reminder_date}")
 
-                                    lesson_datetime = datetime.combine(reminder_date, reminder_time)
-
-                                    await create_trial_lesson_reminder_task(user.tg_id, user_crm_id, lesson_datetime)
+                                    await create_usual_lesson_reminder_task(user.tg_id, next_lesson_date, reminder_date)
+                                else:
+                                    logger.debug(f"Пользователь {user.phone_number} уже посещал обычные занятия.")
 
                             logger.info(f'У пользователя {user.phone_number} нет запланированных пробных занятий. Создан таск на обычное занятие.')
+                    else:
+                        logger.debug(f'У пользователя {user.phone_number} is_study = 1.')
+            else:
+                logger.info(f'У пользователя {user.phone_number} нет запланированных пробных занятий.')
         await asyncio.sleep(10)
 
 
@@ -239,6 +257,29 @@ async def create_trial_lesson_reminder_task(tg_id, user_crm_id, lesson_date):
     logger.info(f'Задача для отправки напоминания пользователю {tg_id} на {lesson_date} создана.')
 
 
+async def create_usual_lesson_reminder_task(tg_id, next_lesson_date, reminder_date):
+    job_id = f'usual_lesson_reminder_{tg_id}_{reminder_date.strftime("%Y%m%d")}'
+    existing_job = scheduler.get_job(job_id)
+
+    if existing_job:
+        logger.info(
+            f'Задача для отправки напоминания пользователю {tg_id} на {reminder_date} уже существует.')
+        return
+
+    trigger = CronTrigger(year=reminder_date.year, month=reminder_date.month, day=reminder_date.day, hour=16, minute=0)
+    # trigger_time = datetime.now() + timedelta(seconds=10)
+    # trigger = DateTrigger(run_date=trigger_time)
+    scheduler.add_job(
+        send_usual_lesson_reminder_message,
+        trigger,
+        args=[tg_id, next_lesson_date, reminder_date],
+        id=job_id,
+        misfire_grace_time=3600,
+    )
+
+    logger.info(f'Задача для отправки напоминания пользователю {tg_id} на {reminder_date} создана.')
+
+
 async def send_reminder_message(tg_id, lesson_datetime):
     logger.info(f'Отправляю напоминание пользователю {tg_id} о пробном занятии на {lesson_datetime}.')
 
@@ -251,7 +292,33 @@ async def send_reminder_message(tg_id, lesson_datetime):
     logger.info(f'Напоминание пользователю {tg_id} о пробном занятии на {lesson_datetime} отправлено.')
 
     job_id = f'reminder_{tg_id}_{lesson_datetime.strftime("%Y%m%d%H%M")}'
-    scheduler.remove_job(job_id)
+    try:
+        scheduler.remove_job(job_id)
+    except Exception as e:
+        logger.error("Ошибка при удалении задачи. Была уже удалена.")
+    logger.info(f'Задача с ID {job_id} удалена из планировщика.')
+
+
+async def send_usual_lesson_reminder_message(tg_id, next_lesson_date, reminder_date):
+    logger.info(f'Отправляю напоминание пользователю {tg_id} об обычном занятии на {next_lesson_date}.')
+
+    lesson_date_str = next_lesson_date.strftime('%d.%m')
+    lesson_time_str = next_lesson_date.strftime('%H:%M')
+
+    reminder_message = (f"\tПоздравляем с поступлением в KIBERone 👏 \n"
+f"Спешим сообщить, что завтра состоится Ваше первое занятие!\n"
+f"Будем ждать Вас {lesson_date_str} в {lesson_time_str}. Пожалуйста не забудьте паспорт, для заключения договора😊\n"
+f"Теперь ваш ребёнок гарантировано будет обладать самыми современными знаниями и построит успешную карьеру 💛")
+
+    async with bot:
+        await bot.send_message(chat_id=tg_id, text=reminder_message)
+    logger.info(f'Напоминание пользователю {tg_id} о занятии на {next_lesson_date} отправлено.')
+
+    job_id = f'usual_lesson_reminder_{tg_id}_{reminder_date.strftime("%Y%m%d")}'
+    try:
+        scheduler.remove_job(job_id)
+    except Exception as e:
+        logger.error("Ошибка при удалении задачи. Была уже удалена.")
     logger.info(f'Задача с ID {job_id} удалена из планировщика.')
 
 
@@ -390,7 +457,7 @@ def setup_scheduler():
 
         scheduler.add_job(
             check_user_trial_lesson,
-            IntervalTrigger(hours=24, start_date=datetime.now().replace(hour=2, minute=35)),
+            IntervalTrigger(hours=24, start_date=datetime.now().replace(hour=2, minute=35)),  # .replace(hour=2, minute=35)
             id='check_user_trial_lesson',
             misfire_grace_time=3600,
         )

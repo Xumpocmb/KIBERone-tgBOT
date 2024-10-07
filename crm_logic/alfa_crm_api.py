@@ -12,15 +12,10 @@ from database.orm_query import orm_get_user_by_crm_id
 
 load_dotenv()
 
-debug = os.getenv("DEBUG")
-if debug == "dev":
-    CRM_HOSTNAME = os.getenv("TEST_CRM_HOSTNAME")
-    CRM_EMAIL = os.getenv("TEST_CRM_EMAIL")
-    CRM_API_KEY = os.getenv("TEST_CRM_API_KEY")
-else:
-    CRM_HOSTNAME = os.getenv("CRM_HOSTNAME")
-    CRM_EMAIL = os.getenv("CRM_EMAIL")
-    CRM_API_KEY = os.getenv("CRM_API_KEY")
+# debug = os.getenv("DEBUG")
+CRM_HOSTNAME = os.getenv("CRM_HOSTNAME")
+CRM_EMAIL = os.getenv("CRM_EMAIL")
+CRM_API_KEY = os.getenv("CRM_API_KEY")
 
 
 headers = {
