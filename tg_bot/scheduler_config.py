@@ -191,6 +191,7 @@ async def check_user_trial_lesson():
                                 logger.info(
                                     f'Не удалось получить дату и время пробного занятия пользователя {user.phone_number}')
                         else:
+                            await asyncio.sleep(5)
                             logger.info("Не удалось получить пробное занятие. Попытка получить обычные занятия.")
                             user_lessons = await get_client_lessons(user_crm_id, user_branch_ids)
                             if user_lessons.get("total", 0) > 0:
@@ -231,7 +232,7 @@ async def check_user_trial_lesson():
                         logger.debug(f'У пользователя {user.phone_number} is_study = 1.')
             else:
                 logger.info(f'У пользователя {user.phone_number} нет запланированных пробных занятий.')
-        await asyncio.sleep(10)
+        await asyncio.sleep(5)
 
 
 async def create_trial_lesson_reminder_task(tg_id, user_crm_id, lesson_date):
@@ -373,7 +374,7 @@ async def check_user_birthday():
                     logger.info(f'Для пользователя {user.phone_number} нет записей о дне рождения в ЦРМ.')
             else:
                 logger.warning(f'Пользователь {user.phone_number} не найден в ЦРМ.')
-            await asyncio.sleep(15)
+            await asyncio.sleep(5)
         except Exception as e:
             logger.error(f'Ошибка при обработке пользователя с телефоном {user.phone_number}: {e}')
     logger.info("Проверка дней рождения завершена.")
@@ -450,21 +451,21 @@ def setup_scheduler():
 
         scheduler.add_job(
             check_user_balance,
-            IntervalTrigger(hours=24, start_date=datetime.now().replace(hour=23, minute=30)),  # .replace(hour=23, minute=30)
+            IntervalTrigger(hours=24, start_date=datetime.now().replace(hour=22, minute=5)),  # .replace(hour=23, minute=30)
             id='check_user_balance',
             misfire_grace_time=3600,
         )
 
         scheduler.add_job(
             check_user_trial_lesson,
-            IntervalTrigger(hours=24, start_date=datetime.now().replace(hour=2, minute=35)),  # .replace(hour=2, minute=35)
+            IntervalTrigger(hours=24, start_date=datetime.now().replace(hour=2, minute=15)),  # .replace(hour=2, minute=35)
             id='check_user_trial_lesson',
             misfire_grace_time=3600,
         )
 
         scheduler.add_job(
             check_user_birthday,
-            IntervalTrigger(hours=24, start_date=datetime.now().replace(hour=5, minute=45)),
+            IntervalTrigger(hours=24, start_date=datetime.now().replace(hour=4, minute=55)),
             id='check_user_birthday',
             misfire_grace_time=3600,
         )
