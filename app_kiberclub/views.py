@@ -1,6 +1,7 @@
 import json
 import hashlib
 import hmac
+import os
 from hmac import new as hmac_new
 import pandas as pd
 
@@ -11,9 +12,18 @@ from django.http import JsonResponse
 from urllib.parse import unquote
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from dotenv import load_dotenv
 
 from app_kiberclub.alfa_crm import find_user_by_phone, get_client_lessons, get_client_lesson_name
 from app_kiberclub.models import UserData
+
+load_dotenv()
+
+DEBUG = os.environ.get("BOT_DEBUG")
+if DEBUG == "dev":
+    BOT_TOKEN = os.environ.get("BOT_TOKEN2")
+else:
+    BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 CREDENTIALS_FILE = 'kiberone-tg-bot-a43691efe721.json'
 
@@ -115,7 +125,7 @@ def get_response_from_page(request):
                 return JsonResponse({"status": "error", "message": "No init data received."}, status=400)
 
             # TODO: Заменить токен бота
-            secret_key = "6113360297:AAGikeld4Us-q3B75l2SHZNuqDEPdKbsW9U"
+            secret_key = BOT_TOKEN
 
 
             init_data_dict = validate(init_data, secret_key)
