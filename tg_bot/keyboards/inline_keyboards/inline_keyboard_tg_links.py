@@ -2,8 +2,8 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from crm_logic.alfa_crm_api import get_user_groups_from_crm, get_group_link_from_crm
-from database.orm_query import get_branch_tg_link, orm_get_user_by_tg_id
+from tg_bot.crm_logic.alfa_crm_api import get_user_groups_from_crm, get_group_link_from_crm
+from tg_bot.database.orm_query import get_branch_tg_link, orm_get_user_by_tg_id
 
 from logger_config import get_logger
 

@@ -2,8 +2,8 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.engine import session_maker
-from database.orm_query import orm_get_user_by_tg_id
+from tg_bot.database.engine import session_maker
+from tg_bot.database.orm_query import orm_get_user_by_tg_id
 from logger_config import get_logger
 from tg_bot.filters.filter_admin import check_admin
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_tg_links import make_tg_links_inline_keyboard

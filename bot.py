@@ -7,7 +7,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from dotenv import load_dotenv
 
-from database.engine import create_db, session_maker
+from tg_bot.database.engine import create_db, session_maker
 from tg_bot.handlers import handler_main_menu
 from tg_bot.handlers import handler_start, handler_help
 from tg_bot.handlers.admin_handlers import (
@@ -30,7 +30,6 @@ from tg_bot.handlers.inline_handlers import (
     inline_handler_trial_lesson,
     inline_handler_crm_balance,
 )
-from tg_bot.middlewares.middleware_antiflood import AntiFloodMiddleware
 from tg_bot.middlewares.middleware_chat_action import ChatActionMiddleware
 from tg_bot.middlewares.middleware_database import DataBaseSession
 from tg_bot.scheduler_config import setup_scheduler, stop_scheduler
@@ -40,7 +39,7 @@ from logger_config import get_logger
 logger = get_logger()
 
 load_dotenv()
-DEBUG = os.environ.get("DEBUG")
+DEBUG = os.environ.get("BOT_DEBUG")
 if DEBUG == "dev":
     BOT_TOKEN = os.environ.get("BOT_TOKEN2")
 else:
@@ -51,13 +50,13 @@ async def on_startup(bot: Bot):
     logger.info("Starting bot..")
     logger.info("Creating DB..")
     await create_db()
-    setup_scheduler()
+    # setup_scheduler()
     logger.info("DB created. Bot started.")
 
 
 async def on_shutdown(bot: Bot):
     logger.info("Processing shutdown..")
-    stop_scheduler()
+    # stop_scheduler()
 
 
 async def main():

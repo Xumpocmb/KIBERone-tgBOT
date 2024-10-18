@@ -1,22 +1,21 @@
 import asyncio
 import os
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta
 
 from aiogram import Bot
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from pytz import timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from crm_logic.alfa_crm_api import find_user_by_phone, get_user_trial_lesson, get_client_lessons
-from database.engine import session_maker
-from database.models import User
-from database.orm_query import orm_update_user
+from tg_bot.crm_logic.alfa_crm_api import find_user_by_phone, get_user_trial_lesson, get_client_lessons
+from tg_bot.database.engine import session_maker
+from tg_bot.database.models import User
+from tg_bot.database.orm_query import orm_update_user
 from tg_bot.filters.filter_admin import check_admin
 
 from logger_config import get_logger

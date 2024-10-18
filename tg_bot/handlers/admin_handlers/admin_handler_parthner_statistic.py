@@ -1,16 +1,13 @@
 import csv
-import io
 import json
 import os
-from datetime import datetime
 from sqlalchemy import select
 from aiogram import Router, F, types
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.engine import session_maker
-from database.models import Partner
-from database.orm_query import get_tasks
+from tg_bot.database.engine import session_maker
+from tg_bot.database.models import Partner
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
 admin_handler_parthner_statistic_router: Router = Router()

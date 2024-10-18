@@ -4,7 +4,7 @@ from aiogram.exceptions import TelegramAPIError
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.engine import session_maker
+from tg_bot.database.engine import session_maker
 from logger_config import get_logger
 from tg_bot.filters.filter_admin import check_admin
 from tg_bot.handlers.handler_main_menu import get_user_keyboard

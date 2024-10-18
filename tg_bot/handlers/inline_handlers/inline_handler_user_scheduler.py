@@ -6,11 +6,10 @@ from aiogram.types import CallbackQuery
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from crm_logic.alfa_crm_api import find_user_by_phone, get_client_lessons
-from database.engine import session_maker
-from database.orm_query import orm_get_user_by_tg_id
+from tg_bot.crm_logic.alfa_crm_api import find_user_by_phone, get_client_lessons
+from tg_bot.database.engine import session_maker
+from tg_bot.database.orm_query import orm_get_user_by_tg_id
 from tg_bot.filters.filter_admin import check_admin
-from tg_bot.handlers.handler_main_menu import get_user_keyboard
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
 

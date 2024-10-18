@@ -4,9 +4,9 @@ from aiogram.types import CallbackQuery
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from crm_logic.alfa_crm_api import get_client_lessons
-from database.engine import session_maker
-from database.orm_query import orm_get_user_by_tg_id, get_manager_info
+from tg_bot.crm_logic.alfa_crm_api import get_client_lessons
+from tg_bot.database.engine import session_maker
+from tg_bot.database.orm_query import orm_get_user_by_tg_id, get_manager_info
 from logger_config import get_logger
 from tg_bot.middlewares.middleware_database import DataBaseSession
 

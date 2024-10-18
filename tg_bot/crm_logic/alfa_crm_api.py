@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.orm_query import orm_get_user_by_crm_id
+from tg_bot.database.orm_query import orm_get_user_by_crm_id
 
 load_dotenv()
 

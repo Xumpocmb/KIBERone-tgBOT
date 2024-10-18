@@ -1,9 +1,8 @@
-from aiogram import Router, F
+from aiogram import Router
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 from aiogram.filters import Command
-from crm_logic.alfa_crm_api import find_user_by_phone, get_client_lessons
-from database.orm_query import orm_get_user_by_tg_id
+from tg_bot.database.orm_query import orm_get_user_by_tg_id
 from tg_bot.filters.filter_admin import check_admin
 from tg_bot.keyboards.inline_keyboards.inline_admin_main_menu import admin_main_menu_inline_keyboard
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_main_menu import main_menu_inline_keyboard_for_client, \

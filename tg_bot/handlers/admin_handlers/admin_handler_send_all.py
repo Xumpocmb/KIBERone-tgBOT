@@ -7,8 +7,8 @@ from aiogram.types import CallbackQuery, Message
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.engine import session_maker
-from database.orm_query import get_all_users
+from tg_bot.database.engine import session_maker
+from tg_bot.database.orm_query import get_all_users
 from tg_bot.keyboards.inline_keyboards.inline_admin_main_menu import admin_main_menu_inline_keyboard
 from tg_bot.middlewares.middleware_database import DataBaseSession
 from aiogram.fsm.context import FSMContext

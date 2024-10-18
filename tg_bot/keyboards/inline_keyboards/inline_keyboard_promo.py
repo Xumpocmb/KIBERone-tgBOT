@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import Promotion
+from tg_bot.database.models import Promotion
 
 from logger_config import get_logger
 

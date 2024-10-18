@@ -2,7 +2,7 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
-from database.models import SchedulerTask, User, BranchesTelegramLink, Manager
+from tg_bot.database.models import SchedulerTask, User, BranchesTelegramLink, Manager
 
 
 async def orm_add_user(session: AsyncSession, data: dict):

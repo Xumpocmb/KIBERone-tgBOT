@@ -1,8 +1,8 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy import select
 
-from database.engine import session_maker
-from database.models import Link
+from tg_bot.database.engine import session_maker
+from tg_bot.database.models import Link
 
 from logger_config import get_logger
 

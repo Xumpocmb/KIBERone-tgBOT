@@ -11,9 +11,9 @@ from aiogram.exceptions import TelegramBadRequest, TelegramNetworkError
 from sqlalchemy.exc import IntegrityError, OperationalError
 from asyncio import TimeoutError
 
-from database.orm_query import orm_add_user, orm_get_user_by_tg_id, orm_update_user
+from tg_bot.database.orm_query import orm_add_user, orm_get_user_by_tg_id, orm_update_user
 from tg_bot.filters.filter_admin import check_admin
-from crm_logic.alfa_crm_api import (
+from tg_bot.crm_logic.alfa_crm_api import (
     create_user_in_alfa_crm,
     find_user_by_phone,
     get_client_lessons,

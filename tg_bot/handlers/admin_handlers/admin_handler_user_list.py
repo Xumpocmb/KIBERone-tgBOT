@@ -1,4 +1,3 @@
-import asyncio
 import csv
 from datetime import datetime
 import io
@@ -7,8 +6,8 @@ from aiogram import Router, F, types
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.engine import session_maker
-from database.orm_query import get_all_users
+from tg_bot.database.engine import session_maker
+from tg_bot.database.orm_query import get_all_users
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
 

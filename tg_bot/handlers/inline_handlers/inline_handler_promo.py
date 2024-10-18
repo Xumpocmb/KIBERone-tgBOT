@@ -7,8 +7,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.operators import eq
 
-from database.engine import session_maker
-from database.models import Promotion
+from tg_bot.database.engine import session_maker
+from tg_bot.database.models import Promotion
 from logger_config import get_logger
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_promo import make_inline_promo_kb
 from tg_bot.middlewares.middleware_database import DataBaseSession

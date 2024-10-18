@@ -1,0 +1,41 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Профиль</title>
+    <link rel="stylesheet" type="text/css" href=" {% static "styles/client_card_style.css" %}">
+    <script type="module" src="{% static 'js/set_client_card_style.js' %}"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<center><div class="visible" id="loader"></div></center>
+<div id="main">
+    <section id="infoWithImage">
+        <img src="{% static 'img/profile_image.png' %}" id="profileImg" alt="">
+        <section id="userInfo">
+            <section id="account">
+                <img src="{% static 'img/wallet_img.png' %}" id="walletImg" alt=""><b id="kiberons">0К</b>
+            </section>
+            <p id="fullname" style="font-family: 'Inter Light';">ФИО</p>
+            <b id="dob" style="font-family: 'Inter Light';">День Рождения</b>
+            <b id="location" style="font-family: 'Inter Light';">Локация</b>
+        </section>
+    </section>
+    <a href="https://kiber-one.club/">Перейти в личный кабинет</a>
+    <section id="extraInfo">
+        <div class="backend_info" id="backend_info"></div>
+        <p>Тема следующего занятия</p>
+        <span id="subject">Scratch. Знакомство с визуальным языком программирования</span>
+        <p>Обратная связь от тьютора</p>
+        <span id="resume">
+                <div class="item" id="resumeInfo">
+                    Резюме от тьютора
+                </div>
+            </span>
+    </section>
+</div>
+</body>
+
+<script src="{% static 'js/get_client_data.js' %}"></script>
+</html>

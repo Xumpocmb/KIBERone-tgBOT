@@ -1,7 +1,7 @@
 import os
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from database.models import Base
+from tg_bot.database.models import Base
 from dotenv import load_dotenv
 
 load_dotenv()

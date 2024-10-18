@@ -1,5 +1,3 @@
-import asyncio
-
 from aiogram import F
 from aiogram import Router
 from aiogram.exceptions import TelegramAPIError
@@ -8,8 +6,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.engine import session_maker
-from database.models import FAQ
+from tg_bot.database.engine import session_maker
+from tg_bot.database.models import FAQ
 from logger_config import get_logger
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_faq import make_inline_faq_kb
 from tg_bot.middlewares.middleware_database import DataBaseSession

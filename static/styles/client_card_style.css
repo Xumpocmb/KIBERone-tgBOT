@@ -1,0 +1,147 @@
+html {
+    width: 100%;
+    height: 100%;
+    font-family: 'PF BeauSans Pro Light';
+    font-size: 13px;
+}
+
+body {
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1%;
+}
+
+span {
+    background-color: #fff;
+    padding: 8px;
+    border-radius: 7px;
+    display: flex;
+    width: 250px;
+    max-height: 30%;
+    font-size: 12px;
+    overflow: auto;
+    scroll-snap-type: y mandatory;
+    border: 3px solid #F6C90E; 
+}
+
+p {
+    font-size: 12px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+a {
+    background-color: #F6C90E;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 8px;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+#profileImg {
+    width: 110px;
+    height: 110px;
+    margin-left: 30px;
+    margin-bottom: -10px;
+}
+
+#walletImg {
+    width: 15px;
+    height: 15px;
+    margin-right: 3px;
+}
+
+#userInfo {
+    display: flex;
+    flex-direction: column;
+    /* margin-left: 20px; */
+    color: #000000;
+    text-align: right;
+}
+
+#infoWithImage {
+    display: flex;
+    width: 265px;
+    align-items: end;
+    margin-bottom: 15px;
+    justify-content: space-between;
+}
+
+#extraInfo {
+    padding-top: 8px;
+}
+
+.visible {
+    margin: 50px;
+    content: "";
+    width: 50px;
+    height: 50px;
+    border: 5px solid #312f32;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.hidden_empty {
+    visibility: hidden;
+    transition: opacity 0.5s ease-out;
+    pointer-events: none;
+}
+
+/*@media screen and (max-device-width: 900px) {*/
+/*    html {*/
+/*        font-size: 43px;*/
+/*    }*/
+/*    */
+/*    body {*/
+/*        padding: 5%;*/
+/*    }*/
+/*    */
+/*    span {*/
+/*        padding: 18px;*/
+/*        border-radius: 15px;*/
+/*        width: 800px;*/
+/*        font-size: 42px;*/
+/*        border: 5px solid #F6C90E; */
+/*    }*/
+/*    */
+/*    p {*/
+/*        font-size: 42px;*/
+/*    }*/
+/*    */
+/*    a {*/
+/*        border-radius: 20px;*/
+/*        padding: 18px;*/
+/*        font-size: 42px;*/
+/*    }*/
+/*    */
+/*    #profileImg {*/
+/*        width: 350px;*/
+/*        height: 350px;*/
+/*        margin-left: 85px;*/
+/*        margin-bottom: -30px;*/
+/*    }*/
+/*    */
+/*    #walletImg {*/
+/*        width: 45px;*/
+/*        height: 45px;*/
+/*        margin-right: 8px;*/
+/*    }*/
+/*    */
+/*    #infoWithImage {*/
+/*        width: 820px;*/
+/*        margin-bottom: 45px;*/
+/*    }*/
+/*}*/
