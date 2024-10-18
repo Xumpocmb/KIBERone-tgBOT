@@ -94,7 +94,6 @@ class GoogleSheet:
             if not data:
                 raise ValueError("No data found in the worksheet")
             df = pd.DataFrame(data)
-            print("Данные успешно загружены из Google Sheets")
             return df
         except Exception as e:
             print(f"Ошибка загрузки данных из Google Sheets: {e}")
@@ -220,17 +219,14 @@ def get_response_from_page(request):
                     login = minsk_login
                     password = minsk_password
                     kiberons: int | None = get_kiberons_count(user_crm_name_full, login, password)
-                    print(kiberons)
                 elif location_name == "Борисов":
                     login = borisov_login
                     password = borisov_password
                     kiberons: int | None = get_kiberons_count(user_crm_name_full, login, password)
-                    print(kiberons)
                 elif location_name == "Барановичи":
                     login = baranovichi_login
                     password = baranovichi_password
                     kiberons: int | None = get_kiberons_count(user_crm_name_full, login, password)
-                    print(kiberons)
 
 
 
