@@ -115,6 +115,7 @@ def get_response_from_page(request):
             if not init_data:
                 return JsonResponse({"status": "error", "message": "No init data received."}, status=400)
 
+            # TODO: Заменить токен бота
             secret_key = "6113360297:AAGikeld4Us-q3B75l2SHZNuqDEPdKbsW9U"
 
 
@@ -128,7 +129,7 @@ def get_response_from_page(request):
                     user_db_info = UserData.objects.filter(tg_id=user_tg_id).first()
                 except Exception as e:
                     return JsonResponse({"status": "error", "message": "Ошибка при поиске записи в базе данных"}, status=400)
-
+                # TODO: заменить номер телефона
                 user_data_by_phone = find_user_by_phone("+375447123218")
 
                 if not user_data_by_phone:

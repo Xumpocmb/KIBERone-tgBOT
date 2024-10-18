@@ -50,6 +50,7 @@ async def on_startup(bot: Bot):
     logger.info("Starting bot..")
     logger.info("Creating DB..")
     await create_db()
+    # TODO: setup scheduler
     # setup_scheduler()
     logger.info("DB created. Bot started.")
 

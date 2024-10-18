@@ -70,3 +70,6 @@ venv.bak/
 /files/
 /bot.log
 /click_data.json
+/kiberclub_credentials.json
+/kiberone-tg-bot-a43691efe721.json
+/tg_bot/crm_logic/user_by_phone.json
