@@ -25,13 +25,37 @@ SECRET_KEY = 'django-insecure-@zjgmc%w0obd@av@wq=%l+oj7^fdj$)yu!_*9%nozp0iu7q^3)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["https://kiberonetgbot.online/", "127.0.0.1", "localhost", "0.0.0.0"]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "https://kiberonetgbot.online/"
+]
+
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+CORS_EXPOSE_HEADERS = ['Set-Cookie']
 
 
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1",
-    "http://localhost",
-    "https://6284-178-120-69-181.ngrok-free.app",
+    "http://localhost:80",
+    "http://localhost:8000",
+    "http://localhost:8000",
+    "https://kiberonetgbot.online"
 ]
 
 
@@ -45,6 +69,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'corsheaders',
+
     'app_kiberclub',
 ]
 
@@ -56,6 +82,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'app_kiberclub.middleware.DeviceDetectionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'tg_kiberclub.urls'

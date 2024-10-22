@@ -10,8 +10,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const contentElement = document.getElementById("main");
             const loaderElement = document.getElementById("loader");
-            // contentElement.hidden = true;
-            // loaderElement.hidden = false;
 
             loaderElement.style.display = 'block';
             contentElement.style.display = 'none';
@@ -34,10 +32,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .then(data => {
                     if (data.status === "success") {
-                        // loaderElement.remove()
-                        // contentElement.classList.remove("hidden_empty");
-                        // contentElement.hidden = false;
-
                         loaderElement.style.display = 'none';
                         contentElement.style.display = 'block';
                         nameElement.innerText = data.data.user_crm_name;
@@ -50,12 +44,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .catch(error => {
                     console.error("Error:", error);
-                    const span = document.getElementById("backend_info");
-                    span.innerText = error.message;
                     loaderElement.style.display = 'none';
                     contentElement.style.display = 'block';
                 });
-        } else {
+        }
+        else {
             console.log("Telegram WebApp is not available");
             const span = document.getElementById("backend_info");
             span.innerText = "Telegram WebApp is not available";

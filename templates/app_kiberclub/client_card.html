@@ -4,29 +4,14 @@
 <html>
 <head>
     <title>Профиль</title>
-    <!-- <script type="module" src="{% static 'js/set_client_card_style.js' %}"></script> -->
+    {% if is_iphone %}
+        <link rel="stylesheet" href="{% static 'styles/client_card_style_iphone.css' %}">
+    {% else %}
+        <link rel="stylesheet" href="{% static 'styles/client_card_style.css' %}">
+    {% endif %}
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-<script>
-    window.addEventListener("load", (e) => {
-        var IS_IPHONE = navigator.userAgent.match(/iPhone/i) != null;
-        console.log(IS_IPHONE)
-        if (IS_IPHONE) {
-            var link=document.createElement("link");
-            link.type="text/css";
-            link.rel="stylesheet";
-            link.href="{% static 'styles/client_card_style_iphone.css' %}";
-            document.getElementsByTagName("head")[0].appendChild(link);
-        }
-        else {
-            var link=document.createElement("link");
-            link.type="text/css";
-            link.rel="stylesheet";
-            link.href="{% static 'styles/client_card_style.css' %}";
-            document.getElementsByTagName("head")[0].appendChild(link);
-        }
-    })
-</script>
+
 <body>
 <center><div class="visible" id="loader"></div></center>
 <div id="main">
@@ -34,7 +19,7 @@
         <img src="{% static 'img/profile_image.png' %}" id="profileImg" alt="">
         <section id="userInfo">
             <section id="account">
-                <img src="{% static 'img/wallet_img.png' %}" id="walletImg" alt=""><b id="kiberons">0К</b>
+                <img src="{% static 'img/wallet_img.png' %}" id="walletImg" alt=""><b id="kiberons">0 К</b>
             </section>
             <p id="fullname" style="font-family: 'Inter Light';">ФИО</p>
             <b id="dob" style="font-family: 'Inter Light';">День Рождения</b>

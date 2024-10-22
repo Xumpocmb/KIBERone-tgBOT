@@ -111,7 +111,10 @@ class GoogleSheet:
 
 
 def get_resume(request):
-    return render(request, 'app_kiberclub/client_card.html')
+    context = {
+        'is_iphone': request.is_iphone,
+    }
+    return render(request, 'app_kiberclub/client_card.html', context=context)
 
 
 @csrf_exempt
@@ -124,7 +127,6 @@ def get_response_from_page(request):
             if not init_data:
                 return JsonResponse({"status": "error", "message": "No init data received."}, status=400)
 
-            # TODO: Заменить токен бота
             secret_key = BOT_TOKEN
 
 
@@ -138,8 +140,7 @@ def get_response_from_page(request):
                     user_db_info = UserData.objects.filter(tg_id=user_tg_id).first()
                 except Exception as e:
                     return JsonResponse({"status": "error", "message": "Ошибка при поиске записи в базе данных"}, status=400)
-                # TODO: заменить номер телефона
-                user_data_by_phone = find_user_by_phone("+375447123218")
+                user_data_by_phone = find_user_by_phone(user_db_info.phone_number)
 
                 if not user_data_by_phone:
                     return JsonResponse({"status": "error", "message": "Ошибка при поиске в CRM"}, status=400)
