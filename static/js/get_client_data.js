@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(response => {
                     if (!response.ok) {
                         return response.json().then(errorData => {
-                            throw new Error(errorData.message || "Unknown error");
+                            throw new Error(errorData.message || "Произошла ошибка при получении данных");
                         });
                     }
                     return response.json();
@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 })
                 .catch(error => {
-                    console.error("Error:", error);
+                    console.error("Error:", error.message);
                     loaderElement.style.display = 'none';
                     contentElement.style.display = 'block';
                 });

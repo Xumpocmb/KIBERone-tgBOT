@@ -250,7 +250,7 @@ def get_response_from_page(request):
                         "user_crm_birthday": user_crm_birthday or "",
                         "user_crm_location": room_name or "",
                         "lesson_name": lesson_name or "",
-                        "intermediate_resume": intermediate_resume or "",
+                        "intermediate_resume": intermediate_resume or "Появится позже..",
                         "kiberons": kiberons if kiberons is not None else 0,
                     }
                 }, status=200)
