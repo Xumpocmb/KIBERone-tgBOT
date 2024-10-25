@@ -44,6 +44,7 @@ MINSK_WORK_SHEET_NAMES = {
     '15': "Арена",
     '16': "Неманская",
     '19': "Богдановича",
+    '21': "Пер. Москвина 4",
 }
 
 BORISOV = {
@@ -238,7 +239,6 @@ def get_response_from_page(request):
                     login = baranovichi_login
                     password = baranovichi_password
                     kiberons: int | None = get_kiberons_count(user_crm_name_full, login, password)
-
 
 
 

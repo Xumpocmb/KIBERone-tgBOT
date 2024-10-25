@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-@zjgmc%w0obd@av@wq=%l+oj7^fdj$)yu!_*9%nozp0iu7q^3)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["https://kiberonetgbot.online/", "127.0.0.1", "localhost", "0.0.0.0"]
+ALLOWED_HOSTS = ["kiberonetgbot.online", "127.0.0.1", "localhost", "0.0.0.0"]
 
 CORS_ALLOW_CREDENTIALS = True
 
