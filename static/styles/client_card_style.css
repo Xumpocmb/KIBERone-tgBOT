@@ -1,7 +1,23 @@
+@font-face {
+    font-family: 'pf_beausans_prolight';
+    src: url("../fonts/PFBeauSansPro-Light.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'franklin_gothic_mediumregular';
+    src: url("https://fedorchuk-valeria.github.io/card-client-kiberone/fonts/ofont.ru_Franklin Gothic Medium.ttf") format("truetype"); 
+    font-weight: normal;
+    font-style: normal;
+
+}
+
 html {
     width: 100%;
     height: 100%;
-    font-family: 'PF BeauSans Pro Light';
+    font-family: 'pf_beausans_prolight';
     font-size: 13px;
 }
 
@@ -20,7 +36,7 @@ span {
     border-radius: 7px;
     display: flex;
     width: 250px;
-    max-height: 30%;
+    max-height: 250px;
     font-size: 12px;
     overflow: auto;
     scroll-snap-type: y mandatory;
@@ -29,7 +45,7 @@ span {
 
 p {
     font-size: 12px;
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-family: 'franklin_gothic_mediumregular';
 }
 
 a {
@@ -74,74 +90,49 @@ a {
     padding-top: 8px;
 }
 
-.visible {
-    margin: 50px;
-    content: "";
-    width: 50px;
-    height: 50px;
-    border: 5px solid #312f32;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
+/* @media screen and (max-device-width: 850px) {
+    html {
+        font-size: 43px;
     }
-    to {
-        transform: rotate(360deg);
+    
+    body {
+        padding: 5%;
     }
-}
-
-.hidden_empty {
-    visibility: hidden;
-    transition: opacity 0.5s ease-out;
-    pointer-events: none;
-}
-
-/*@media screen and (max-device-width: 900px) {*/
-/*    html {*/
-/*        font-size: 43px;*/
-/*    }*/
-
-/*    body {*/
-/*        padding: 5%;*/
-/*    }*/
-
-/*    span {*/
-/*        padding: 18px;*/
-/*        border-radius: 15px;*/
-/*        width: 800px;*/
-/*        font-size: 42px;*/
-/*        border: 5px solid #F6C90E;*/
-/*    }*/
-
-/*    p {*/
-/*        font-size: 42px;*/
-/*    }*/
-
-/*    a {*/
-/*        border-radius: 20px;*/
-/*        padding: 18px;*/
-/*        font-size: 42px;*/
-/*    }*/
-
-/*    #profileImg {*/
-/*        width: 350px;*/
-/*        height: 350px;*/
-/*        margin-left: 85px;*/
-/*        margin-bottom: -30px;*/
-/*    }*/
-
-/*    #walletImg {*/
-/*        width: 45px;*/
-/*        height: 45px;*/
-/*        margin-right: 8px;*/
-/*    }*/
-
-/*    #infoWithImage {*/
-/*        width: 820px;*/
-/*        margin-bottom: 45px;*/
-/*    }*/
-/*}*/
+    
+    span {
+        padding: 18px;
+        border-radius: 15px;
+        width: 800px;
+        font-size: 42px;
+        border: 5px solid #F6C90E;
+        max-height: 600px;
+    }
+    
+    p {
+        font-size: 42px;
+    }
+    
+    a {
+        border-radius: 20px;
+        padding: 18px;
+        font-size: 42px;
+    }
+    
+    #profileImg {
+        width: 350px;
+        height: 350px;
+        margin-left: 85px;
+        margin-bottom: -30px;
+    }
+    
+    #walletImg {
+        width: 45px;
+        height: 45px;
+        margin-right: 8px;
+    }
+    
+    #infoWithImage {
+        width: 820px;
+        margin-bottom: 45px;
+    }
+} */

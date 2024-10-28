@@ -73,3 +73,5 @@ venv.bak/
 /kiberclub_credentials.json
 /kiberone-tg-bot-a43691efe721.json
 /tg_bot/crm_logic/user_by_phone.json
+/static/img/
+/static/fonts/

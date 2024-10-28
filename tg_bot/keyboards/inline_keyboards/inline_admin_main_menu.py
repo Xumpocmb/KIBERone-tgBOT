@@ -17,7 +17,8 @@ button_4: InlineKeyboardButton = InlineKeyboardButton(
 )
 
 button_5: InlineKeyboardButton = InlineKeyboardButton(
-    text="Резюме", web_app=WebAppInfo(url="https://kiberonetgbot.online/kiberclub/resume/")
+    text="Резюме", web_app=WebAppInfo(url="https://a9d1-185-177-125-58.ngrok-free.app/kiberclub/index/")
+    # text="Резюме", web_app=WebAppInfo(url="https://kiberonetgbot.online/kiberclub/resume/")
 )
 
 admin_main_menu_inline_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(

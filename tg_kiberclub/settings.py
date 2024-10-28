@@ -25,14 +25,15 @@ SECRET_KEY = 'django-insecure-@zjgmc%w0obd@av@wq=%l+oj7^fdj$)yu!_*9%nozp0iu7q^3)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["kiberonetgbot.online", "127.0.0.1", "localhost", "0.0.0.0"]
+ALLOWED_HOSTS = ["*", "https://a9d1-185-177-125-58.ngrok-free.app", "kiberonetgbot.online", "127.0.0.1", "localhost", "0.0.0.0"]
 
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-    "https://kiberonetgbot.online/"
+    # "https://kiberonetgbot.online/",
+    "https://a9d1-185-177-125-58.ngrok-free.app",
 ]
 
 CORS_ALLOWED_HEADERS = [
@@ -55,7 +56,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:80",
     "http://localhost:8000",
     "http://localhost:8000",
-    "https://kiberonetgbot.online"
+    "https://kiberonetgbot.online",
+    "https://a9d1-185-177-125-58.ngrok-free.app",
 ]
 
 

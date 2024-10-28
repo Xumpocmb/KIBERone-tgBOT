@@ -23,12 +23,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 body: JSON.stringify({initData: initData}),
             })
                 .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(errorData => {
-                            throw new Error(errorData.message || "Произошла ошибка при получении данных");
-                        });
+                    if (response.ok) {
+                        return response.json();
                     }
-                    return response.json();
                 })
                 .then(data => {
                     if (data.status === "success") {
@@ -55,4 +52,3 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 );
-

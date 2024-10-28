@@ -1,8 +1,13 @@
 from django.urls import path
 
-from app_kiberclub.views import get_resume, get_response_from_page
+from app_kiberclub.views import open_profile, get_response_from_page, choose_child, save_init_data, index, error_page
+
+app_name = 'app_kiberclub'
 
 urlpatterns = [
-    path('resume/', get_resume, name='get_resume'),
-    path('data_from_page/', get_response_from_page, name='data_from_page'),
+    path('index/', index, name='index'),
+    path('save_init_data/', save_init_data, name='save_init_data'),
+    path('choose_child/', choose_child, name='choose_child'),
+    path('profile/', open_profile, name='open_profile'),
+    path('error/', error_page, name='error_page'),
 ]
