@@ -22,6 +22,19 @@ partner_router: Router = Router()
 partner_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))
 
 
+
+
+
+
+@partner_router.callback_query(F.data == 'lets_study')
+async def process_button_lets_study_press(callback: CallbackQuery, session: AsyncSession):
+    await callback.message.answer(
+        text='Для того, чтобы узнать подробнее Вам необходимо быть нашим клиентом.\n'
+             'А если Вы уже заполняли договор на обучение, перезапустите бота через Меню -> /start.',
+        reply_markup=back_to_main_inline)
+    await callback.answer()
+
+
 @partner_router.callback_query(F.data.startswith('partners_of_category-'))
 async def process_button_partner_category_press(callback: CallbackQuery, session: AsyncSession):
     """Присылает партнеров выбранной категории"""
@@ -30,9 +43,10 @@ async def process_button_partner_category_press(callback: CallbackQuery, session
     callback_data = callback.data
     category_id = int(callback_data.split('-')[1])
     try:
+        user_from_db = await orm_get_user_by_tg_id(session, user_id)
         await callback.message.answer(
             text='Список партнеров:',
-            reply_markup=await make_inline_partner_kb(session, category_id)
+            reply_markup=await make_inline_partner_kb(session, category_id, is_study=user_from_db.is_study)
         )
         logger.info(f"Информация о партнерах отправлена пользователю с ID {user_id}.")
 
@@ -54,22 +68,18 @@ async def process_button_partner_category_press(callback: CallbackQuery, session
 async def get_partner_categories(callback: CallbackQuery, session: AsyncSession):
     user_id = callback.from_user.id
     try:
-        pass
+        await callback.message.answer(text='Выберите категорию:', reply_markup=await make_inline_partner_categories_kb(session))
+        await callback.message.delete()
+        logger.debug(f"Исходное сообщение удалено для пользователя с ID {user_id}.")
     except TelegramAPIError as e:
         logger.error(f"Ошибка API Telegram при обработке запроса категорий партнеров от пользователя с ID {user_id}: {e}")
     except SQLAlchemyError as e:
         logger.error(f"Ошибка SQLAlchemy при выполнении запроса категорий партнеров для пользователя с ID {user_id}: {e}")
+    finally:
+        await callback.answer()
+        logger.debug(f"Подтверждение кнопки отправлено пользователю с ID {user_id}.")
 
-    await callback.message.answer(
-        text='Выберите категорию:',
-        reply_markup=await make_inline_partner_categories_kb(session)
-    )
 
-    await callback.message.delete()
-    logger.debug(f"Исходное сообщение удалено для пользователя с ID {user_id}.")
-
-    await callback.answer()
-    logger.debug(f"Подтверждение кнопки отправлено пользователю с ID {user_id}.")
 
 
 @partner_router.callback_query(F.data.startswith('partner-'))
@@ -91,23 +101,10 @@ async def process_button_partner_question_press(callback: CallbackQuery, session
 
         if partner:
             logger.debug(f"Получена информация о партнере: {partner.description}")
-            user_from_db = await orm_get_user_by_tg_id(session, user_id)
-            if user_from_db.is_study:
-                match partner_id:
-                    case 1:
-                        await callback.message.answer(text="Промокод: КИБЕР")
-                    case 10:
-                        await callback.message.answer(text="Промокод: ФОРМУЛА")
-                    case 11:
-                        await callback.message.answer(text="Промокод: КИБЕР")
             await callback.message.answer(text=partner.description, reply_markup=back_to_main_inline)
         else:
             logger.warning(f"Партнер с ID {partner_id} не найден.")
             await callback.message.answer(text="Партнер не найден.")
-
-        await callback.answer()
-        logger.debug(f"Подтверждение кнопки отправлено пользователю с ID {user_id}.")
-
     except SQLAlchemyError as e:
         logger.error(f"Ошибка SQLAlchemy при обработке запроса от пользователя с ID {user_id}: {e}")
 
@@ -116,3 +113,7 @@ async def process_button_partner_question_press(callback: CallbackQuery, session
 
     except Exception as e:
         logger.error(f"Неизвестная ошибка при обработке запроса от пользователя с ID {user_id}: {e}")
+    finally:
+        await callback.answer()
+        logger.debug(f"Подтверждение кнопки отправлено пользователю с ID {user_id}.")
+

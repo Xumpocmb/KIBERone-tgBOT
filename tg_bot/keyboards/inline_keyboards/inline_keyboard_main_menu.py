@@ -26,7 +26,7 @@ button_5: InlineKeyboardButton = InlineKeyboardButton(
 
 button_6: InlineKeyboardButton = InlineKeyboardButton(
     text='Наши Партнёры',
-    callback_data='partner')
+    callback_data='partners_list')
 
 button_7: InlineKeyboardButton = InlineKeyboardButton(
     text='Ваш менеджер KIBERone',
@@ -125,9 +125,6 @@ main_menu_inline_keyboard_for_lead_without_group: InlineKeyboardMarkup = InlineK
         ],
         [
             button_5
-        ],
-        [
-            button_6
         ],
         [
             button_11

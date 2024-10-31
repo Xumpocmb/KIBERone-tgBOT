@@ -117,7 +117,8 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
     if is_admin:
         greeting = f'Привет, {"администратор " if is_admin else ""}{message.from_user.username}!'
     else:
-        greeting = f"Привет, {message.from_user.username}!"
+        greeting = (f"Ваш личный KIBER-помощник готов к работе!\n"
+                    f"Воспользуйтесь боковым меню чтобы начать работу.")
         user_data = {
             "tg_id": message.from_user.id,
             "username": message.from_user.username,
@@ -155,7 +156,7 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
             logger.error(f"Произошла ошибка: {e}")
             await message.answer("Произошла ошибка при обработке вашего запроса.")
 
-    await message.answer(greeting)
+    await message.answer(greeting, reply_markup=ReplyKeyboardRemove())
 
 
 async def handle_new_user(message: Message):
@@ -356,6 +357,4 @@ async def create_new_user_in_crm(user_data, session, message):
     )
     await update_user_data(session, user_data)
     logger.debug("Данные пользователя в бд обновлены после создания в ЦРМ.")
-
-
     await message.answer(greeting_message)

@@ -1,5 +1,4 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from oauthlib.uri_validate import query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,11 +10,13 @@ logger = get_logger()
 
 
 async def make_inline_partner_categories_kb(session: AsyncSession) -> InlineKeyboardMarkup:
+    """Формирует список категорий партнеров"""
     buttons = []
     try:
         query = select(PartnerCategory)
         result = await session.execute(query)
         categories = result.scalars().all()
+
 
         for category in categories:
             buttons.append(InlineKeyboardButton(text=category.category, callback_data=f"partners_of_category-{str(category.id)}"))
@@ -34,7 +35,8 @@ async def make_inline_partner_categories_kb(session: AsyncSession) -> InlineKeyb
 
 
 
-async def make_inline_partner_kb(session: AsyncSession, category_id: int) -> InlineKeyboardMarkup:
+async def make_inline_partner_kb(session: AsyncSession, category_id: int, is_study: int = 0) -> InlineKeyboardMarkup:
+    """Формирует список партнеров определенной категории"""
     buttons = []
 
     try:
@@ -42,8 +44,12 @@ async def make_inline_partner_kb(session: AsyncSession, category_id: int) -> Inl
         result = await session.execute(query)
         partners = result.scalars().all()
 
-        for item in partners:
-            buttons.append(InlineKeyboardButton(text=item.partner, callback_data=f'partner-{item.id}'))
+        if is_study == 1:
+            for item in partners:
+                buttons.append(InlineKeyboardButton(text=item.partner, callback_data=f'partner-{item.id}'))
+        else:
+            for item in partners:
+                buttons.append(InlineKeyboardButton(text=item.partner, callback_data='lets_study'))
 
         buttons.append(InlineKeyboardButton(text='<< Назад', callback_data='partners_categories'))
         buttons = [[button] for button in buttons]

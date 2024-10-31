@@ -10,7 +10,9 @@ from sqlalchemy.sql.operators import eq
 from tg_bot.database.engine import session_maker
 from tg_bot.database.models import Promotion
 from logger_config import get_logger
-from tg_bot.keyboards.inline_keyboards.inline_keyboard_clients_bonuses import clients_bonuses_menu_inline
+from tg_bot.database.orm_query import orm_get_user_by_tg_id
+from tg_bot.keyboards.inline_keyboards.inline_keyboard_clients_bonuses import clients_bonuses_menu_inline, \
+    clients_bonuses_menu_inline_for_lead
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_promo import make_inline_promo_kb
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
@@ -25,11 +27,25 @@ promo_router.callback_query.middleware(DataBaseSession(session_pool=session_make
 @promo_router.callback_query(F.data == 'clients_bonuses')
 async def process_button_clients_bonuses_press(callback: CallbackQuery, session: AsyncSession):
     await callback.message.delete()
-    await callback.message.answer(
-        text='Наши акции:',
-        reply_markup=clients_bonuses_menu_inline
-    )
-    await callback.answer()
+    user_id = callback.from_user.id
+    try:
+        user_from_db = await orm_get_user_by_tg_id(session, user_id)
+        if user_from_db.is_study == 1:
+            await callback.message.answer(
+                text='Наши акции:',
+                reply_markup=clients_bonuses_menu_inline
+            )
+        else:
+            await callback.message.answer(
+                text='Наши акции:', reply_markup=clients_bonuses_menu_inline_for_lead)
+    except TelegramAPIError as e:
+        logger.error(f"Ошибка API Telegram при обработке запроса от пользователя с ID {user_id}: {e}")
+    except SQLAlchemyError as e:
+        logger.error(f"Ошибка SQLAlchemy при обработке запроса от пользователя с ID {user_id}: {e}")
+    except Exception as e:
+        logger.error(f"Неизвестная ошибка при обработке запроса от пользователя с ID {user_id}: {e}")
+    finally:
+        await callback.answer()
 
 
 # главное меню раздела Promo
