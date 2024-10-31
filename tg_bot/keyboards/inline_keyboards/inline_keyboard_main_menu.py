@@ -1,3 +1,11 @@
+import os
+
+from dotenv import load_dotenv
+
+from tg_kiberclub.settings import BASE_DIR
+
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
 button_1: InlineKeyboardButton = InlineKeyboardButton(
@@ -58,7 +66,7 @@ button_15: InlineKeyboardButton = InlineKeyboardButton(
 
 button_16: InlineKeyboardButton = InlineKeyboardButton(
     text='Личный кабинет KIBERhub',
-    web_app=WebAppInfo(url="https://a9d1-185-177-125-58.ngrok-free.app/kiberclub/index/"))
+    web_app=WebAppInfo(url=f"https://{os.getenv('NGROK') if os.getenv('DEBUG_WEB_APP') == 'True' else os.getenv('DOMAIN')}/kiberclub/index/"))
 
 main_menu_inline_keyboard_for_client: InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -86,16 +94,10 @@ main_menu_inline_keyboard_for_client: InlineKeyboardMarkup = InlineKeyboardMarku
 main_menu_inline_keyboard_for_lead_with_group: InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[
         [
-            button_1
-        ],
-        [
-            button_2
+            button_15, button_2
         ],
         [
             button_5
-        ],
-        [
-            button_6
         ],
         [
             button_7
@@ -104,10 +106,7 @@ main_menu_inline_keyboard_for_lead_with_group: InlineKeyboardMarkup = InlineKeyb
             button_8
         ],
         [
-            button_9
-        ],
-        [
-            button_12
+            button_1
         ],
     ]
 )
