@@ -4,7 +4,7 @@ from sqlite3 import IntegrityError, OperationalError
 
 from aiogram import Router, F, types
 from aiogram.filters import CommandStart
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardRemove
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from aiogram.exceptions import TelegramBadRequest, TelegramNetworkError
@@ -133,7 +133,7 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
 
                     if crm_client is None:
                         logger.error(f"CRM клиент с номером {user_in_db.phone_number} не найден.")
-                        await message.answer("Не удалось найти данные в CRM.")
+                        await message.answer("Не удалось найти данные в CRM.", reply_markup=ReplyKeyboardRemove())
                         return
 
                     item = await get_best_items(crm_client)
@@ -225,7 +225,7 @@ async def handle_contact(message: Message, session: AsyncSession):
         if check_admin(message.from_user.id):
             await save_user_data(session, user_data)
             return await message.answer(
-                "Спасибо! Ваш контакт сохранен.")
+                "Спасибо! Ваш контакт сохранен.", reply_markup=ReplyKeyboardRemove())
 
         try:
             user = await orm_get_user_by_tg_id(session, tg_id=message.contact.user_id)
@@ -322,7 +322,7 @@ async def process_existing_user(item, session, message, user_data):
         await send_tg_links(message, session, user_data["tg_id"], user_crm_id=item.get("id"), user_branch_ids=user_data["user_branch_ids"])
     else:
         await message.answer(
-            "Мы поколдовали, и все готово!")
+            "Мы поколдовали, и все готово!", reply_markup=ReplyKeyboardRemove())
 
 
 async def send_tg_links(message, session, user_id, user_crm_id, user_branch_ids):
@@ -336,7 +336,7 @@ async def send_tg_links(message, session, user_id, user_crm_id, user_branch_ids)
         reply_markup=await make_tg_links_inline_keyboard(session, user_id, user_crm_id, user_branch_ids, include_back_button=False),
     )
     await message.answer(
-        "Мы поколдовали, и все готово! ✨")
+        "Мы поколдовали, и все готово! ✨", reply_markup=ReplyKeyboardRemove())
 
 
 async def create_new_user_in_crm(user_data, session, message):

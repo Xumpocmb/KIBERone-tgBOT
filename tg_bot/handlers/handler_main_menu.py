@@ -23,6 +23,7 @@ async def main_menu_handler(message: Message, session: AsyncSession):
     try:
         keyboard = await get_user_keyboard(session, user_id)
         logger.debug(f"Клавиатура для пользователя с ID {user_id} успешно получена.")
+        await message.delete()
         await message.answer('Главное меню', reply_markup=keyboard)
         logger.info(f"Пользователю с ID {user_id} отправлено сообщение с главным меню.")
     except Exception as e:

@@ -29,6 +29,7 @@ async def process_button_inline_back_to_main(callback: CallbackQuery, session: A
     else:
         try:
             user_keyboard = await get_user_keyboard(session, user_id)
+            await callback.message.delete()
             await callback.message.answer(
                 text='Выберите действие..',
                 reply_markup=user_keyboard

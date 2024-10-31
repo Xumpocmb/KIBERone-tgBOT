@@ -14,7 +14,7 @@ button_4: InlineKeyboardButton = InlineKeyboardButton(
 
 button_5: InlineKeyboardButton = InlineKeyboardButton(
     text='Бонусы для клиентов',
-    callback_data='promo')
+    callback_data='clients_bonuses')
 
 button_6: InlineKeyboardButton = InlineKeyboardButton(
     text='Наши Партнёры',
