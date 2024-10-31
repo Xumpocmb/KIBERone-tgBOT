@@ -76,7 +76,6 @@ async def main():
 
     dp.include_routers(
         handler_start.start_router,
-        handler_main_menu.main_menu_router,
         inline_handler_tg_links.inline_tg_links_router,
         inline_handler_all_links.button_link_router,
         inline_handler_faq.faq_router,
@@ -88,6 +87,7 @@ async def main():
         inline_handler_user_scheduler.user_scheduler_router,
         inline_handler_trial_lesson.trial_lesson_router,
         inline_handler_crm_balance.crm_balance_router,
+        handler_main_menu.main_menu_router,
         # admin
         admin_handler_user_list.admin_user_list_router,
         admin_handler_send_all.admin_send_all_router,

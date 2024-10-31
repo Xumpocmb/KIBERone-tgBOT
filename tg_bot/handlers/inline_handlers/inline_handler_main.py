@@ -29,7 +29,10 @@ async def process_button_inline_back_to_main(callback: CallbackQuery, session: A
     else:
         try:
             user_keyboard = await get_user_keyboard(session, user_id)
-            await callback.message.delete()
+            try:
+                await callback.message.delete()
+            except Exception as e:
+                logger.error(f"Не удалось удалить исходное сообщение пользователя {user_id}: {e}")
             await callback.message.answer(
                 text='Выберите действие..',
                 reply_markup=user_keyboard

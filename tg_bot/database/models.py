@@ -1,7 +1,7 @@
 from datetime import datetime
-from sqlalchemy import LargeBinary
+from sqlalchemy import LargeBinary, ForeignKey
 from sqlalchemy import DateTime, func, JSON
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, foreign, relationship
 
 
 class Base(DeclarativeBase):
@@ -65,9 +65,17 @@ class Promotion(Base):
     answer: Mapped[str] = mapped_column()
 
     def __repr__(self):
-        return (
-            f"<Promotion(id={self.id}, title={self.question}, content={self.answer})>"
-        )
+        return f"<Promotion(id={self.id}, title={self.question}, content={self.answer})>"
+
+
+class PartnerCategory(Base):
+    __tablename__ = "PartnerCategory"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    category: Mapped[str] = mapped_column()
+
+    def __repr__(self):
+        return f"<PartnerCategory(id={self.id}, name={self.category})>"
 
 
 class Partner(Base):
@@ -76,6 +84,8 @@ class Partner(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     partner: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column()
+    category_id: Mapped[int] = mapped_column(ForeignKey('PartnerCategory.id'))
+    category: Mapped[PartnerCategory] = relationship("PartnerCategory", backref="partners")
 
     def __repr__(self):
         return f"<Partner(id={self.id}, name={self.partner}, link={self.description})>"

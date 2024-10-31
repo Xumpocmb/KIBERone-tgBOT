@@ -68,6 +68,10 @@ button_16: InlineKeyboardButton = InlineKeyboardButton(
     text='Личный кабинет KIBERhub',
     web_app=WebAppInfo(url=f"https://{os.getenv('NGROK') if os.getenv('DEBUG_WEB_APP') == 'True' else os.getenv('DOMAIN')}/kiberclub/index/"))
 
+button_17: InlineKeyboardButton = InlineKeyboardButton(
+    text='Оплатить через ЕРИП',
+    callback_data='erip_payment')
+
 main_menu_inline_keyboard_for_client: InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[
         [
@@ -117,7 +121,7 @@ main_menu_inline_keyboard_for_lead_without_group: InlineKeyboardMarkup = InlineK
             button_1
         ],
         [
-            button_2
+            button_17
         ],
         [
             button_5
