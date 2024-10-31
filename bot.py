@@ -9,14 +9,14 @@ from dotenv import load_dotenv
 
 from tg_bot.database.engine import create_db, session_maker
 from tg_bot.handlers import handler_main_menu
-from tg_bot.handlers import handler_start, handler_help
+from tg_bot.handlers import handler_start
 from tg_bot.handlers.admin_handlers import (
     admin_handler_user_list,
     admin_handler_send_all,
     admin_handler_check_tasks,
     admin_handler_parthner_statistic,
 )
-from tg_bot.handlers.inline_handlers import inline_handler_link
+from tg_bot.handlers.inline_handlers import inline_handler_all_links
 from tg_bot.handlers.inline_handlers import (
     inline_handler_tg_links,
     inline_handler_main,
@@ -33,6 +33,7 @@ from tg_bot.handlers.inline_handlers import (
 from tg_bot.middlewares.middleware_chat_action import ChatActionMiddleware
 from tg_bot.middlewares.middleware_database import DataBaseSession
 from tg_bot.scheduler_config import setup_scheduler, stop_scheduler
+from tg_bot.utils.set_commands import set_main_menu
 
 from logger_config import get_logger
 
@@ -50,6 +51,7 @@ async def on_startup(bot: Bot):
     logger.info("Starting bot..")
     logger.info("Creating DB..")
     await create_db()
+    await set_main_menu(bot),
     setup_scheduler()
     logger.info("DB created. Bot started.")
 
@@ -74,10 +76,9 @@ async def main():
 
     dp.include_routers(
         handler_start.start_router,
-        handler_help.command_help_router,
         handler_main_menu.main_menu_router,
         inline_handler_tg_links.inline_tg_links_router,
-        inline_handler_link.button_link_router,
+        inline_handler_all_links.button_link_router,
         inline_handler_faq.faq_router,
         inline_handler_promo.promo_router,
         inline_handler_partner.partner_router,

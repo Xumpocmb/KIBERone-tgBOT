@@ -7,7 +7,6 @@ from tg_bot.database.orm_query import orm_get_user_by_tg_id
 from logger_config import get_logger
 from tg_bot.filters.filter_admin import check_admin
 from tg_bot.keyboards.inline_keyboards.inline_keyboard_tg_links import make_tg_links_inline_keyboard
-from tg_bot.keyboards.keyboard_start import main_menu_button_keyboard
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
 logger = get_logger()
@@ -37,9 +36,7 @@ async def tg_links_handler(callback: CallbackQuery, session: AsyncSession):
         if user_data_in_db is None:
             logger.error(f"Пользователь с ID {user_tg_id} не найден в базе данных.")
             await callback.message.answer(
-                'Вы не зарегистрированы в нашем чате. Пожалуйста, зарегистрируйтесь через команду /start',
-                reply_markup=main_menu_button_keyboard
-            )
+                'Вы не зарегистрированы в нашем чате. Пожалуйста, зарегистрируйтесь через команду /start')
             await callback.answer()
             return
 
@@ -47,9 +44,7 @@ async def tg_links_handler(callback: CallbackQuery, session: AsyncSession):
         if is_admin:
             logger.info(f"Пользователь с ID {user_tg_id} является администратором.")
             await callback.message.answer(
-                'Администратор не может получать ссылки на телеграм-каналы',
-                reply_markup=main_menu_button_keyboard
-            )
+                'Администратор не может получать ссылки на телеграм-каналы')
             logger.debug(f"Отправлено сообщение о запрете получения ссылок администратору с ID {user_tg_id}.")
         else:
             user_crm_id = user_data_in_db.user_crm_id
@@ -57,9 +52,7 @@ async def tg_links_handler(callback: CallbackQuery, session: AsyncSession):
             if user_crm_id is None:
                 logger.error(f"ID пользователя {user_tg_id} не найден в CRM.")
                 await callback.message.answer(
-                    'Вы не зарегистрированы в CRM. Пожалуйста, зарегистрируйтесь через команду /start',
-                    reply_markup=main_menu_button_keyboard
-                )
+                    'Вы не зарегистрированы в CRM. Пожалуйста, зарегистрируйтесь через команду /start')
                 await callback.answer()
                 return
 

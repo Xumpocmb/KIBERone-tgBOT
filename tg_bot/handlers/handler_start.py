@@ -22,7 +22,6 @@ from tg_bot.keyboards.inline_keyboards.inline_keyboard_tg_links import (
     make_tg_links_inline_keyboard,
 )
 from tg_bot.keyboards.keyboard_send_contact import contact_keyboard
-from tg_bot.keyboards.keyboard_start import main_menu_button_keyboard
 
 from logger_config import get_logger
 
@@ -56,7 +55,6 @@ tg_links_message = (
 
 async def get_best_items(crm_client: dict) -> dict | None:
     try:
-        # Получаем элементы из CRM-клиента
         items = crm_client.get("items", [])
         if not items:
             logger.info("Нет доступных элементов в ответе CRM-клиента.")
@@ -64,6 +62,7 @@ async def get_best_items(crm_client: dict) -> dict | None:
 
         logger.debug(f"Найдено {len(items)} элементов.")
 
+        study_items = []
         for item in items:
             item_id = item.get("id")
             branch_ids = item.get("branch_ids", [])
@@ -75,20 +74,25 @@ async def get_best_items(crm_client: dict) -> dict | None:
 
             logger.debug(f"Обрабатываем элемент ID: {item_id}, branch_ids: {branch_ids}, is_study: {is_study}")
 
-            try:
-                user_lessons = await get_client_lessons(item_id, branch_ids)
-                if user_lessons is None:
-                    logger.warning(f"Не удалось получить уроки для элемента ID: {item_id}. Пропуск.")
-                    continue
-            except Exception as e:
-                logger.exception(f"Ошибка при получении уроков для элемента ID {item_id}: {e}")
-                continue
-
             if is_study == 1:
-                logger.info(f"Элемент ID {item_id} помечен как 'is_study'. Возврат этого элемента.")
-                return item
-            elif user_lessons.get("total", 0) > 0:
-                logger.info(f"Элемент ID {item_id} имеет уроки. Возврат этого элемента.")
+                try:
+                    user_lessons = await get_client_lessons(item_id, branch_ids)
+                    if user_lessons and user_lessons.get("total", 0) > 0:
+                        study_items.append((item, user_lessons["total"]))
+                except Exception as e:
+                    logger.exception(f"Ошибка при получении уроков для элемента ID {item_id}: {e}")
+                    continue
+
+        if study_items:
+            best_item, _ = max(study_items, key=lambda x: x[1])
+            logger.info(f"Возвращаем лучший элемент с ID {best_item.get('id')}, "
+                        f"у которого есть {max(study_items, key=lambda x: x[1])[1]} занятий.")
+            return best_item
+
+        # Если нет подходящих элементов с занятиями, но есть `is_study == 1`
+        for item in items:
+            if item.get("is_study", 0) == 1:
+                logger.info(f"Возвращаем элемент с ID {item.get('id')}, помеченный как 'is_study'.")
                 return item
 
         logger.info("Ни один элемент не подходит по условиям. Возврат первого элемента.")
@@ -151,7 +155,7 @@ async def handle_existing_user(message: Message, session: AsyncSession, is_admin
             logger.error(f"Произошла ошибка: {e}")
             await message.answer("Произошла ошибка при обработке вашего запроса.")
 
-    await message.answer(greeting, reply_markup=main_menu_button_keyboard)
+    await message.answer(greeting)
 
 
 async def handle_new_user(message: Message):
@@ -221,8 +225,7 @@ async def handle_contact(message: Message, session: AsyncSession):
         if check_admin(message.from_user.id):
             await save_user_data(session, user_data)
             return await message.answer(
-                "Спасибо! Ваш контакт сохранен.",
-                reply_markup=main_menu_button_keyboard)
+                "Спасибо! Ваш контакт сохранен.")
 
         try:
             user = await orm_get_user_by_tg_id(session, tg_id=message.contact.user_id)
@@ -319,8 +322,7 @@ async def process_existing_user(item, session, message, user_data):
         await send_tg_links(message, session, user_data["tg_id"], user_crm_id=item.get("id"), user_branch_ids=user_data["user_branch_ids"])
     else:
         await message.answer(
-            "Мы поколдовали, и все готово!", reply_markup=main_menu_button_keyboard
-        )
+            "Мы поколдовали, и все готово!")
 
 
 async def send_tg_links(message, session, user_id, user_crm_id, user_branch_ids):
@@ -334,8 +336,7 @@ async def send_tg_links(message, session, user_id, user_crm_id, user_branch_ids)
         reply_markup=await make_tg_links_inline_keyboard(session, user_id, user_crm_id, user_branch_ids, include_back_button=False),
     )
     await message.answer(
-        "Мы поколдовали, и все готово! ✨", reply_markup=main_menu_button_keyboard
-    )
+        "Мы поколдовали, и все готово! ✨")
 
 
 async def create_new_user_in_crm(user_data, session, message):
@@ -357,4 +358,4 @@ async def create_new_user_in_crm(user_data, session, message):
     logger.debug("Данные пользователя в бд обновлены после создания в ЦРМ.")
 
 
-    await message.answer(greeting_message, reply_markup=main_menu_button_keyboard)
+    await message.answer(greeting_message)

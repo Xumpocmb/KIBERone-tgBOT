@@ -6,7 +6,6 @@ from tg_bot.crm_logic.alfa_crm_api import find_user_by_phone
 from tg_bot.database.engine import session_maker
 from tg_bot.database.orm_query import orm_get_user_by_tg_id
 from logger_config import get_logger
-from tg_bot.keyboards.keyboard_start import main_menu_button_keyboard
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
 logger = get_logger()
@@ -42,7 +41,7 @@ async def balance_handler(callback: CallbackQuery, session: AsyncSession):
                     if user_paid_till:
                         text_message += f"'Оплачено до: <b>{user_paid_till}</b>'\n"
 
-                    await callback.message.answer(text_message, reply_markup=main_menu_button_keyboard)
+                    await callback.message.answer(text_message)
     except Exception as e:
         logger.error(f"Ошибка при обработке запроса на получение баланса от пользователя с ID {user_tg_id}: {e}")
         await callback.message.answer(
