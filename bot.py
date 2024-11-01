@@ -51,7 +51,6 @@ async def on_startup(bot: Bot):
     logger.info("Starting bot..")
     logger.info("Creating DB..")
     await create_db()
-    await set_main_menu(bot),
     setup_scheduler()
     logger.info("DB created. Bot started.")
 
@@ -99,6 +98,7 @@ async def main():
 
     try:
         await bot.delete_webhook(drop_pending_updates=True)
+        await set_main_menu(bot)
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     finally:
         await bot.session.close()

@@ -9,4 +9,8 @@ async def set_main_menu(bot: Bot):
         BotCommand(command='/menu',
                    description='Главное меню'),
     ]
-    await bot.set_my_commands(main_menu_commands)
+    try:
+        await bot.set_my_commands(main_menu_commands)
+        print("Commands set")
+    except Exception:
+        print("Commands not set")

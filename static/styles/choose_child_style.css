@@ -55,4 +55,11 @@ button {
     font-family: 'franklin_gothic_mediumregular';
     margin: 10px;
     border: none;
+    cursor: pointer;
+}
+
+label {
+    font-size: 14px;
+    text-align: center;
+    width: 400px;
 }

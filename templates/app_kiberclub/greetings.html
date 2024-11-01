@@ -19,10 +19,12 @@
 </center>
 <div id="mainDiv">
     <section id="main">
-    <h1>Добро пожаловать!</h1>
-    <a href="{% url 'app_kiberclub:choose_child' %}" id="start-link">Давайте начнем</a>
-    <img src="{% static 'img/start.png' %}" id="startImg" alt="Старт">
-</section>
+        <p>Добро пожаловать <br> в KIBERhab!</p>
+        <a href="{% url 'app_kiberclub:choose_child' %}" id="start-link">Давайте начнем</a>
+        <img src="{% static 'img/start.png' %}" id="startImg" alt="Старт">
+        <p id="text">KIBERhab - это личный кабинет Вашего ребенка, в котором вы сможете посмотреть количество заработанных киберонов, перейти в кабинет по предзаказу товаров к предстающему КиберШопу, узнать тему занятий и получить обратную связь от тьютора
+        </p>
+    </section>
 </div>
 
 </body>
@@ -30,7 +32,7 @@
     window.Telegram.WebApp.ready();
     window.Telegram.WebApp.expand();
 
-        window.addEventListener('DOMContentLoaded', function () {
+    window.addEventListener('DOMContentLoaded', function () {
 
         document.getElementById("loader").style.display = 'block';
         document.getElementById("mainDiv").style.display = 'none';

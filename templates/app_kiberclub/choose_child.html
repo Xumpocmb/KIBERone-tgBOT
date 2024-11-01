@@ -18,14 +18,13 @@
     <form action="{% url 'app_kiberclub:open_profile' %}" method="post" id="profileForm">
         {% csrf_token %}
         {% if profiles %}
-            <label for="profiles">Выберите профиль</label>
+            <label for="profiles">В KIBERone учится...</label>
             <select id="profiles" name="profile_id">
                 {% for id, name in profiles.items %}
                     <option value="{{ id }}">{{ name }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" id="open">Открыть профиль</button>
-            <p>Загрузка данных может занять около 30ти секунд.</p>
+            <button type="submit" id="open">Перейти в KIBERhab</button>
         {% else %}
             <p>Как бы мы не старались, но не нашли ни одного профиля.</p>
         {% endif %}
