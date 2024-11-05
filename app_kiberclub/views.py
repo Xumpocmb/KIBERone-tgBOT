@@ -16,7 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 
 from app_kiberclub.alfa_crm import find_user_by_phone, get_client_lessons, get_client_lesson_name
-from app_kiberclub.models import UserData
+from app_kiberclub.models import UserData, Locations
 
 load_dotenv()
 
@@ -72,7 +72,7 @@ worksheet_names = {
 }
 
 BARANOVICHI_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1lzGfMTHlpIU4a02OwliKB8pB6vRdl7pTV0TOE2W5ypw'
-MINSK_SHEET_URL = 'https://docs.google.com/spreadsheets/d/11KW9qvvAmqUS75SF6o1akKuo2bJPDi7Tomcsf1d1vfc'
+MINSK_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1lzGfMTHlpIU4a02OwliKB8pB6vRdl7pTV0TOE2W5ypw'
 BORISOV_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1Q3HI6sl6TvWJkscqpnmm3P-6iANzlENfT4XfHPgqgpQ'
 
 
@@ -212,7 +212,10 @@ def open_profile(request):
 
                 if room_id:
                     room_name, spreadsheet_url, worksheet_name, location_name = get_room_id(room_id)
-                    context.update({"user_location": room_name})
+                    if not room_name:
+                        context.update({"user_location": "Неизвестно"})
+                    else:
+                        context.update({"user_location": room_name})
                     if not spreadsheet_url or not worksheet_name:
                         context.update({"user_resume": "Появится позже"})
                     else:
@@ -283,23 +286,15 @@ def get_check_kiberclub(user_crm_name, location_name):
 
 
 def get_room_id(room_id):
-    room_name, spreadsheet_url, worksheet_name, location_name = None, None, None, None
-    if room_id in MINSK:
-        room_name = MINSK[room_id]
-        spreadsheet_url = MINSK_SHEET_URL
-        worksheet_name = MINSK_WORK_SHEET_NAMES.get(room_id)
-        location_name = "Минск"
-    elif room_id in BORISOV:
-        room_name = BORISOV[room_id]
-        spreadsheet_url = BORISOV_SHEET_URL
-        worksheet_name = BARANOVICHI_WORK_SHEET_NAMES.get(room_id)
-        location_name = "Борисов"
-    elif room_id in BARANOVICHI:
-        room_name = BARANOVICHI[room_id]
-        spreadsheet_url = BARANOVICHI_SHEET_URL
-        worksheet_name = BARANOVICHI_WORK_SHEET_NAMES.get(room_id)
-        location_name = "Барановичи"
-    return room_name, spreadsheet_url, worksheet_name, location_name
+    room_id = int(room_id)
+    try:
+        location_info = Locations.objects.get(location_id=room_id)
+        room_name = location_info.location_name
+        spreadsheet_url = location_info.sheet_url
+        worksheet_name = location_info.sheet_names
+        return room_name, spreadsheet_url, worksheet_name, location_info.location_name
+    except Exception:
+        return None, None, None, None
 
 
 def get_user_lessons(user_crm_id, user_crm_branch_ids):

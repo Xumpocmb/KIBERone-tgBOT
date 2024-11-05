@@ -145,6 +145,8 @@ class Locations(Base):
     location_id: Mapped[int] = mapped_column()
     location_name: Mapped[str] = mapped_column()
     location_map_link: Mapped[str] = mapped_column()
+    sheet_url: Mapped[str] = mapped_column()
+    sheet_names: Mapped[str] = mapped_column()
 
     def __repr__(self):
         return f"<Locations(id={self.id}, name={self.location_name})>"
