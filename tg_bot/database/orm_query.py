@@ -1,8 +1,9 @@
+from oauthlib.uri_validate import query
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
-from tg_bot.database.models import SchedulerTask, User, BranchesTelegramLink, Manager
+from tg_bot.database.models import SchedulerTask, User, BranchesTelegramLink, Manager, Locations
 
 
 async def orm_add_user(session: AsyncSession, data: dict):
@@ -21,6 +22,20 @@ async def orm_add_user(session: AsyncSession, data: dict):
         await session.commit()
     except Exception as e:
         await session.rollback()
+        print(f"An error occurred: {e}")
+
+
+async  def orm_get_location(session: AsyncSession, room_id: int):
+    try:
+        query = select(Locations).where(Locations.location_id == room_id)
+        result = await session.execute(query)
+        location = result.scalar()
+        if location:
+            logger.info(f"Локация с room_id {room_id} найдена: {location}")
+        else:
+            logger.info(f"Локация с room_id {room_id} не найдена.")
+        return location
+    except Exception as e:
         print(f"An error occurred: {e}")
 
 

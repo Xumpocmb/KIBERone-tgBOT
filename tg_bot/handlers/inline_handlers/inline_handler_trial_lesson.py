@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tg_bot.crm_logic.alfa_crm_api import find_user_by_phone, get_user_trial_lesson
 from tg_bot.database.engine import session_maker
-from tg_bot.database.orm_query import orm_get_user_by_tg_id
+from tg_bot.database.orm_query import orm_get_user_by_tg_id, orm_get_location
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
 
@@ -92,14 +92,14 @@ async def user_trial_handler(callback: CallbackQuery, session: AsyncSession):
                             )
 
                             # Получаем адрес занятия
-                            lesson_address = str(trial_lesson.get("room_id", None))
-                            if lesson_address:
-                                if lesson_address in MINSK:
-                                    lesson_address = MINSK[lesson_address]
-                                elif lesson_address in BORISOV:
-                                    lesson_address = BORISOV[lesson_address]
-                                elif lesson_address in BARANOVICHI:
-                                    lesson_address = BARANOVICHI[lesson_address]
+                            room_id = trial_lesson.get("room_id", None)
+                            if room_id:
+                                location_info = await orm_get_location(session, room_id)
+                                location_name = location_info.location_name
+                                location_map_link = location_info.location_map_link
+                                lesson_address = f"{location_name}\n{location_map_link}"
+                            else:
+                                lesson_address = "Неизвестно"
 
                             await callback.message.answer(
                                 text=f"{user_crm_name} записан на пробный урок: \n{lesson_day}: {lesson_time}\n{lesson_address}"

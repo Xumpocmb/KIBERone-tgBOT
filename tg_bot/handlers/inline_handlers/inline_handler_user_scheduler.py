@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tg_bot.crm_logic.alfa_crm_api import find_user_by_phone, get_client_lessons
 from tg_bot.database.engine import session_maker
-from tg_bot.database.orm_query import orm_get_user_by_tg_id
+from tg_bot.database.orm_query import orm_get_user_by_tg_id, orm_get_location
 from tg_bot.filters.filter_admin import check_admin
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
@@ -69,7 +69,7 @@ async def process_button_inline_user_scheduler(callback: CallbackQuery, session:
     if not user_in_crm:
         return
 
-    await process_user_schedule(user_in_crm, callback)
+    await process_user_schedule(session,user_in_crm, callback)
 
 
 async def is_admin_user(user_id: int, callback: CallbackQuery) -> bool:
@@ -112,16 +112,16 @@ async def find_user_in_crm(phone_number: str, callback: CallbackQuery):
     return user_in_crm
 
 
-async def process_user_schedule(user_in_crm, callback: CallbackQuery):
+async def process_user_schedule(session, user_in_crm, callback: CallbackQuery):
     """Обработка расписания пользователя на основе данных из CRM."""
     user_crm_items = user_in_crm.get("items", [])
     logger.debug(f"Найдено {len(user_crm_items)} записей в CRM.")
 
     for item in user_crm_items:
-        await process_single_crm_item(item, callback)
+        await process_single_crm_item(session, item, callback)
 
 
-async def process_single_crm_item(item, callback: CallbackQuery):
+async def process_single_crm_item(session, item, callback: CallbackQuery):
     """Обработка одной записи из CRM."""
     user_name = item.get("name", None)
     user_branch_ids = item.get("branch_ids", [])
@@ -133,13 +133,13 @@ async def process_single_crm_item(item, callback: CallbackQuery):
 
     last_user_lesson = user_lessons.get("items", [])[-1]
 
-    await send_lesson_info(last_user_lesson, user_name, callback)
+    await send_lesson_info(session, last_user_lesson, user_name, callback)
 
 
-async def send_lesson_info(last_user_lesson, student_name: str, callback: CallbackQuery):
+async def send_lesson_info(session, last_user_lesson, student_name: str, callback: CallbackQuery):
     """Отправка информации о ближайшем занятии пользователю."""
 
-    lesson_day, lesson_time, lesson_address = format_lesson_info(last_user_lesson)
+    lesson_day, lesson_time, lesson_address = await format_lesson_info(session, last_user_lesson)
     logger.debug(f"День недели: {lesson_day}, Время: {lesson_time}, Адрес: {lesson_address}")
 
     lesson_date = last_user_lesson.get("lesson_date") or last_user_lesson.get("date")
@@ -152,7 +152,7 @@ async def send_lesson_info(last_user_lesson, student_name: str, callback: Callba
     logger.debug(f"Отправлено расписание для пользователя с ID {callback.from_user.id}.")
 
 
-def format_lesson_info(lesson) -> tuple:
+async def format_lesson_info(session, lesson) -> tuple:
     """Форматирование данных урока для отображения."""
     lesson_date = lesson.get("lesson_date") or lesson.get("date")
     lesson_date_splitted = lesson_date.split('-')
@@ -167,13 +167,11 @@ def format_lesson_info(lesson) -> tuple:
     lesson_time = f"{lesson.get('time_from').split(' ')[1][:-3]} - {lesson.get('time_to').split(' ')[1][:-3]}"
 
     # Определение адреса урока
-    lesson_address = str(lesson.get("room_id", None))
-    if lesson_address:
-        if lesson_address in MINSK:
-            lesson_address = MINSK[lesson_address]
-        elif lesson_address in BORISOV:
-            lesson_address = BORISOV[lesson_address]
-        elif lesson_address in BARANOVICHI:
-            lesson_address = BARANOVICHI[lesson_address]
+    room_id = lesson.get("room_id", None)
+    location_info = await orm_get_location(session, room_id)
+    location_name = location_info.location_name
+    location_map_link = location_info.location_map_link
+
+    lesson_address = f"{location_name}\n{location_map_link}"
 
     return lesson_day, lesson_time, lesson_address

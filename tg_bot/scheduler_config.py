@@ -442,7 +442,6 @@ def setup_scheduler():
         existing_jobs = scheduler.get_jobs()
         if existing_jobs:
             for job in existing_jobs:
-                logger.info(f"Removing existing job with ID '{job.id}'...")
                 scheduler.remove_job(job.id)
             logger.info("All existing jobs removed.")
         else:

@@ -202,10 +202,13 @@ def open_profile(request):
                 })
 
                 lesson_name, room_id = get_user_lessons(user_crm_id, user_crm_branch_ids)
-                context.update({
-                    "lesson_name": lesson_name if lesson_name else "У вас нет занятий",
-                    "room_id": room_id,
-                })
+                if lesson_name and room_id:
+                    context.update({
+                        "lesson_name": lesson_name if lesson_name else "У вас нет занятий",
+                        "room_id": room_id,
+                    })
+                else:
+                    return redirect('app_kiberclub:error_page')
 
                 if room_id:
                     room_name, spreadsheet_url, worksheet_name, location_name = get_room_id(room_id)

@@ -135,3 +135,17 @@ class SchedulerTask(Base):
 
     def __repr__(self):
         return f"<Tasks(id={self.id}, name={self.task_name}, link={self.task_link})>"
+
+
+class Locations(Base):
+    __tablename__ = "Locations"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    location_branch_id: Mapped[int] = mapped_column()
+    location_id: Mapped[int] = mapped_column()
+    location_name: Mapped[str] = mapped_column()
+    location_map_link: Mapped[str] = mapped_column()
+
+    def __repr__(self):
+        return f"<Locations(id={self.id}, name={self.location_name})>"
+
