@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from tg_bot.crm_logic.alfa_crm_api import find_user_by_phone, get_user_trial_lesson, get_client_lessons
 from tg_bot.database.engine import session_maker
-from tg_bot.database.models import User
+from tg_bot.database.models import User, Locations
 from tg_bot.database.orm_query import orm_update_user
 from tg_bot.filters.filter_admin import check_admin
 
@@ -40,6 +40,21 @@ async def get_users_from_db():
         query = select(User)
         result = await session.execute(query)
         return result.scalars().all()
+
+
+async  def orm_get_location(room_id: int):
+    try:
+        async with session_maker() as session:
+            query = select(Locations).where(Locations.location_id == room_id)
+            result = await session.execute(query)
+            location = result.scalar()
+            if location:
+                logger.info(f"Локация с room_id {room_id} найдена: {location}")
+            else:
+                logger.info(f"Локация с room_id {room_id} не найдена.")
+            return location
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 """ BALANCE
@@ -177,12 +192,25 @@ async def check_user_trial_lesson():
                             logger.debug(f"Дата занятия для пользователя с ID {user_crm_id}: {lesson_date}")
 
                             lesson_time = f"{trial_lesson.get('time_from').split(' ')[1][:-3]}"
+
+                            room_id = trial_lesson.get("room_id", None)
+                            if room_id:
+                                location_info = await orm_get_location(room_id)
+                                if location_info:
+                                    location_name = location_info.location_name
+                                    location_map_link = location_info.location_map_link
+                                    lesson_address = f"{location_name}\n{location_map_link}"
+                                else:
+                                    lesson_address = "Неизвестно"
+                            else:
+                                lesson_address = "Неизвестно"
+
                             logger.debug(
-                                f'У пользователя {user.phone_number} есть запланированные пробные занятия на {lesson_date, lesson_time} | {type(lesson_date)}.')
+                                f'У пользователя {user.phone_number} есть запланированные пробные занятия на {lesson_date, lesson_time}.')
                             if lesson_date and lesson_time:
                                 lesson_datetime_str = f"{lesson_date} {lesson_time}"
                                 lesson_datetime = datetime.strptime(lesson_datetime_str, '%Y-%m-%d %H:%M')
-                                await create_trial_lesson_reminder_task(user.tg_id, user_crm_id, lesson_datetime)
+                                await create_trial_lesson_reminder_task(user.tg_id, user_crm_id, lesson_datetime, lesson_address)
                                 logger.debug(
                                     f'Задача для отправки напоминания пользователю {user.phone_number} на {lesson_date} '
                                     f'создана.')
@@ -220,9 +248,21 @@ async def check_user_trial_lesson():
                                     next_lesson_date = datetime.strptime(lesson_datetime_str, '%Y-%m-%d %H:%M')
                                     reminder_date = next_lesson_date - timedelta(days=1)
 
+                                    room_id = last_user_lesson.get("room_id", None)
+                                    if room_id:
+                                        location_info = await orm_get_location(room_id)
+                                        if location_info:
+                                            location_name = location_info.location_name
+                                            location_map_link = location_info.location_map_link
+                                            lesson_address = f"{location_name}\n{location_map_link}"
+                                        else:
+                                            lesson_address = "Неизвестно"
+                                    else:
+                                        lesson_address = "Неизвестно"
+
                                     logger.debug(f"Дата и время напоминания для пользователя {user.phone_number}: {reminder_date}")
 
-                                    await create_usual_lesson_reminder_task(user.tg_id, next_lesson_date, reminder_date)
+                                    await create_usual_lesson_reminder_task(user.tg_id, next_lesson_date, reminder_date, lesson_address)
                                 else:
                                     logger.debug(f"Пользователь {user.phone_number} уже посещал обычные занятия.")
 
@@ -234,7 +274,7 @@ async def check_user_trial_lesson():
         await asyncio.sleep(5)
 
 
-async def create_trial_lesson_reminder_task(tg_id, user_crm_id, lesson_date):
+async def create_trial_lesson_reminder_task(tg_id, user_crm_id, lesson_date, lesson_address):
     job_id = f'trial_reminder_{tg_id}_{user_crm_id}_{lesson_date.strftime("%Y%m%d%H%M")}'
     existing_job = scheduler.get_job(job_id)
 
@@ -249,7 +289,7 @@ async def create_trial_lesson_reminder_task(tg_id, user_crm_id, lesson_date):
     scheduler.add_job(
         send_reminder_message,
         trigger,
-        args=[tg_id, lesson_date],
+        args=[tg_id, lesson_date, lesson_address],
         id=job_id,
         misfire_grace_time=3600,
     )
@@ -257,7 +297,7 @@ async def create_trial_lesson_reminder_task(tg_id, user_crm_id, lesson_date):
     logger.info(f'Задача для отправки напоминания пользователю {tg_id} на {lesson_date} создана.')
 
 
-async def create_usual_lesson_reminder_task(tg_id, next_lesson_date, reminder_date):
+async def create_usual_lesson_reminder_task(tg_id, next_lesson_date, reminder_date, lesson_address):
     job_id = f'usual_lesson_reminder_{tg_id}_{reminder_date.strftime("%Y%m%d")}'
     existing_job = scheduler.get_job(job_id)
 
@@ -272,7 +312,7 @@ async def create_usual_lesson_reminder_task(tg_id, next_lesson_date, reminder_da
     scheduler.add_job(
         send_usual_lesson_reminder_message,
         trigger,
-        args=[tg_id, next_lesson_date, reminder_date],
+        args=[tg_id, next_lesson_date, reminder_date, lesson_address],
         id=job_id,
         misfire_grace_time=3600,
     )
@@ -280,13 +320,13 @@ async def create_usual_lesson_reminder_task(tg_id, next_lesson_date, reminder_da
     logger.info(f'Задача для отправки напоминания пользователю {tg_id} на {reminder_date} создана.')
 
 
-async def send_reminder_message(tg_id, lesson_datetime):
+async def send_reminder_message(tg_id, lesson_datetime, lesson_address):
     logger.info(f'Отправляю напоминание пользователю {tg_id} о пробном занятии на {lesson_datetime}.')
 
     lesson_date_str = lesson_datetime.strftime('%d.%m')
     lesson_time_str = lesson_datetime.strftime('%H:%M')
 
-    reminder_message = f"KIBERone\nНапоминание: Ваше пробное занятие состоится {lesson_date_str} в {lesson_time_str}."
+    reminder_message = f"KIBERone\nНапоминание: Ваше пробное занятие состоится {lesson_date_str} в {lesson_time_str} по адресу: {lesson_address}."
     async with bot:
         await bot.send_message(chat_id=tg_id, text=reminder_message)
     logger.info(f'Напоминание пользователю {tg_id} о пробном занятии на {lesson_datetime} отправлено.')
@@ -299,7 +339,7 @@ async def send_reminder_message(tg_id, lesson_datetime):
     logger.info(f'Задача с ID {job_id} удалена из планировщика.')
 
 
-async def send_usual_lesson_reminder_message(tg_id, next_lesson_date, reminder_date):
+async def send_usual_lesson_reminder_message(tg_id, next_lesson_date, reminder_date, lesson_address):
     logger.info(f'Отправляю напоминание пользователю {tg_id} об обычном занятии на {next_lesson_date}.')
 
     lesson_date_str = next_lesson_date.strftime('%d.%m')
@@ -307,7 +347,7 @@ async def send_usual_lesson_reminder_message(tg_id, next_lesson_date, reminder_d
 
     reminder_message = (f"\tПоздравляем с поступлением в KIBERone 👏 \n"
 f"Спешим сообщить, что завтра состоится Ваше первое занятие!\n"
-f"Будем ждать Вас {lesson_date_str} в {lesson_time_str}. Пожалуйста не забудьте паспорт, для заключения договора😊\n"
+f"Будем ждать Вас {lesson_date_str} в {lesson_time_str} по адресу: {lesson_address}. Пожалуйста не забудьте паспорт, для заключения договора😊\n"
 f"Теперь ваш ребёнок гарантировано будет обладать самыми современными знаниями и построит успешную карьеру 💛")
 
     async with bot:

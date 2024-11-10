@@ -10,7 +10,7 @@ button_2: InlineKeyboardButton = InlineKeyboardButton(
 
 button_3: InlineKeyboardButton = InlineKeyboardButton(
     text='Платформа Lim English',
-    callback_data='lim_english')
+    callback_data='english_platform')
 
 button_4: InlineKeyboardButton = InlineKeyboardButton(
     text='<< Главное меню',
