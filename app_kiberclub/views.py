@@ -211,7 +211,7 @@ def open_profile(request):
                     return redirect('app_kiberclub:error_page')
 
                 if room_id:
-                    room_name, spreadsheet_url, worksheet_name, location_name = get_room_id(room_id)
+                    room_name, spreadsheet_url, worksheet_name, branch_id = get_room_id(room_id)
                     if not room_name:
                         context.update({"user_location": "Неизвестно"})
                     else:
@@ -227,8 +227,10 @@ def open_profile(request):
                 else:
                     context.update({"user_resume": "Появится позже"})
 
-                if user_crm_name and location_name:
-                    kiberons_count = get_check_kiberclub(user_crm_name, location_name)
+                print(user_crm_name, branch_id, room_name)
+
+                if user_crm_name and branch_id:
+                    kiberons_count = get_check_kiberclub(user_crm_name, branch_id)
                     context.update({"user_kiberons": kiberons_count if kiberons_count else 0})
                 else:
                     context.update({"user_kiberons": 0})
@@ -252,7 +254,7 @@ def get_intermediate_resume_from_spreadsheet(spreadsheet_url, worksheet_name, us
                 return intermediate_resume
 
 
-def get_check_kiberclub(user_crm_name, location_name):
+def get_check_kiberclub(user_crm_name, branch_id):
     with open("kiberclub_credentials.json", "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -268,17 +270,17 @@ def get_check_kiberclub(user_crm_name, location_name):
     user_crm_name_splitted: list = user_crm_name.split(" ", )[:2]
     user_crm_name_full: str = " ".join(user_crm_name_splitted)
 
-    if location_name == "Минск":
+    if branch_id == 1:
         login = minsk_login
         password = minsk_password
         kiberons: int | None = get_kiberons_count(user_crm_name_full, login, password)
         return kiberons
-    elif location_name == "Борисов":
+    elif branch_id == 3:
         login = borisov_login
         password = borisov_password
         kiberons: int | None = get_kiberons_count(user_crm_name_full, login, password)
         return kiberons
-    elif location_name == "Барановичи":
+    elif branch_id == 2:
         login = baranovichi_login
         password = baranovichi_password
         kiberons: int | None = get_kiberons_count(user_crm_name_full, login, password)
@@ -292,7 +294,7 @@ def get_room_id(room_id):
         room_name = location_info.location_name
         spreadsheet_url = location_info.sheet_url
         worksheet_name = location_info.sheet_names
-        return room_name, spreadsheet_url, worksheet_name, location_info.location_name
+        return room_name, spreadsheet_url, worksheet_name, location_info.location_branch_id
     except Exception:
         return None, None, None, None
 
@@ -318,149 +320,6 @@ def get_user_lessons(user_crm_id, user_crm_branch_ids):
                     lesson_name = item.get("name")
 
     return lesson_name, room_id
-
-
-@csrf_exempt
-def get_response_from_page(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            init_data = data.get("initData")
-
-            if not init_data:
-                return JsonResponse({"status": "error", "message": "No init data received."}, status=400)
-
-            secret_key = BOT_TOKEN
-
-            init_data_dict = validate(init_data, secret_key)
-
-            if init_data_dict is not None:
-                user_info: str = init_data_dict.get("user")
-                user_info: dict = json.loads(user_info)
-                user_tg_id: int = user_info.get("id")
-                try:
-                    user_db_info = UserData.objects.filter(tg_id=user_tg_id).first()
-                except Exception as e:
-                    return JsonResponse({"status": "error", "message": "Ошибка при поиске записи в базе данных"},
-                                        status=400)
-                user_data_by_phone = find_user_by_phone(user_db_info.phone_number)
-
-                if not user_data_by_phone:
-                    return JsonResponse({"status": "error", "message": "Ошибка при поиске в CRM"}, status=400)
-
-                user_crm_items = user_data_by_phone.get("items")
-                for item in user_crm_items:
-                    user_crm_id: int = item.get("id")
-                    user_crm_branch_ids: list = item.get("branch_ids")
-                    user_crm_name: str = item.get("name").strip()
-                    user_crm_birthday = item.get("dob")
-
-                user_lessons = get_client_lessons(user_crm_id, user_crm_branch_ids)
-                if user_lessons['total'] == 0:
-                    return JsonResponse({"status": "error", "message": "No lessons found."}, status=400)
-                if user_lessons['total'] > user_lessons['count']:
-                    page = user_lessons['total'] // user_lessons['count']
-                    user_lessons = get_client_lessons(user_crm_id, user_crm_branch_ids, page=page)
-                last_user_lesson = user_lessons.get("items", [])[-1]
-                subject_id = last_user_lesson.get("subject_id")
-                all_lesson_info: dict = get_client_lesson_name(user_crm_branch_ids, subject_id=subject_id)
-                if all_lesson_info.get("total") == 0:
-                    return JsonResponse({"status": "error", "message": "No lesson names found."}, status=400)
-                all_lesson_items: list = all_lesson_info.get("items")
-
-                for item in all_lesson_items:
-                    if item.get("id") == subject_id:
-                        lesson_name = item.get("name")
-
-                room_id: str = str(last_user_lesson.get("room_id", None))
-                if room_id:
-                    if room_id in MINSK:
-                        room_name = MINSK[room_id]
-                        spreadsheet_url = MINSK_SHEET_URL
-                        worksheet_name = MINSK_WORK_SHEET_NAMES.get(room_id)
-                        location_name = "Минск"
-                    elif room_id in BORISOV:
-                        room_name = BORISOV[room_id]
-                        spreadsheet_url = BORISOV_SHEET_URL
-                        worksheet_name = BARANOVICHI_WORK_SHEET_NAMES.get(room_id)
-                        location_name = "Борисов"
-                    elif room_id in BARANOVICHI:
-                        room_name = BARANOVICHI[room_id]
-                        spreadsheet_url = BARANOVICHI_SHEET_URL
-                        worksheet_name = BARANOVICHI_WORK_SHEET_NAMES.get(room_id)
-                        location_name = "Барановичи"
-                else:
-                    return JsonResponse({"status": "error", "message": "No room info found."}, status=400)
-
-                if not spreadsheet_url or not worksheet_name:
-                    return JsonResponse({"status": "error", "message": "No spreadsheet info found."}, status=400)
-
-                google_sheet = GoogleSheet(CREDENTIALS_FILE, spreadsheet_url, worksheet_name)
-                df = google_sheet.load_data_from_google_sheet()
-
-                if df is None:
-                    return JsonResponse({"status": "error", "message": "No data loaded from Google Sheet"}, status=400)
-
-                for index, row in df.iterrows():
-                    if pd.notna(row["ID ребенка"]):
-                        if row["ID ребенка"] == user_crm_id:
-                            intermediate_resume = row["Резюме промежуточное"]
-                            break
-
-                if not intermediate_resume:
-                    return JsonResponse({"status": "error", "message": "No intermediate resume found."}, status=400)
-
-                # ----------------------------------------------
-                # ПОЛУЧЕНИЕ КИБЕРОНОВ
-                # ----------------------------------------------
-
-                with open("kiberclub_credentials.json", "r", encoding="utf-8") as f:
-                    data = json.load(f)
-
-                    baranovichi_login: str = data["Барановичи"]["логин"]
-                    baranovichi_password: str = data["Барановичи"]["пароль"]
-
-                    minsk_login: str = data["Минск"]["логин"]
-                    minsk_password: str = data["Минск"]["пароль"]
-
-                    borisov_login: str = data["Борисов"]["логин"]
-                    borisov_password: str = data["Борисов"]["пароль"]
-
-                user_crm_name_splitted: list = user_crm_name.split(" ", )[:2]
-                user_crm_name_full: str = " ".join(user_crm_name_splitted)
-
-                if location_name == "Минск":
-                    login = minsk_login
-                    password = minsk_password
-                    kiberons: int | None = get_kiberons_count(user_crm_name_full, login, password)
-                elif location_name == "Борисов":
-                    login = borisov_login
-                    password = borisov_password
-                    kiberons: int | None = get_kiberons_count(user_crm_name_full, login, password)
-                elif location_name == "Барановичи":
-                    login = baranovichi_login
-                    password = baranovichi_password
-                    kiberons: int | None = get_kiberons_count(user_crm_name_full, login, password)
-
-                return JsonResponse({
-                    "status": "success",
-                    "message": "Init data received.",
-                    "data": {
-                        "user_crm_name": user_crm_name or "",
-                        "user_crm_birthday": user_crm_birthday or "",
-                        "user_crm_location": room_name or "",
-                        "lesson_name": lesson_name or "",
-                        "intermediate_resume": intermediate_resume or "Появится позже..",
-                        "kiberons": kiberons if kiberons is not None else 0,
-                    }
-                }, status=200)
-            else:
-                return JsonResponse({"status": "error", "message": "Invalid data received."}, status=400)
-
-        except (json.JSONDecodeError, ValueError) as e:
-            return JsonResponse({"status": "error", "message": str(e)}, status=400)
-
-    return JsonResponse({"error": "Неподдерживаемый метод"}, status=405)
 
 
 def validate(init_data: str, token: str, c_str="WebAppData") -> None | dict[str, str]:
@@ -495,6 +354,7 @@ def validate(init_data: str, token: str, c_str="WebAppData") -> None | dict[str,
 
 
 def get_kiberons_count(user_crm_name_full: str, login: str, password: str) -> int | None:
+    print("get_kiberons_count: ", user_crm_name_full, login, password)
     cookies = {
         'developsess': 'e65294731ff311d892841471f7beec1e',
     }

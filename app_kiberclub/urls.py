@@ -1,6 +1,6 @@
 from django.urls import path
 
-from app_kiberclub.views import open_profile, get_response_from_page, choose_child, save_init_data, index, error_page
+from app_kiberclub.views import open_profile, choose_child, save_init_data, index, error_page
 
 app_name = 'app_kiberclub'
 
