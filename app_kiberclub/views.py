@@ -227,8 +227,6 @@ def open_profile(request):
                 else:
                     context.update({"user_resume": "Появится позже"})
 
-                print(user_crm_name, branch_id, room_name)
-
                 if user_crm_name and branch_id:
                     kiberons_count = get_check_kiberclub(user_crm_name, branch_id)
                     context.update({"user_kiberons": kiberons_count if kiberons_count else 0})
@@ -354,7 +352,6 @@ def validate(init_data: str, token: str, c_str="WebAppData") -> None | dict[str,
 
 
 def get_kiberons_count(user_crm_name_full: str, login: str, password: str) -> int | None:
-    print("get_kiberons_count: ", user_crm_name_full, login, password)
     cookies = {
         'developsess': 'e65294731ff311d892841471f7beec1e',
     }
