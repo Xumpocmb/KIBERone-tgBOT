@@ -77,6 +77,8 @@ async def check_user_balance():
                         user_paid_lesson_count: int = int(item.get("paid_lesson_count", 0))
                         logger.debug(f"Баланс пользователя {user.phone_number}: {user_paid_lesson_count}")
                         user_balance = str(item.get("balance", 0))
+                        paid_count = int(item.get("paid_count", 0))
+
                         async with Session() as session:
                             user_data = {
                                 "tg_id": user.tg_id,
@@ -101,6 +103,12 @@ async def check_user_balance():
                             if user_paid_lesson_count <= 0:
                                 await create_balance_reminder_task(user.tg_id, user_id, next_lesson_date)
                                 logger.debug(f'Задача для отправки напоминания пользователю {user.tg_id} на {next_lesson_date} создана.')
+                            elif paid_count == 1:
+                                job_id = f'one_lesson_balance_reminder_{user.tg_id}'
+                                existing_job = scheduler.get_job(job_id)
+                                if not existing_job:
+                                    await create_one_lesson_balance_reminder_task(user.tg_id, user_id, next_lesson_date)
+                                    logger.debug(f'Задача для отправки напоминания пользователю {user.tg_id} на {next_lesson_date} создана.')
                             else:
                                 job_id = f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d")}'
                                 existing_job = scheduler.get_job(job_id)
@@ -108,6 +116,49 @@ async def check_user_balance():
                                     scheduler.remove_job(f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d")}')
 
         await asyncio.sleep(5)
+
+
+async def create_one_lesson_balance_reminder_task(tg_id, user_id, next_lesson_date):
+    logger.info(f'Создание задачи для пользователя {tg_id} с ID {user_id}')
+    job_id = f'one_lesson_balance_reminder_{tg_id}'
+    existing_job = scheduler.get_job(job_id)
+    if existing_job:
+        logger.info(
+            f'Задача для отправки напоминания пользователю {tg_id} на {next_lesson_date} уже существует.')
+        return
+
+    trigger = CronTrigger(year=next_lesson_date.year, month=next_lesson_date.month, day=next_lesson_date.day, hour=9, minute=5)
+    scheduler.add_job(
+        send_one_lesson_balance_reminder_message,
+        trigger,
+        args=[tg_id, next_lesson_date],
+        id=job_id,
+        misfire_grace_time=3600,
+    )
+
+    logger.info(f'Задача для отправки напоминания пользователю {tg_id} на {next_lesson_date} создана.')
+
+
+async def send_one_lesson_balance_reminder_message(tg_id, next_lesson_date):
+    logger.info(f'Отправляю напоминание пользователю {tg_id} об обычном занятии на {next_lesson_date}.')
+
+    reminder_message = ("Уважаемый клиент!\n"
+                        "Оповещаем, что у Вас осталось ОДНО оплаченное занятие.\n"
+                        "Во избежании просрочки оплаты за обучение Вы можете оплатить "
+                        "по ссылке https://client.express-pay.by/show?k=2F37583A-3ED1-453D-86FD-E3A13B7ADA19 или "
+                        "на месте Вашему преподавателю.\n"
+                        "Ваш KIBERone.")
+
+    await bot.send_message(tg_id, reminder_message)
+
+    logger.info(f'Напоминание пользователю {tg_id} о занятии на {next_lesson_date} отправлено.')
+
+    job_id = f'one_lesson_balance_reminder_{tg_id}'
+    try:
+        scheduler.remove_job(job_id)
+    except Exception as e:
+        logger.error("Ошибка при удалении задачи. Была уже удалена.")
+    logger.info(f'Задача с ID {job_id} удалена из планировщика.')
 
 
 async def create_balance_reminder_task(tg_id, user_id, next_lesson_date):
