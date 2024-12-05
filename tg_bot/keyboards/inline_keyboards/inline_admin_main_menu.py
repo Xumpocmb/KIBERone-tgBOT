@@ -1,3 +1,5 @@
+import os
+
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
 button_1: InlineKeyboardButton = InlineKeyboardButton(
@@ -17,9 +19,10 @@ button_4: InlineKeyboardButton = InlineKeyboardButton(
 )
 
 button_5: InlineKeyboardButton = InlineKeyboardButton(
-    text="Резюме", web_app=WebAppInfo(url="https://a9d1-185-177-125-58.ngrok-free.app/kiberclub/index/")
-    # text="Резюме", web_app=WebAppInfo(url="https://kiberonetgbot.online/kiberclub/resume/")
-)
+    text="Админ панель", web_app=WebAppInfo(url=f"https://{os.getenv('NGROK') if os.getenv('DEBUG_WEB_APP') == 'True' else os.getenv('DOMAIN')}/admin"))
+
+button_6: InlineKeyboardButton = InlineKeyboardButton(
+    text="Админ панель2", web_app=WebAppInfo(url=f"https://{os.getenv('NGROK') if os.getenv('DEBUG_WEB_APP') == 'True' else os.getenv('DOMAIN')}/admin_management/index_admin"))
 
 admin_main_menu_inline_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -28,5 +31,6 @@ admin_main_menu_inline_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
         [button_3],
         [button_4],
         [button_5],
+        [button_6],
     ]
 )

@@ -60,6 +60,8 @@ INSTALLED_APPS = [
     'corsheaders',
 
     'app_kiberclub',
+    'app_admin_management',
+    'app_accounts',
 ]
 
 MIDDLEWARE = [

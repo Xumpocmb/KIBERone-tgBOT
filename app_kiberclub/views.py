@@ -9,7 +9,8 @@ import pandas as pd
 import gspread
 import requests
 from bs4 import BeautifulSoup
-from django.http import JsonResponse
+from django.contrib import messages
+from django.http import JsonResponse, HttpResponseRedirect
 from urllib.parse import unquote
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
@@ -85,7 +86,7 @@ class GoogleSheet:
             self.topics = {elem.title: elem.id for elem in self.spreadsheet.worksheets()}
             if worksheet_name not in self.topics:
                 raise ValueError(f"Worksheet '{worksheet_name}' not found in spreadsheet")
-            self.answers = self.spreadsheet.get_worksheet_by_id(self.topics[worksheet_name])
+            self.worksheet = self.spreadsheet.get_worksheet_by_id(self.topics[worksheet_name])
         except Exception as e:
             print(f"Ошибка подключения к Google Sheets: {e}")
             raise e
@@ -107,6 +108,22 @@ class GoogleSheet:
             return df
         except Exception as e:
             print(f"Ошибка загрузки данных из Google Sheets: {e}")
+            raise e
+
+    def add_data_to_google_sheet(self, user_crm_id, feedback):
+        """Добавляет фидбек от родителя в Google Sheets."""
+        try:
+            df = self.load_data_from_google_sheet()
+
+            row_index = df[df['ID ребенка'] == user_crm_id].index
+            if row_index.empty:
+                raise ValueError(f"Child with ID {user_crm_id} not found in the worksheet")
+
+            row_number = row_index[0] + 2  # +2, потому что индексы DataFrame начинаются с 0, а индексы Google Sheets с 1
+            self.worksheet.update_cell(row_number, df.columns.get_loc('Отзыв родителя') + 1, feedback)
+
+        except Exception as e:
+            print(f"Ошибка добавления данных в Google Sheets: {e}")
             raise e
 
 
@@ -184,6 +201,7 @@ def open_profile(request):
     if request.method == 'POST':
         profile_id = request.POST.get('profile_id')
 
+
         user_crm_items = request.session.get('user_crm_items', [])
         if not user_crm_items:
             return redirect('app_kiberclub:error_page')
@@ -191,7 +209,9 @@ def open_profile(request):
         for item in user_crm_items:
             if int(item.get('id')) == int(profile_id):
                 user_crm_id = item.get("id")
+                request.session['user_crm_id'] = user_crm_id
                 user_crm_branch_ids = item.get("branch_ids")
+                request.session['user_crm_branch_ids'] = user_crm_branch_ids
                 user_crm_name = item.get("name").strip()
                 user_crm_birthday = item.get("dob")
 
@@ -212,6 +232,11 @@ def open_profile(request):
 
                 if room_id:
                     room_name, spreadsheet_url, worksheet_name, branch_id = get_room_id(room_id)
+                    request.session['room_id'] = room_id
+                    request.session['room_name'] = room_name
+                    request.session['spreadsheet_url'] = spreadsheet_url
+                    request.session['worksheet_name'] = worksheet_name
+                    request.session['branch_id'] = branch_id
                     if not room_name:
                         context.update({"user_location": "Неизвестно"})
                     else:
@@ -238,7 +263,33 @@ def open_profile(request):
     return render(request, 'app_kiberclub/client_card.html', context=context)
 
 
+def submit_review(request):
+    if request.method == 'POST':
+        user_crm_id = request.session.get('user_crm_id')
+        room_id = request.session.get('room_id')
+        room_name = request.session.get('room_name')
+        spreadsheet_url = request.session.get('spreadsheet_url')
+        worksheet_name = request.session.get('worksheet_name')
+        branch_id = request.session.get('branch_id')
+        feedback = request.POST.get('feedbackInput')
+
+        if user_crm_id and room_id and room_name and spreadsheet_url and worksheet_name and branch_id:
+            if save_review(user_crm_id, spreadsheet_url, worksheet_name, feedback):
+                return JsonResponse({'status': 'success', "message": "Ваш отзыв сохранен!"}, status=200)
+    return JsonResponse({'status': 'error', "message": "Произошла ошибка при сохранении отзыва"}, status=400)
+
+
+def save_review(user_crm_id, spreadsheet_url, worksheet_name, feedback):
+    google_sheet = GoogleSheet(CREDENTIALS_FILE, spreadsheet_url, worksheet_name)
+    try:
+        google_sheet.add_data_to_google_sheet(user_crm_id, feedback)
+        return True
+    except Exception as e:
+        return False
+
+
 def get_intermediate_resume_from_spreadsheet(spreadsheet_url, worksheet_name, user_crm_id):
+
     google_sheet = GoogleSheet(CREDENTIALS_FILE, spreadsheet_url, worksheet_name)
     df = google_sheet.load_data_from_google_sheet()
 
