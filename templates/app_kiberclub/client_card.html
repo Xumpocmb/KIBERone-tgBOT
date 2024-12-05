@@ -9,6 +9,7 @@
     {% else %}
         <link rel="stylesheet" href="{% static 'styles/client_card_style.css' %}">
     {% endif %}
+    <link rel="stylesheet" href="{% static 'styles/feed_back_form_style.css' %}">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 
@@ -41,7 +42,7 @@
         </section>
         <section id="feedback">
 
-                <i id="message">Оставьте обратную связь по работе нашей КИБЕР-школы!<br></i>
+            <i id="message">Оставьте обратную связь по работе нашей КИБЕР-школы!<br></i>
 
             <form id="feedbackForm" onsubmit="event.preventDefault(); submitReview();">
                 {% csrf_token %}
@@ -67,17 +68,17 @@
                 'X-CSRFToken': '{{ csrf_token }}'
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                document.getElementById('message').innerText = data.message;
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('message').innerText = data.message;
+                    button.innerText = 'Отправить';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
                 button.innerText = 'Отправить';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            button.innerText = 'Отправить';
-        });
+            });
     }
 </script>
 

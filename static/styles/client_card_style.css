@@ -15,7 +15,7 @@
 
 html {
     width: 100%;
-    height: 3000px;
+    height: 100vh;
     font-family: 'pf_beausans_prolight';
     font-size: 13px;
 }
@@ -47,7 +47,7 @@ p {
     font-family: 'franklin_gothic_mediumregular';
 }
 
-a, button {
+a {
     background-color: #F6C90E;
     color: #ffffff;
     border-radius: 10px;
@@ -57,37 +57,6 @@ a, button {
     border: none;
 }
 
-i {
-    font-size: 10px;
-    background-color: #fff;
-}
-
-textarea {
-    width: 250px;
-    height: 80px;
-    font-size: 12px;
-    border: 3px solid #F6C90E; 
-    margin-bottom: 5px;
-    padding: 8px;
-    border-radius: 7px;
-}
-
-form {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-}
-
-#sendButton {
-    width: 80px;
-    display: flex;
-    justify-content: center;
-}
-
-#feedback {
-    margin-top: 8px;
-    margin-bottom: 10px;
-}
 
 #profileImg {
     width: 110px;
@@ -121,6 +90,44 @@ form {
 #extraInfo {
     padding-top: 8px;
 }
+
+textarea {
+    width: 255px;
+    height: 80px;
+}
+
+
+/*i {*/
+/*    font-size: 10px;*/
+/*    background-color: #fff;*/
+/*}*/
+
+/*textarea {*/
+/*    width: 250px;*/
+/*    height: 80px;*/
+/*    font-size: 12px;*/
+/*    border: 3px solid #F6C90E; */
+/*    margin-bottom: 5px;*/
+/*    padding: 8px;*/
+/*    border-radius: 7px;*/
+/*}*/
+
+/*form {*/
+/*    display: flex;*/
+/*    align-items: center;*/
+/*    flex-direction: column;*/
+/*}*/
+
+/*#sendButton {*/
+/*    width: 80px;*/
+/*    display: flex;*/
+/*    justify-content: center;*/
+/*}*/
+
+/*#feedback {*/
+/*    margin-top: 8px;*/
+/*    margin-bottom: 10px;*/
+/*}*/
 
 /* @media screen and (max-device-width: 850px) {
     html {

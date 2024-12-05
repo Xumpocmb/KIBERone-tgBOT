@@ -75,3 +75,6 @@ venv.bak/
 /tg_bot/crm_logic/user_by_phone.json
 /static/img/
 /static/fonts/
+/app_admin_management/migrations/
+/app_accounts/migrations/
+/app_kiberclub/migrations/
