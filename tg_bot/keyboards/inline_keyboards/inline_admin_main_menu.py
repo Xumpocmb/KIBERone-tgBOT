@@ -24,6 +24,7 @@ button_5: InlineKeyboardButton = InlineKeyboardButton(
 button_6: InlineKeyboardButton = InlineKeyboardButton(
     text="Админ панель2", web_app=WebAppInfo(url=f"https://{os.getenv('NGROK') if os.getenv('DEBUG_WEB_APP') == 'True' else os.getenv('DOMAIN')}/admin_management/index_admin"))
 
+
 admin_main_menu_inline_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[
         [button_1],

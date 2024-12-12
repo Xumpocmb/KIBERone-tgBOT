@@ -42,3 +42,8 @@ form {
     margin-top: 1vw;
     margin-bottom: 3vw;
 }
+
+/*#main:focus-within {*/
+/*    position: fixed;*/
+/*    margin-bottom: 3vw;*/
+/*}*/

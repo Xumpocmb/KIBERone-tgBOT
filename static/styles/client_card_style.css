@@ -1,13 +1,13 @@
 @font-face {
     font-family: 'pf_beausans_prolight';
-    src: url("https://fedorchuk-valeria.github.io/card-client-kiberone/fonts/PFBeauSansPro-Light.ttf") format("truetype");    
+    src: url("../fonts/PFBeauSansPro-Light.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'franklin_gothic_mediumregular';
-    src: url("https://fedorchuk-valeria.github.io/card-client-kiberone/fonts/ofont.ru_Franklin Gothic Medium.ttf") format("truetype"); 
+    src: url("../fonts/ofont.ru_Franklin Gothic Medium.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
 
