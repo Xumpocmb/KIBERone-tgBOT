@@ -29,54 +29,6 @@ else:
 
 CREDENTIALS_FILE = 'kiberone-tg-bot-a43691efe721.json'
 
-MINSK = {
-    '1': "Локация разработки и тестирования ПО",
-    '12': "Аэродромная, 125, 4 этаж, кабинет 29",
-    '14': "Петра Мстиславца, 1, с торца",
-    '15': "ТЦ Арена-Сити, Пр-т Победителей 84, 2 этаж",
-    '16': "Неманская, 24, 2 этаж, кабинет 215",
-    '19': "Максима Богдановича 132, 2 этаж",
-}
-
-MINSK_WORK_SHEET_NAMES = {
-    '1': "Локация разработки и тестирования ПО",
-    '12': "Аэродромная",
-    '14': "Мстиславца",
-    '15': "Арена",
-    '16': "Неманская",
-    '19': "Богдановича",
-    '21': "Пер. Москвина 4",
-}
-
-BORISOV = {
-    '18': "ТЦ Клад Наполеона, Строителей 26, 3 этаж"
-}
-
-BORISOV_WORK_SHEET_NAMES = {
-    '18': "Строителей",
-}
-
-BARANOVICHI = {
-    '17': 'Тельмана, 64, 2 этаж',
-    '20': "Р-н Боровки, Geely Центр, пересечение улицы Морфицкого и Журавлевича 1 А, 3 этаж"
-}
-
-BARANOVICHI_WORK_SHEET_NAMES = {
-    '17': "Радужный",
-    '20': "Боровки",
-}
-
-worksheet_names = {
-    'minsk': MINSK,
-    'borisov': BORISOV,
-    'baranovichi': BARANOVICHI
-}
-
-BARANOVICHI_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1lzGfMTHlpIU4a02OwliKB8pB6vRdl7pTV0TOE2W5ypw'
-MINSK_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1lzGfMTHlpIU4a02OwliKB8pB6vRdl7pTV0TOE2W5ypw'
-BORISOV_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1Q3HI6sl6TvWJkscqpnmm3P-6iANzlENfT4XfHPgqgpQ'
-
-
 class GoogleSheet:
     def __init__(self, google_credentials_file: str, spreadsheet_url: str, worksheet_name: str) -> None:
         try:
@@ -253,7 +205,7 @@ def open_profile(request):
                     context.update({"user_resume": "Появится позже"})
 
                 if user_crm_name and branch_id:
-                    kiberons_count = get_check_kiberclub(user_crm_name, branch_id)
+                    kiberons_count = get_check_kiberclub(user_crm_id, user_crm_name, branch_id)
                     context.update({"user_kiberons": kiberons_count if kiberons_count else 0})
                 else:
                     context.update({"user_kiberons": 0})
@@ -303,7 +255,7 @@ def get_intermediate_resume_from_spreadsheet(spreadsheet_url, worksheet_name, us
                 return intermediate_resume
 
 
-def get_check_kiberclub(user_crm_name, branch_id):
+def get_check_kiberclub(user_crm_id, user_crm_name, branch_id):
     with open("kiberclub_credentials.json", "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -322,17 +274,17 @@ def get_check_kiberclub(user_crm_name, branch_id):
     if branch_id == 1:
         login = minsk_login
         password = minsk_password
-        kiberons: int | None = get_kiberons_count(user_crm_name_full, login, password)
+        kiberons: int | None = get_kiberons_count(user_crm_id, user_crm_name_full, login, password)
         return kiberons
     elif branch_id == 3:
         login = borisov_login
         password = borisov_password
-        kiberons: int | None = get_kiberons_count(user_crm_name_full, login, password)
+        kiberons: int | None = get_kiberons_count(user_crm_id, user_crm_name_full, login, password)
         return kiberons
     elif branch_id == 2:
         login = baranovichi_login
         password = baranovichi_password
-        kiberons: int | None = get_kiberons_count(user_crm_name_full, login, password)
+        kiberons: int | None = get_kiberons_count(user_crm_id, user_crm_name_full, login, password)
         return kiberons
 
 
@@ -402,7 +354,7 @@ def validate(init_data: str, token: str, c_str="WebAppData") -> None | dict[str,
     return init_data_dict
 
 
-def get_kiberons_count(user_crm_name_full: str, login: str, password: str) -> int | None:
+def get_kiberons_count(user_crm_id, user_crm_name_full: str, login: str, password: str) -> int | None:
     cookies = {
         'developsess': 'e65294731ff311d892841471f7beec1e',
     }
@@ -475,5 +427,7 @@ def get_kiberons_count(user_crm_name_full: str, login: str, password: str) -> in
         if name == user_crm_name_full:
             balance_element = child.find('div', class_='user_admin_col_balance')
             balance = balance_element.text.strip()
+            UserData.objects.filter(user_crm_id=user_crm_id).update(kiberons_count=int(balance))
             return balance
     return None
+

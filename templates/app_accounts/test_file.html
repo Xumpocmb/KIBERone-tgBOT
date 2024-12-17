@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список товаров</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        li .product-name {
+            font-size: 16px;
+            color: #333;
+        }
+
+        li .product-price {
+            font-size: 16px;
+            color: #e91e63;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Список товаров</h1>
+    <ul id="product-list">
+        <!-- Товары будут добавлены здесь с помощью JavaScript -->
+    </ul>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const products = [
+            {name: 'Товар 1', price: '$10'},
+            {name: 'Товар 2', price: '$20'},
+            {name: 'Товар 3', price: '$30'},
+            {name: 'Товар 4', price: '$40'},
+        ];
+
+        const productList = document.getElementById('product-list');
+
+        products.forEach(product => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `<span class="product-name">${product.name}</span><span class="product-price">${product.price}</span>`;
+            productList.appendChild(listItem);
+        });
+    });
+
+</script>
+</body>
+</html>

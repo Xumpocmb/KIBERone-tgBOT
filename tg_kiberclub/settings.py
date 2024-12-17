@@ -44,6 +44,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
     "http://localhost:8000",
     f"https://{os.getenv('NGROK') if os.getenv('DEBUG_WEB_APP') == 'True' else os.getenv('DOMAIN')}",
+    "https://b5f8-178-120-58-183.ngrok-free.app",
 ]
 
 
@@ -62,6 +63,7 @@ INSTALLED_APPS = [
     'app_kiberclub',
     'app_admin_management',
     'app_accounts',
+    'app_kibershop.apps.AppKibershopConfig'
 ]
 
 MIDDLEWARE = [
@@ -89,6 +91,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'app_kibershop.context_processors.cart',
+                'app_kibershop.context_processors.kiberons',
             ],
         },
     },

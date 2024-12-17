@@ -13,15 +13,17 @@ class UserData(models.Model):
     next_lesson_date = models.CharField(max_length=255, blank=True, null=True)
     user_branch_ids = models.CharField(max_length=255, blank=True, null=True)
     user_crm_id = models.IntegerField(blank=True, null=True)
-    user_lessons = models.BooleanField(default=False)
     notified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     customer_data = models.TextField(blank=True, null=True)
+    kiberons_count = models.IntegerField(default=0, null=True)
+    kiberons_count_after_orders = models.IntegerField(default=0, null=True)
+    user_lessons = models.BooleanField(default=False, null=True, blank=True)
 
     objects = models.Manager()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'users'
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'

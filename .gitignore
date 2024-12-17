@@ -78,3 +78,7 @@ venv.bak/
 /app_admin_management/migrations/
 /app_accounts/migrations/
 /app_kiberclub/migrations/
+/media/
+/app_kibershop.json
+/app_kibershop/migrations/
+

@@ -8,6 +8,7 @@ urlpatterns = [
     path('kiberclub/', include('app_kiberclub.urls')),
     path('accounts/', include('app_accounts.urls')),
     path('admin_management/', include('app_admin_management.urls')),
+    path('kibershop/', include('app_kibershop.urls')),
 ]
 
 if settings.DEBUG:

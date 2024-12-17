@@ -29,7 +29,7 @@
                 <b id="location" style="font-family: 'Inter Light';">{{ user_location }}</b>
             </section>
         </section>
-        <a>Личный кабинет KIBERone</a>
+        <a href="{% url 'app_kibershop:catalog' %}">Перейти в KIBERshop</a>
         <section id="extraInfo">
             <div class="backend_info" id="backend_info"></div>
             <p>Тема следующего занятия</p>
@@ -42,9 +42,7 @@
             </span>
         </section>
         <section id="feedback">
-
             <i id="message">Оставьте обратную связь по работе нашей КИБЕР-школы!<br></i>
-
             <form id="feedbackForm" onsubmit="event.preventDefault(); submitReview();">
                 {% csrf_token %}
                 <textarea placeholder="Отзыв" id="feedbackInput" name="feedbackInput"></textarea>
