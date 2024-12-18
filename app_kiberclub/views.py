@@ -78,6 +78,21 @@ class GoogleSheet:
             print(f"Ошибка добавления данных в Google Sheets: {e}")
             raise e
 
+    def save_data_to_google_sheet(self, df: pd.DataFrame, worksheet_name) -> None:
+        """Сохраняет DataFrame в указанный лист Google Sheets."""
+        try:
+            if not self.spreadsheet:
+                raise ValueError("Spreadsheet is not initialized")
+            if not self.topics:
+                raise ValueError("No topics found in the spreadsheet")
+            worksheet = self.spreadsheet.worksheet(worksheet_name)
+            if not worksheet:
+                raise ValueError(f"Worksheet '{worksheet_name}' not found in spreadsheet")
+            worksheet.clear()
+            worksheet.update([df.columns.values.tolist()] + df.values.tolist())
+        except Exception as e:
+            raise e
+
 
 def index(request):
     context = {

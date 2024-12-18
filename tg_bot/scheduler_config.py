@@ -115,7 +115,7 @@ async def check_user_balance():
                                 if existing_job:
                                     scheduler.remove_job(f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d")}')
 
-        await asyncio.sleep(5)
+        await asyncio.sleep(7)
 
 
 async def create_one_lesson_balance_reminder_task(tg_id, user_id, next_lesson_date):
@@ -322,7 +322,7 @@ async def check_user_trial_lesson():
                         logger.debug(f'У пользователя {user.phone_number} is_study = 1.')
             else:
                 logger.info(f'У пользователя {user.phone_number} нет запланированных пробных занятий.')
-        await asyncio.sleep(5)
+        await asyncio.sleep(7)
 
 
 async def create_trial_lesson_reminder_task(tg_id, user_crm_id, lesson_date, lesson_address):
@@ -417,6 +417,8 @@ f"Теперь ваш ребёнок гарантировано будет об�
 ------------------------
 """
 
+# можно проверить в БД, есть ли ДР, если нету, то уже брать в црм. уменшит количество запросов
+
 def check_reminder_time(b_date, year):
     r_time = None
     try:
@@ -464,7 +466,7 @@ async def check_user_birthday():
                     logger.info(f'Для пользователя {user.phone_number} нет записей о дне рождения в ЦРМ.')
             else:
                 logger.warning(f'Пользователь {user.phone_number} не найден в ЦРМ.')
-            await asyncio.sleep(5)
+            await asyncio.sleep(7)
         except Exception as e:
             logger.error(f'Ошибка при обработке пользователя с телефоном {user.phone_number}: {e}')
     logger.info("Проверка дней рождения завершена.")

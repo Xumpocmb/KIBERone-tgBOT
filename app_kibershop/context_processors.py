@@ -14,7 +14,7 @@ def kiberons(request):
         user_orders = Order.objects.filter(user=UserData.objects.get(tg_id=request.session.get('user_tg_id')))
         if user_orders.exists():
             user_data = UserData.objects.filter(tg_id=request.session.get('user_tg_id')).first()
-            if user_data and user_data.kiberons_count_after_orders > 0:
+            if user_data:
                 return {'kiberons': user_data.kiberons_count_after_orders}
 
     if not request.session.get('user_crm_id'):
