@@ -8,7 +8,7 @@
 
 @font-face {
     font-family: 'franklin_gothic_mediumregular';
-    src: url("../../fonts/ofont.ru_Franklin Gothic Medium.ttf") format("truetype");
+    src: url("../../fonts/Franklin_Gothic_Medium.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
 
@@ -33,7 +33,7 @@ span {
     padding-left: 5vw;
     padding-right: 40vw;
     font-size: 4.5vw;
-    font-family: '../../franklin_gothic_mediumregular';
+    font-family: 'franklin_gothic_mediumregular';
 }
 
 button {
@@ -81,7 +81,7 @@ button {
 }
 
 .productName {
-    font-family: '../../fonts/franklin_gothic_mediumregular';
+    font-family: 'franklin_gothic_mediumregular';
     font-size: 3.5vw;
     color: white;
     /* margin: 0; */
@@ -97,7 +97,7 @@ button {
 }
 
 .productPrice {
-    font-family: '../../fonts/franklin_gothic_mediumregular';
+    font-family: 'franklin_gothic_mediumregular';
     font-size: 4vw;
     color: #92241F;
     margin-left: 2vw;

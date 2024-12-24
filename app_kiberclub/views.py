@@ -508,15 +508,12 @@ def get_kiberons_count(tg_id, user_crm_id, user_crm_name_full: str, login: str, 
         if name == user_crm_name_full:
             balance_element = child.find('div', class_='user_admin_col_balance')
             balance = balance_element.text.strip()
-            print(f'balance: {balance}')
 
             user = UserData.objects.filter(tg_id=tg_id).first()
             if user:
                 user.kiberons_count = int(balance)
                 user.save()
-                print(f'kiberons: {user.kiberons_count}')
             else:
-                print('no user')
-            return balance
+                return balance
     return None
 
