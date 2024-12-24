@@ -9,25 +9,27 @@ button {
 }
 
 i {
-    font-size: 2.3vw;
+    font-size: 2.8vw;
     background-color: #fff;
 }
 
 textarea {
-    font-size: 4.5vw;
+    font-size: 5vw;
     border: 0.5vw solid #F6C90E;
     margin-bottom: 2vw;
-    margin-top: 1vw;
-    border-radius: 1.5vw;
-    padding: 2vw;
-    margin-left: -1vw;
+    /* margin-top: 1vw; */
+    border-radius: 2vw;
+    padding: 3vw;
+    /* margin-left: -1vw; */
+    width: 81vw;
 }
 
 
 form {
     display: flex;
-    align-items: center;
+    /* align-items: center; */
     flex-direction: column;
+    
     /* padding: 4px; */
 }
 
@@ -39,16 +41,14 @@ form {
 }
 
 #feedback {
-    margin-top: 1vw;
+    margin-top: 3vw;
     margin-bottom: 3vw;
+    
 }
 
-/*#main:focus-within {*/
-/*    position: fixed;*/
-/*    margin-bottom: 3vw;*/
-/*}*/
-
-/*#main:focus-within {*/
-/*    position: fixed;*/
-/*    margin-bottom: 3vw;*/
-/*}*/
+#forSendButton {
+    width: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

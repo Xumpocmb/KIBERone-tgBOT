@@ -5,12 +5,15 @@
     justify-content: space-between;
     margin-left: 5vw;
     margin-right: 5vw;
-    padding: 4vw;
+    padding: 1vw;
+    padding-top: 3vw;
+    padding-bottom: 3vw;
     background-color: #ffca1c4a;
     border-radius: 1vw;
     height: 15vw;
     margin-top: 8vw;
 }
+
 
 .orderProductImg {
     height: 25vw;
@@ -21,9 +24,18 @@
 }
 
 .orderProductPrice {
-    font-size: 3.5vw;
+    font-size: 4.5vw;
     margin-bottom: 0;
     margin-top: 0;
+    color: #92241F;
+}
+
+#errorText {
+    font-size: 4.5vw;
+    margin-bottom: 0;
+    margin-top: 0;
+    margin-left: 5vw;
+    color: #92241F;
 }
 
 .orderSection {
@@ -44,8 +56,9 @@
 .removeButton {
     height: 6vw;
     margin-top: -3vw;
-    margin-right: -3vw;
+    margin-right: -1vw;
 }
+
 
 .removeButtonSection {
     height: inherit;

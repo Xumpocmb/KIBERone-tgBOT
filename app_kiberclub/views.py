@@ -19,6 +19,12 @@ from dotenv import load_dotenv
 from app_kiberclub.alfa_crm import find_user_by_phone, get_client_lessons, get_client_lesson_name
 from app_kiberclub.models import UserData, Locations
 
+
+from logger_config import get_logger
+
+logger = get_logger()
+
+
 load_dotenv()
 
 DEBUG = os.environ.get("BOT_DEBUG")
@@ -124,40 +130,100 @@ def error_page(request):
 
 
 def get_user_crm_items(request):
-    user_tg_id = request.session['user_tg_id']
+    logger.debug("get_user_crm_items called")
+
+    user_tg_id = request.session.get('user_tg_id')
+    logger.debug(f"User Telegram ID from session: {user_tg_id}")
+
     if not user_tg_id:
+        logger.error("No user_tg_id found in session.")
         return redirect('app_kiberclub:error_page')
 
     try:
         user_db_info = UserData.objects.filter(tg_id=user_tg_id).first()
+        logger.debug(f"User database info: {user_db_info}")
     except Exception as e:
-        return JsonResponse({"status": "error", "message": "Ошибка при поиске записи в базе данных"}, status=400)
-    user_data_by_phone = find_user_by_phone(user_db_info.phone_number)
+        logger.error(f"Error fetching user data from database: {e}")
+        return redirect('app_kiberclub:error_page')
+        # return JsonResponse({"status": "error", "message": "Ошибка при поиске записи в базе данных"}, status=404)
 
-    if not user_data_by_phone:
+    if not user_db_info:
+        logger.error("No user data found in the database.")
         return redirect('app_kiberclub:error_page')
 
-    return user_data_by_phone.get('items')
+    try:
+        user_data_by_phone = find_user_by_phone(user_db_info.phone_number)
+        logger.debug(f"User data by phone: {user_data_by_phone}")
+    except Exception as e:
+        logger.error(f"Error finding user by phone: {e}")
+        return redirect('app_kiberclub:error_page')
+
+    if not user_data_by_phone:
+        logger.error("No user data found by phone.")
+        return redirect('app_kiberclub:error_page')
+
+    user_crm_items = user_data_by_phone.get('items')
+    logger.debug(f"User CRM items: {user_crm_items}")
+
+    return user_crm_items
 
 
 # @csrf_exempt
 def save_init_data(request):
+    logger.debug("save_init_data called")
+
     if request.method == 'POST':
-        data = json.loads(request.body)
+        logger.debug("Request method is POST")
+        try:
+            data = json.loads(request.body)
+            logger.debug(f"Request body loaded: {data}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to decode JSON: {e}")
+            return JsonResponse({"status": "error", "message": "Invalid JSON data."}, status=400)
+
         init_data = data.get('initData')
         if not init_data:
+            logger.error("No init data received.")
             return JsonResponse({"status": "error", "message": "No init data received."}, status=400)
+
         secret_key = BOT_TOKEN
+        logger.debug(f"Secret key: {secret_key}")
+
         init_data_dict = validate(init_data, secret_key)
         if init_data_dict is None:
+            logger.error("Invalid data received.")
             return JsonResponse({"status": "error", "message": "Invalid data received."}, status=400)
 
-        user_dict = json.loads(init_data_dict.get('user'))
-        request.session['user_tg_id'] = user_dict.get('id')
+        logger.debug(f"init_data_dict: {init_data_dict}")
+
+        try:
+            user_dict = json.loads(init_data_dict.get('user'))
+            logger.debug(f"User dictionary: {user_dict}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to decode user JSON: {e}")
+            return JsonResponse({"status": "error", "message": "Invalid user data."}, status=400)
+
+        user_tg_id = user_dict.get('id')
+        logger.debug(f"User Telegram ID: {user_tg_id}")
+        request.session['user_tg_id'] = user_tg_id
 
         user_crm_items = get_user_crm_items(request)
-        request.session['user_crm_items'] = user_crm_items
+        logger.debug(f"User CRM items: {user_crm_items}")
+
+        if not user_crm_items:
+            logger.error("No user CRM items received.")
+            return redirect('app_kiberclub:error_page')
+
+        try:
+            request.session['user_crm_items'] = user_crm_items
+            logger.debug("User CRM items saved to session.")
+        except Exception as e:
+            logger.error(f"Failed to save user CRM items to session: {e}")
+            return redirect('app_kiberclub:error_page')
+
         return JsonResponse({'status': 'success'})
+
+    logger.error("Invalid request method.")
     return JsonResponse({'status': 'invalid request'}, status=400)
 
 
@@ -185,7 +251,7 @@ def open_profile(request):
                 context.update({
                     "user_crm_id": user_crm_id,
                     "user_crm_name": user_crm_name,
-                    "user_tg_id": request.session['user_tg_id'],
+                    "user_tg_id": request.session.get('user_tg_id'),
                 })
 
                 lesson_name, room_id = get_user_lessons(user_crm_id, user_crm_branch_ids)
@@ -220,7 +286,7 @@ def open_profile(request):
                     context.update({"user_resume": "Появится позже"})
 
                 if user_crm_name and branch_id:
-                    kiberons_count = get_check_kiberclub(user_crm_id, user_crm_name, branch_id)
+                    kiberons_count = get_check_kiberclub(request.session.get('user_tg_id'), user_crm_id, user_crm_name, branch_id)
                     context.update({"user_kiberons": kiberons_count if kiberons_count else 0})
                 else:
                     context.update({"user_kiberons": 0})
@@ -270,7 +336,7 @@ def get_intermediate_resume_from_spreadsheet(spreadsheet_url, worksheet_name, us
                 return intermediate_resume
 
 
-def get_check_kiberclub(user_crm_id, user_crm_name, branch_id):
+def get_check_kiberclub(tg_id, user_crm_id, user_crm_name, branch_id):
     with open("kiberclub_credentials.json", "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -289,17 +355,17 @@ def get_check_kiberclub(user_crm_id, user_crm_name, branch_id):
     if branch_id == 1:
         login = minsk_login
         password = minsk_password
-        kiberons: int | None = get_kiberons_count(user_crm_id, user_crm_name_full, login, password)
+        kiberons: int | None = get_kiberons_count(tg_id, user_crm_id, user_crm_name_full, login, password)
         return kiberons
     elif branch_id == 3:
         login = borisov_login
         password = borisov_password
-        kiberons: int | None = get_kiberons_count(user_crm_id, user_crm_name_full, login, password)
+        kiberons: int | None = get_kiberons_count(tg_id, user_crm_id, user_crm_name_full, login, password)
         return kiberons
     elif branch_id == 2:
         login = baranovichi_login
         password = baranovichi_password
-        kiberons: int | None = get_kiberons_count(user_crm_id, user_crm_name_full, login, password)
+        kiberons: int | None = get_kiberons_count(tg_id, user_crm_id, user_crm_name_full, login, password)
         return kiberons
 
 
@@ -369,7 +435,7 @@ def validate(init_data: str, token: str, c_str="WebAppData") -> None | dict[str,
     return init_data_dict
 
 
-def get_kiberons_count(user_crm_id, user_crm_name_full: str, login: str, password: str) -> int | None:
+def get_kiberons_count(tg_id, user_crm_id, user_crm_name_full: str, login: str, password: str) -> int | None:
     cookies = {
         'developsess': 'e65294731ff311d892841471f7beec1e',
     }
@@ -442,7 +508,15 @@ def get_kiberons_count(user_crm_id, user_crm_name_full: str, login: str, passwor
         if name == user_crm_name_full:
             balance_element = child.find('div', class_='user_admin_col_balance')
             balance = balance_element.text.strip()
-            UserData.objects.filter(user_crm_id=user_crm_id).update(kiberons_count=int(balance))
+            print(f'balance: {balance}')
+
+            user = UserData.objects.filter(tg_id=tg_id).first()
+            if user:
+                user.kiberons_count = int(balance)
+                user.save()
+                print(f'kiberons: {user.kiberons_count}')
+            else:
+                print('no user')
             return balance
     return None
 

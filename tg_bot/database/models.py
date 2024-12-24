@@ -31,6 +31,9 @@ class User(Base):
     notified: Mapped[bool] = mapped_column(default=False, nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
 
+    kiberons_count: Mapped[int] = mapped_column(default=0, nullable=True)
+    kiberons_count_after_orders: Mapped[int] = mapped_column(default=0, nullable=True)
+
     def __repr__(self):
         return f"<User(id={self.id}, tg_id={self.tg_id}, username={self.username})>"
 

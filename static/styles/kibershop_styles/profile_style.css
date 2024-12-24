@@ -17,6 +17,7 @@
 html {
     background-color: white;
     font-family: 'pf_beausans_prolight';
+    overflow-x: hidden;
 }
 
 body {

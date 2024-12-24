@@ -7,6 +7,10 @@ from dotenv import load_dotenv
 import os
 import random
 
+from logger_config import get_logger
+
+logger = get_logger()
+
 
 load_dotenv()
 
@@ -52,6 +56,7 @@ def login_to_alfa_crm() -> str | None:
 def find_user_by_phone(phone_number: str) -> dict | None:
     token = login_to_alfa_crm()
     if not token:
+        logger.error("Failed to login to Alfa CRM")
         return None
 
     def fetch_data(branch: str, status: int) -> dict | None:

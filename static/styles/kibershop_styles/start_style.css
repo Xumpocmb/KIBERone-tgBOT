@@ -20,6 +20,7 @@ html {
     font-family: 'franklin_gothic_mediumregular';
     font-size: 10.8vw;
     background-color: #8cd1d3;
+    overflow-x: hidden;
 }
 
 #main {

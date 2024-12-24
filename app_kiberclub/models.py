@@ -16,8 +16,8 @@ class UserData(models.Model):
     notified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     customer_data = models.TextField(blank=True, null=True)
-    kiberons_count = models.IntegerField(default=0, null=True)
-    kiberons_count_after_orders = models.IntegerField(default=0, null=True)
+    kiberons_count = models.IntegerField(default=0, null=True, blank=True)
+    kiberons_count_after_orders = models.IntegerField(default=0, null=True, blank=True)
     user_lessons = models.BooleanField(default=False, null=True, blank=True)
 
     objects = models.Manager()
@@ -43,7 +43,7 @@ class Locations(models.Model):
     objects = models.Manager()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'Locations'
         verbose_name = 'Локация'
         verbose_name_plural = 'Локации'

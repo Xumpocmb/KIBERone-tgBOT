@@ -30,7 +30,7 @@
                 </section>
                 <section class="orderSection">
                     <p class="orderProductPrice"><b>{{ cart.cart_item_price }}К</b></p>
-                    <button class="orderButton">Предзаказ</button>
+                    <!--  <button class="orderButton">Предзаказ</button>  -->
                 </section>
                 <section class="removeButtonSection">
                     <a href="{% url 'app_kibershop:remove_from_cart' cart.id %}"><img src="{% static 'img/kibershop/remove.svg' %}" class="removeButton"></a>

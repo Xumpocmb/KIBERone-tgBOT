@@ -25,3 +25,5 @@ ps aux | grep bot.py
 Это покажет вам процесс bot.py, который должен быть запущен.
 
 # KIBERone
+
+ngrok http http://127.0.0.1:8080

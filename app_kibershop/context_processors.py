@@ -11,16 +11,16 @@ def cart(request):
 
 def kiberons(request):
     if request.session.get('user_tg_id'):
+        user_tg_id = request.session.get('user_tg_id')
+
         user_orders = Order.objects.filter(user=UserData.objects.get(tg_id=request.session.get('user_tg_id')))
+        user_data = UserData.objects.get(tg_id=user_tg_id)
+
         if user_orders.exists():
-            user_data = UserData.objects.filter(tg_id=request.session.get('user_tg_id')).first()
             if user_data:
                 return {'kiberons': user_data.kiberons_count_after_orders}
-
-    if not request.session.get('user_crm_id'):
+        else:
+            return {'kiberons': user_data.kiberons_count}
+    else:
         return {'kiberons': 0}
-    user_crm_id = request.session.get('user_crm_id')
-    user_data = UserData.objects.filter(user_crm_id=user_crm_id).first()
-    if user_data:
-        return {'kiberons': user_data.kiberons_count}
-    return {'kiberons': 0}
+

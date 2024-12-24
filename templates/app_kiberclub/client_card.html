@@ -4,12 +4,10 @@
 <html>
 <head>
     <title>Профиль</title>
-    {% if is_iphone %}
-        <link rel="stylesheet" href="{% static 'styles/client_card_style_iphone.css' %}">
-    {% else %}
-        <link rel="stylesheet" href="{% static 'styles/client_card_style.css' %}">
-    {% endif %}
+    <link rel="stylesheet" href="{% static 'styles/client_card_style.css' %}">
     <link rel="stylesheet" href="{% static 'styles/feed_back_form_style.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/running_line.css' %}">
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="{% static 'styles/feed_back_form_style.css' %}">
 </head>
@@ -30,6 +28,10 @@
             </section>
         </section>
         <a href="{% url 'app_kibershop:catalog' %}">Перейти в KIBERshop</a>
+        <div id="warning">
+            <p class="warningText">*количество товара ограничено! ПРИ ОФОРМЛЕНИИ ПРЕДЗАКАЗА КИБЕРОНЫ СПИСЫВАЮТСЯ ТОЛЬКО
+                ПРИ ПОЛУЧЕНИИ!</p>
+        </div>
         <section id="extraInfo">
             <div class="backend_info" id="backend_info"></div>
             <p>Тема следующего занятия</p>
@@ -46,7 +48,9 @@
             <form id="feedbackForm" onsubmit="event.preventDefault(); submitReview();">
                 {% csrf_token %}
                 <textarea placeholder="Отзыв" id="feedbackInput" name="feedbackInput"></textarea>
-                <button id="sendButton">Отправить</button>
+                <div id="forSendButton">
+                    <button type="submit" id="sendButton">Отправить</button>
+                </div>
             </form>
         </section>
     </div>
