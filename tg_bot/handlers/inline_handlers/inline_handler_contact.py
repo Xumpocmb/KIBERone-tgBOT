@@ -67,7 +67,7 @@ async def process_button_lead_contact_press(callback: CallbackQuery, session: As
     logger.debug("Обработка нажатия кнопки 'lead_contact_manager_lead'")
     logger.debug(f"Получен запрос от пользователя: {callback.from_user.id}")
 
-    response_text = 'Менеджер Евгений:\nhttps://t.me/EvgeniyKIBERone\n+375296332779'
+    response_text = 'Менеджер Римма:\nhttps://t.me/kiber1help'
 
     try:
         await callback.message.answer(text=response_text)

@@ -15,6 +15,7 @@ from urllib.parse import unquote
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
+from gspread import GSpreadException
 
 from app_kiberclub.alfa_crm import find_user_by_phone, get_client_lessons, get_client_lesson_name
 from app_kiberclub.models import UserData, Locations
@@ -59,7 +60,10 @@ class GoogleSheet:
             worksheet = self.spreadsheet.worksheet(self.worksheet_name)
             if not worksheet:
                 raise ValueError(f"Worksheet '{self.worksheet_name}' not found in spreadsheet")
-            data = worksheet.get_all_records()
+            try:
+                data = worksheet.get_all_records()
+            except Exception as e:
+                raise GSpreadException(e)
             if not data:
                 raise ValueError("No data found in the worksheet")
             df = pd.DataFrame(data)
@@ -332,7 +336,7 @@ def get_intermediate_resume_from_spreadsheet(spreadsheet_url, worksheet_name, us
     for index, row in df.iterrows():
         if pd.notna(row["ID ребенка"]):
             if row["ID ребенка"] == user_crm_id:
-                intermediate_resume = row["Резюме промежуточное"]
+                intermediate_resume = row["Резюме НГ"]
                 return intermediate_resume
 
 
@@ -508,12 +512,15 @@ def get_kiberons_count(tg_id, user_crm_id, user_crm_name_full: str, login: str, 
         if name == user_crm_name_full:
             balance_element = child.find('div', class_='user_admin_col_balance')
             balance = balance_element.text.strip()
+            print(f'balance: {balance}')
 
             user = UserData.objects.filter(tg_id=tg_id).first()
             if user:
                 user.kiberons_count = int(balance)
                 user.save()
+                print(f'kiberons: {user.kiberons_count}')
             else:
-                return balance
+                print('no user')
+            return balance
     return None
 

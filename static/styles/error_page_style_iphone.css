@@ -1,6 +1,6 @@
 @font-face {
     font-family: 'franklin_gothic_mediumregular';
-    src: url("https://fedorchuk-valeria.github.io/card-client-kiberone/fonts/ofont.ru_Franklin Gothic Medium.ttf") format("truetype"); 
+    src: url("../fonts/Franklin_Gothic_Medium.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
 

@@ -46,17 +46,17 @@
         </div>
         <form id="orderForm" action="{% url 'app_kibershop:make_order' %}" method="post">
             {% csrf_token %}
-            <button type="submit" id="fullOrderButton"><img src="{% static 'img/kibershop/money.svg' %}" id="fullOrderButtonImg">Предзаказ</button>
+            <button type="submit" id="fullOrderButton" disabled><img src="{% static 'img/kibershop/money.svg' %}" id="fullOrderButtonImg">Предзаказ</button>
         </form>
 
     </section>
     </body>
     <script>
-        document.getElementById('fullOrderButton').addEventListener('click', function (event) {
-            event.preventDefault();
-            this.innerHTML = 'Создание заказа';
-            document.getElementById('orderForm').submit();
-        });
+        //document.getElementById('fullOrderButton').addEventListener('click', function (event) {
+        //    event.preventDefault();
+        //    this.innerHTML = 'Обработка…';
+        //    document.getElementById('orderForm').submit();
+        //});
     </script>
 {% endblock %}
 
