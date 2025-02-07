@@ -75,8 +75,9 @@ async def check_user_balance():
                 for item in items:
                     if item.get("is_study", 0):
                         user_paid_lesson_count: int = int(item.get("paid_lesson_count", 0))
-                        logger.debug(f"Баланс пользователя {user.phone_number}: {user_paid_lesson_count}")
+                        logger.debug(f"Количество оплаченных занятий: {user.phone_number}: {user_paid_lesson_count}")
                         user_balance = str(item.get("balance", 0))
+                        logger.debug(f"Баланс: {user_balance}")
                         # paid_count = int(item.get("paid_count", 0))
 
                         async with Session() as session:
@@ -87,6 +88,7 @@ async def check_user_balance():
                             await orm_update_user(session, user_data)
                         user_id = item.get("id", None)
 
+                        # напоминание перед уроком
                         user_branch_ids = item.get("branch_ids", [])
                         user_lessons = await get_client_lessons(user_id, user_branch_ids)
                         if user_lessons['total'] > user_lessons['count']:
@@ -101,7 +103,7 @@ async def check_user_balance():
                             next_lesson_date = datetime.strptime(next_lesson_date, '%Y-%m-%d')
                             logger.debug(f'Дата следующего занятия для пользователя {user.phone_number}: {next_lesson_date}')
                             if user_paid_lesson_count <= 0:
-                                await create_balance_reminder_task(user.tg_id, user_id, next_lesson_date)
+                                await create_balance_reminder_task(user.tg_id, user_id, next_lesson_date, user_paid_lesson_count)
                                 logger.debug(f'Задача для отправки напоминания пользователю {user.tg_id} на {next_lesson_date} создана.')
                             else:
                                 job_id = f'balance_reminder_{user.tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d")}'
@@ -112,7 +114,7 @@ async def check_user_balance():
         await asyncio.sleep(5)
 
 
-async def create_balance_reminder_task(tg_id, user_id, next_lesson_date):
+async def create_balance_reminder_task(tg_id, user_id, next_lesson_date, user_paid_lesson_count):
     logger.info(f'Создание задачи для пользователя {tg_id} с ID {user_id}')
     job_id = f'balance_reminder_{tg_id}_{user_id}_{next_lesson_date.strftime("%Y%m%d")}'
     existing_job = scheduler.get_job(job_id)
@@ -130,7 +132,7 @@ async def create_balance_reminder_task(tg_id, user_id, next_lesson_date):
     scheduler.add_job(
         send_balance_reminder_message,
         trigger,
-        args=[tg_id, user_id, next_lesson_date],
+        args=[tg_id, user_id, next_lesson_date, user_paid_lesson_count],
         id=job_id,
         misfire_grace_time=3600,
     )
@@ -138,14 +140,14 @@ async def create_balance_reminder_task(tg_id, user_id, next_lesson_date):
     logger.info(f'Задача для отправки напоминания пользователю {tg_id} на {next_lesson_date} создана.')
 
 
-async def send_balance_reminder_message(tg_id, user_id, lesson_datetime):
+async def send_balance_reminder_message(tg_id, user_id, lesson_datetime, user_paid_lesson_count):
     logger.info(f'Отправляю напоминание пользователю {tg_id} о пробном занятии на {lesson_datetime}.')
 
     next_lesson_date = lesson_datetime.strftime('%d.%m')
 
-    day = lesson_datetime.day
-    logger.debug(f'День {day}')
-    if day < 10:
+    # day = lesson_datetime.day
+    # logger.debug(f'День {day}')
+    if user_paid_lesson_count == 0:
         reminder_message = (
             "Уважаемый клиент!\n"
             "Во избежание просрочки оплаты за обучение, просим произвести оплату через ЕРИП по "
@@ -154,7 +156,7 @@ async def send_balance_reminder_message(tg_id, user_id, lesson_datetime):
         async with bot:
             await bot.send_message(chat_id=tg_id, text=reminder_message)
         logger.info(f'Напоминание пользователю {tg_id} о необходимости оплаты занятий {next_lesson_date} отправлено.')
-    else:
+    elif user_paid_lesson_count < 0:
         reminder_message = (
             "https://youtu.be/j-tUb1o6dVU \n"
             "Уважаемый клиент!\n"
