@@ -108,7 +108,7 @@ async def find_user_by_phone(phone_number: str) -> dict | None:
         data = json.dumps(data)
         url = f"https://{CRM_HOSTNAME}/v2api/{branch}/customer/index"
 
-        delay = random.uniform(0.3, 0.7)
+        delay = random.uniform(0.7, 1.5)
         logger.debug(f"Задержка перед запросом: {delay:.2f} секунд.")
         await asyncio.sleep(delay)
 
@@ -157,7 +157,7 @@ async def send_request_to_crm(url: str, data: str, params: dict | None, token: s
         logger.debug("Обновление заголовков..")
         headers.update({"X-ALFACRM-TOKEN": token})
 
-        delay = random.uniform(0.2, 0.6)
+        delay = random.uniform(0.5, 1.2)
         await asyncio.sleep(delay)
         async with aiohttp.ClientSession() as session:
             try:

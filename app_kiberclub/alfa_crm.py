@@ -27,7 +27,7 @@ headers = {
     "Accept": "application/json, text/plain, */*",
 }
 
-branches = [1, 2, 3]
+branches = [1, 2, 3, 4]
 client_is_study_statuses = [0, 1]
 
 

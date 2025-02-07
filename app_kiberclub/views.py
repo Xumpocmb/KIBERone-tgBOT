@@ -353,6 +353,9 @@ def get_check_kiberclub(tg_id, user_crm_id, user_crm_name, branch_id):
         borisov_login: str = data["Борисов"]["логин"]
         borisov_password: str = data["Борисов"]["пароль"]
 
+        novopolock_login: str = data["Новополоцк"]["логин"]
+        novopolock_password: str = data["Новополоцк"]["пароль"]
+
     user_crm_name_splitted: list = user_crm_name.split(" ", )[:2]
     user_crm_name_full: str = " ".join(user_crm_name_splitted)
 
@@ -370,6 +373,11 @@ def get_check_kiberclub(tg_id, user_crm_id, user_crm_name, branch_id):
         login = baranovichi_login
         password = baranovichi_password
         kiberons: int | None = get_kiberons_count(tg_id, user_crm_id, user_crm_name_full, login, password)
+        return kiberons
+    elif branch_id == 4:
+        login = novopolock_login
+        password = novopolock_password
+        kiberons: int | None = get_kiberons_count(tg_id, user_crm_id, user_crm_name, login, password)
         return kiberons
 
 
@@ -443,7 +451,6 @@ def get_kiberons_count(tg_id, user_crm_id, user_crm_name_full: str, login: str, 
     cookies = {
         'developsess': 'e65294731ff311d892841471f7beec1e',
     }
-
     headers = {
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
         'accept-language': 'ru,en-US;q=0.9,en;q=0.8',
@@ -473,7 +480,6 @@ def get_kiberons_count(tg_id, user_crm_id, user_crm_name_full: str, login: str, 
     response = requests.post('https://kiber-one.club/enter/', cookies=cookies, headers=headers, data=data)
 
     if response.status_code != 200:
-        print("response.status_code != 200")
         return None
 
     cookies.update(response.cookies)
@@ -484,19 +490,15 @@ def get_kiberons_count(tg_id, user_crm_id, user_crm_name_full: str, login: str, 
         response = requests.get(users_url, cookies=cookies, headers=headers)
 
         if response.status_code != 200:
-            print("response.status_code != 200")
             return None
     except Exception as e:
-        print(f"An error occurred: {e}")
         return None
 
     try:
         soup = BeautifulSoup(response.text, 'lxml')
         if soup is None:
-            print("No soup found")
             return None
     except Exception as e:
-        print(f"An error occurred: {e}")
         return None
 
     children_elements = soup.find_all("div", class_="user_item")
@@ -509,18 +511,16 @@ def get_kiberons_count(tg_id, user_crm_id, user_crm_name_full: str, login: str, 
         full_name = name_element.text.strip()
         full_name_splitted = full_name.split(' ')[:2]
         name = ' '.join(full_name_splitted)
-        if name == user_crm_name_full:
+        if name == ' '.join(user_crm_name_full.split(' ')[:2]):
             balance_element = child.find('div', class_='user_admin_col_balance')
             balance = balance_element.text.strip()
-            print(f'balance: {balance}')
 
             user = UserData.objects.filter(tg_id=tg_id).first()
             if user:
                 user.kiberons_count = int(balance)
                 user.save()
-                print(f'kiberons: {user.kiberons_count}')
             else:
-                print('no user')
+                return 0
             return balance
     return None
 
