@@ -74,7 +74,7 @@ async def check_user_balance():
                 logger.debug(f"Найдено {len(items)} записей в ЦРМ.")
                 for item in items:
                     if item.get("is_study", 0):
-                        user_paid_lesson_count: int = int(item.get("paid_lesson_count", 0))
+                        user_paid_lesson_count: int = int(item.get("paid_count", 0))
                         logger.debug(f"Количество оплаченных занятий: {user.phone_number}: {user_paid_lesson_count}")
                         user_balance = str(item.get("balance", 0))
                         logger.debug(f"Баланс: {user_balance}")
