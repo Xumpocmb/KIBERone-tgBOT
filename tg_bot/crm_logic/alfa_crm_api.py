@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import random
+from datetime import datetime
 
 import aiohttp
 from dotenv import load_dotenv
@@ -298,3 +299,65 @@ async def get_user_trial_lesson(user_crm_id: int, branch_ids: list) -> dict | No
         if response_data.get("total") != 0:
             return response_data
     return {"total": 0}
+
+
+async def get_curr_tariff(user_crm_id, branch_id, current_month, current_year):
+    token = await login_to_alfa_crm()
+    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/customer-tariff/index?customer_id={user_crm_id}"
+    customer_tariffs = await send_request_to_crm(url, "{}", None, token)
+    current_date = datetime.strptime("01." + str(current_month) + "." + str(current_year), '%d.%m.%Y')
+    for tariff in sorted(customer_tariffs.get("items"), key=lambda x: datetime.strptime(x.get("e_date"), '%d.%m.%Y')):
+        tariff_end_date = datetime.strptime(tariff.get("e_date"), '%d.%m.%Y')
+        tariff_begin_date = datetime.strptime(tariff.get("b_date"), '%d.%m.%Y')
+        if tariff_end_date >= current_date >= tariff_begin_date and tariff_end_date.year == current_year:
+            price = float(await get_tariff_price(token,branch_id, tariff.get("tariff_id")))
+            discount = float(await get_curr_discount(token, branch_id, user_crm_id, current_month, current_year))
+            tariff.update({"price": price * (1 - discount/100)})
+            return tariff
+
+
+async def get_tariff_price(token, branch_id, tariff_id):
+    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/tariff/index"
+    page = 0
+    data = {"page": 0}
+    data_json = json.dumps(data)
+    tariff_objects = await send_request_to_crm(url, data_json, None, token)
+    tariff_objects_items = tariff_objects.get("items")
+    last_page = 1
+    if tariff_objects.get('count') != 0:
+        last_page = tariff_objects.get('total') // tariff_objects.get('count')
+    while page < last_page:
+        for tariff in tariff_objects_items:
+            if tariff.get("id") == tariff_id:
+                return tariff.get("price")
+        page += 1
+        data = {page: 0}
+        data_json = json.dumps(data)
+        tariff_objects = await send_request_to_crm(url, data_json, None, token)
+        tariff_objects_items = tariff_objects.get("items")
+    return []
+
+
+async def get_curr_discount(token, branch_id, user_crm_id, current_month, current_year):
+    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/discount/index"
+    page = 0
+    data = {"customer_id": user_crm_id, "page": 0}
+    data_json = json.dumps(data)
+    discounts = await send_request_to_crm(url, data_json, None, token)
+    discounts_items = discounts.get("items")
+    last_page = 1
+    if discounts.get('count') != 0:
+        last_page = discounts.get('total') // discounts.get('count')
+    current_date = datetime.strptime("01." + str(current_month) + "." + str(current_year), '%d.%m.%Y')
+    while page < last_page:
+        for discount in sorted(discounts_items, key=lambda x: datetime.strptime(x.get("end"), '%d.%m.%Y')):
+            discount_end_date = datetime.strptime(discount.get("end"), '%d.%m.%Y')
+            discount_begin_date = datetime.strptime(discount.get("begin"), '%d.%m.%Y')
+            if discount_end_date >= current_date >= discount_begin_date and discount_end_date.year == current_year:
+                return discount.get("amount")
+        page += 1
+        data.update({"page": page})
+        data_json = json.dumps(data)
+        discounts = await send_request_to_crm(url, data_json, None, token)
+        discounts_items = discounts.get("items")
+    return 0

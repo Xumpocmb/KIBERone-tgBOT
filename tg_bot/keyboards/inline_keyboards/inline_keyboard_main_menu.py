@@ -14,7 +14,7 @@ button_1: InlineKeyboardButton = InlineKeyboardButton(
 
 button_2: InlineKeyboardButton = InlineKeyboardButton(
     text='Оплатить',
-    callback_data='erip_payment')
+    callback_data='erip_payment-service')
 
 button_4: InlineKeyboardButton = InlineKeyboardButton(
     text='Платформа английского Lim English',
