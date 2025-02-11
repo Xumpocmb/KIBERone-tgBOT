@@ -311,6 +311,7 @@ async def get_curr_tariff(user_crm_id, branch_id, current_month, current_year):
         tariff_begin_date = datetime.strptime(tariff.get("b_date"), '%d.%m.%Y')
         if tariff_end_date >= current_date >= tariff_begin_date and tariff_end_date.year == current_year:
             price = float(await get_tariff_price(token,branch_id, tariff.get("tariff_id")))
+            await asyncio.sleep(random.uniform(0.5, 1.2))
             discount = float(await get_curr_discount(token, branch_id, user_crm_id, current_month, current_year))
             tariff.update({"price": price * (1 - discount/100)})
             return tariff
@@ -333,6 +334,7 @@ async def get_tariff_price(token, branch_id, tariff_id):
         page += 1
         data = {page: 0}
         data_json = json.dumps(data)
+        await asyncio.sleep(random.uniform(0.5, 1.2))
         tariff_objects = await send_request_to_crm(url, data_json, None, token)
         tariff_objects_items = tariff_objects.get("items")
     return []
@@ -358,6 +360,7 @@ async def get_curr_discount(token, branch_id, user_crm_id, current_month, curren
         page += 1
         data.update({"page": page})
         data_json = json.dumps(data)
+        await asyncio.sleep(random.uniform(0.5, 1.2))
         discounts = await send_request_to_crm(url, data_json, None, token)
         discounts_items = discounts.get("items")
     return 0
