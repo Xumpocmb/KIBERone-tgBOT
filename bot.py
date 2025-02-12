@@ -101,7 +101,7 @@ async def main():
     try:
         await bot.delete_webhook(drop_pending_updates=True)
         await set_main_menu(bot)
-        await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types(), timeout_seconds=30, polling_timeout=5)
+        await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types(), timeout_seconds=30, polling_timeout=30)
     finally:
         await bot.session.close()
 

@@ -309,6 +309,7 @@ async def get_curr_tariff(user_crm_id, branch_id, current_month, current_year):
     for tariff in sorted(customer_tariffs.get("items"), key=lambda x: datetime.strptime(x.get("e_date"), '%d.%m.%Y')):
         tariff_end_date = datetime.strptime(tariff.get("e_date"), '%d.%m.%Y')
         tariff_begin_date = datetime.strptime(tariff.get("b_date"), '%d.%m.%Y')
+        current_date = current_date.replace(day=tariff_begin_date.day)
         if tariff_end_date >= current_date >= tariff_begin_date and tariff_end_date.year == current_year:
             price = float(await get_tariff_price(token,branch_id, tariff.get("tariff_id")))
             await asyncio.sleep(random.uniform(0.5, 1.2))
@@ -355,6 +356,7 @@ async def get_curr_discount(token, branch_id, user_crm_id, current_month, curren
         for discount in sorted(discounts_items, key=lambda x: datetime.strptime(x.get("end"), '%d.%m.%Y')):
             discount_end_date = datetime.strptime(discount.get("end"), '%d.%m.%Y')
             discount_begin_date = datetime.strptime(discount.get("begin"), '%d.%m.%Y')
+            current_date = current_date.replace(day=discount_begin_date.day)
             if discount_end_date >= current_date >= discount_begin_date and discount_end_date.year == current_year:
                 return discount.get("amount")
         page += 1

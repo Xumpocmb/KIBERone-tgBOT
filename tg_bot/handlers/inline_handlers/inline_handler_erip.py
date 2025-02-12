@@ -1,6 +1,8 @@
 import hashlib
 import hmac
 from datetime import datetime
+import os
+from dotenv import load_dotenv
 
 import requests
 from aiogram import F
@@ -16,13 +18,14 @@ from tg_bot.keyboards.inline_keyboards.inline_back_to_main import back_to_main_i
 from tg_bot.middlewares.middleware_database import DataBaseSession
 
 logger = get_logger()
+load_dotenv()
 
 erip_router: Router = Router()
 erip_router.callback_query.middleware(DataBaseSession(session_pool=session_maker))
 
-EXPRESS_PAY_TOKEN = "2666b84457dfef74f0f3d36d3d7c3e87"
-EXPRESS_PAY_URL = "https://api.express-pay.by/v1/"
-DEFAULT_PAY_URL = "https://client.express-pay.by/show?k=2F37583A-3ED1-453D-86FD-E3A13B7ADA19"
+EXPRESS_PAY_TOKEN = os.getenv("EXPRESS_PAY_TOKEN")
+EXPRESS_PAY_URL = os.getenv("EXPRESS_PAY_URL")
+DEFAULT_PAY_URL = os.getenv("DEFAULT_PAY_URL")
 
 
 @erip_router.callback_query(F.data == "erip_payment")
