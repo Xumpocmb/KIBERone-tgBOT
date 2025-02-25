@@ -114,7 +114,14 @@ async def get_paid_summ(user_data, user_balance, curr_month):
         if user_balance < 0:
             return abs(user_balance)
         else:
-            return 0
+            temp_current_month = str(int(current_month) + 1)
+            if len(temp_current_month) == 1:
+                temp_current_month = '0' + temp_current_month
+            taught_dates_dict, plan_dates_dict = await get_curr_month_lessons(user_data, temp_current_month)
+            if len(plan_dates_dict) == 0:
+                return 0
+            else:
+                return await get_paid_summ(user_data, user_balance, curr_month + 1)
     amount_payable = user_balance - lesson_price*len(plan_dates_dict)
     if amount_payable < 0:
         return abs(amount_payable)
@@ -125,18 +132,21 @@ async def get_paid_summ(user_data, user_balance, curr_month):
 async def get_curr_month_lessons(user_data, current_month):
     taught_lesson_dates = []
     plan_lesson_dates = []
-    taught_lessons = await get_client_lessons(user_data.get("id"), [1], None, 3)
-    taught_lessons = taught_lessons.get("items")
-    plan_lessons = await get_client_lessons(user_data.get("id"), [1], None, 1)
-    plan_lessons = plan_lessons.get("items")
+    taught_lessons = await get_client_lessons(user_data.get("id"), user_data.get("branch_ids", []), None, 3)
+    taught_lessons = taught_lessons.get("items", [])
+    plan_lessons = await get_client_lessons(user_data.get("id"), user_data.get("branch_ids", []), None, 1)
+    plan_lessons = plan_lessons.get("items", [])
     for lesson in taught_lessons:
         reason_id = lesson.get("details")[0].get("reason_id")
         if lesson.get("date").find('-' + current_month + '-') != -1 and reason_id != 1:
             taught_lesson_dates.append({"date": lesson.get("date"), "reason": reason_id})
     for lesson in plan_lessons:
-        reason_id = lesson.get("details")[0].get("reason_id")
-        if lesson.get("date").find('-' + current_month + '-') != -1 and reason_id != 1:
-            plan_lesson_dates.append({"date": lesson.get("date"), "reason": reason_id})
+        details = lesson.get("details", [])
+        if details:
+            reason_id = details[0].get("reason_id")
+            lesson_date = lesson.get("date")
+            if lesson_date and '-' + current_month + '-' in lesson_date and reason_id != 1:
+                plan_lesson_dates.append({"date": lesson_date, "reason": reason_id})
     return taught_lesson_dates, plan_lesson_dates
 
 
