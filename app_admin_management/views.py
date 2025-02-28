@@ -39,7 +39,7 @@ def user_data_from_excel(request):
             # обработка
             excel_df = pd.read_excel(excel_file)
             google_sheet = GoogleSheet(CREDENTIALS_FILE, sheet_url, sheet_names)
-            google_sheet.update_google_sheet_with_excel(excel_df)
+            google_sheet.add_new_rows(excel_df)
 
             default_storage.delete(file_path)
 
@@ -63,77 +63,43 @@ class GoogleSheet:
         try:
             self.account = gspread.service_account(filename=google_credentials_file)
             self.spreadsheet = self.account.open_by_url(spreadsheet_url)
-            self.worksheet_name = worksheet_name
-            self.topics = {elem.title: elem.id for elem in self.spreadsheet.worksheets()}
-            if worksheet_name not in self.topics:
-                raise ValueError(f"Worksheet '{worksheet_name}' not found in spreadsheet")
-            self.worksheet = self.spreadsheet.get_worksheet_by_id(self.topics[worksheet_name])
+            self.worksheet = self.spreadsheet.worksheet(worksheet_name)
         except Exception as e:
             logging.error(f"Ошибка подключения к Google Sheets: {e}")
             raise e
 
-    def load_data_from_google_sheet(self) -> pd.DataFrame:
-        """Загружает данные из Google Sheets."""
+    def get_existing_ids(self) -> set:
+        """Загружает существующие ID из Google Sheets для быстрого сравнения."""
         try:
-            data = self.worksheet.get_all_records()
-            if not data:
-                raise ValueError("No data found in the worksheet")
-            df = pd.DataFrame(data)
-            return df
+            column_values = self.worksheet.col_values(1)  # Получаем только первый столбец (ID)
+            return set(column_values[1:])  # Пропускаем заголовок
         except Exception as e:
-            logging.error(f"Ошибка загрузки данных из Google Sheets: {e}")
-            raise e
+            logging.error(f"Ошибка при загрузке ID из Google Sheets: {e}")
+            return set()
 
-    def update_google_sheet_with_excel(self, excel_df: pd.DataFrame):
-        """Обновляет Google Sheets данными из Excel-таблицы."""
+    def add_new_rows(self, excel_df: pd.DataFrame):
+        """Добавляет новые строки из Excel, если их нет в Google Sheets."""
         try:
-            # Загрузить данные из Google Sheets
-            logging.info("Загрузка данных из Google Sheets...")
-            google_df = self.load_data_from_google_sheet()
-            logging.info("Данные из Google Sheets успешно загружены.")
+            existing_ids = self.get_existing_ids()
+            logging.info(f"Найдено {len(existing_ids)} существующих записей в Google Sheets.")
 
-            # Сравнить данные и добавить новые строки
-            logging.info("Начало сравнения данных из Excel-файла с данными из Google Sheets...")
-            new_rows = []
-            for index, row in excel_df.iterrows():
-                user_crm_id = row['ID']
-                logging.debug(f"Обработка строки с ID ребенка: {user_crm_id}")
-                if user_crm_id not in google_df['ID ребенка'].values:
-                    new_row = [
-                        user_crm_id,  # ID ребенка
-                        row['ФИО'],  # ФИО ребенка
-                        row['Группы'],  # Группа
-                        '',  # Резюме промежуточное
-                        '',  # Резюме НГ
-                        '',  # Резюме май 2025
-                        ''  # Отзыв родителя
-                    ]
-                    new_rows.append(new_row)
-                    logging.info(f"Добавление новой строки в Google Sheets: {new_row}")
-                else:
-                    logging.debug(f"ID ребенка {user_crm_id} уже существует в Google Sheets.")
+            new_rows = [
+                [
+                    str(row["ID"]),  # ID ребенка
+                    row["ФИО"],      # ФИО ребенка
+                    row["Группы"],   # Группа
+                    "", "", "", ""   # Пустые колонки для резюме и отзыва
+                ]
+                for _, row in excel_df.iterrows() if str(row["ID"]) not in existing_ids
+            ]
 
             if new_rows:
-                logging.info("Выполнение пакетного обновления Google Sheets...")
-                # Получаем текущий размер таблицы
-                current_row_count = len(google_df) + 1
-                # Подготавливаем данные для пакетного обновления
-                batch_update_data = {
-                    'range': f'A{current_row_count}:G{current_row_count + len(new_rows) - 1}',
-                    'values': new_rows
-                }
-                self.worksheet.batch_update([{
-                    'range': batch_update_data['range'],
-                    'values': batch_update_data['values']
-                }])
-                logging.info("Пакетное обновление Google Sheets успешно выполнено.")
+                self.worksheet.append_rows(new_rows, value_input_option="RAW")
+                logging.info(f"Добавлено {len(new_rows)} новых строк в Google Sheets.")
             else:
-                logging.info("Нет новых строк для добавления.")
-
-            logging.info("Сравнение данных завершено.")
-
+                logging.info("Нет новых данных для добавления.")
         except Exception as e:
-            logging.error(f"Ошибка обновления Google Sheets данными из Excel: {e}")
+            logging.error(f"Ошибка при добавлении новых данных: {e}")
             raise e
 
 
