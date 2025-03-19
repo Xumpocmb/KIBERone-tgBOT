@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    {% if is_iphone %}
+        <link rel="stylesheet" href="{% static 'styles/start_page_style_iphone.css' %}">
+    {% else %}
+        <link rel="stylesheet" href="{% static 'styles/start_page_style.css' %}">
+    {% endif %}
+    <link rel="stylesheet" href="{% static 'styles/spinner_style.css' %}">
+    <script type="text/javascript" src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+
+<body>
+<center>
+    <div id="loader"></div>
+</center>
+<div id="mainDiv">
+    <section id="main">
+        <p>Добро пожаловать <br> в KIBERhub!</p>
+        <a href="{% url 'app_kiberclub:choose_child' %}" id="start-link">Давайте начнем</a>
+        <img src="{% static 'img/start.png' %}" id="startImg" alt="Старт">
+        <p id="text">KIBERhub - это личный кабинет Вашего ребенка, в котором вы сможете посмотреть количество заработанных киберонов, перейти в кабинет по предзаказу товаров к предстающему КиберШопу, узнать тему занятий и получить обратную связь от тьютора
+        </p>
+    </section>
+</div>
+
+</body>
+<script>
+    window.Telegram.WebApp.ready();
+    window.Telegram.WebApp.expand();
+
+    window.addEventListener('DOMContentLoaded', function () {
+
+        document.getElementById("loader").style.display = 'block';
+        document.getElementById("mainDiv").style.display = 'none';
+
+        const initData = window.Telegram.WebApp.initData;
+        const csrfToken = '{{ csrf_token }}';
+        if (initData) {
+            fetch('/kiberclub/save_init_data/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({initData: initData})
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('InitData отправлены:', data);
+                    document.getElementById("loader").style.display = 'none';
+                    document.getElementById("mainDiv").style.display = 'block';
+                })
+                .catch((error) => console.error('Ошибка:', error));
+        } else {
+            console.log("Telegram WebApp is not available");
+            document.getElementById("loader").style.display = 'block';
+            document.getElementById("mainDiv").style.display = 'none';
+        }
+    });
+</script>
+<script>
+    document.getElementById('start-link').addEventListener('click', function (event) {
+        event.preventDefault();  // Отменяем стандартное поведение ссылки
+
+        const contentElement = document.getElementById("main");
+        const loaderElement = document.getElementById("loader");
+        loaderElement.style.display = 'block';
+        contentElement.style.display = 'none';
+
+        fetch(this.href, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => {
+                loaderElement.style.display = 'none';
+                contentElement.style.display = 'none';
+
+                if (response.ok) {
+                    window.location.href = this.href;
+                } else {
+                    alert('Произошла ошибка. Пожалуйста, попробуйте снова.');
+                }
+            })
+            .catch(error => {
+                document.getElementById('loader').classList.remove('visible');
+                document.getElementById('loader').classList.add('hidden');
+                alert('Ошибка соединения. Пожалуйста, попробуйте снова.');
+            });
+    });
+</script>
+</html>

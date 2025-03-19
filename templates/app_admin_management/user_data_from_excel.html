@@ -1,0 +1,41 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'styles/admin_styles.css' %}">
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Excel File</title>
+</head>
+<body>
+<h2>Upload Excel File</h2>
+<p>Загрузите файл с данными учеников конкретной локации, чтобы добавить их в файл резюме от тьюторов</p>
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Upload</button>
+</form>
+<script>
+    // scripts.js
+    document.addEventListener('DOMContentLoaded', function () {
+        // Получаем все сообщения
+        var messages = document.querySelectorAll('.messages li');
+
+        // Перебираем все сообщения и устанавливаем таймер для их скрытия
+        messages.forEach(function (message) {
+            setTimeout(function () {
+                message.style.display = 'none';
+            }, 3000); // 3 секунды
+        });
+    });
+
+</script>
+</body>
+</html>

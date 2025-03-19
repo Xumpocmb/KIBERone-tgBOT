@@ -1,0 +1,19 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'styles/admin_styles.css' %}">
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+</head>
+<body>
+    <h1>Admin Home Page</h1>
+    {% if user.is_authenticated %}
+        <h2>Hello, {{ user.username }}!</h2>
+        <p><a href="{% url 'app_admin_management:user_data_from_excel' %}">Загрузить данные учеников для локации</a></p>
+        <a href="{% url 'app_accounts:logout' %}">Logout</a>
+    {% else %}
+        <p><a href="{% url 'app_accounts:login' %}">Login</a></p>
+        <p><a href="{% url 'app_accounts:signup' %}">Sign Up</a></p>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,76 @@
+{% extends 'app_kibershop/base.html' %}
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/kibershop_styles/catalog_style.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/kibershop_styles/running_line.css' %}">
+{% endblock %}
+
+{% block header %}
+
+{% endblock %}
+
+{% block content %}
+    <body>
+    <section id="fixedCartSection">
+        <p id="productInCartCount">{% if carts.total_quantity %}{{ carts.total_quantity }}{% else %}0{% endif %}</p>
+        <a href="{% url 'app_kibershop:cart' %}" id="fixedCartButton">
+            <img src="{% static 'img/kibershop/cart_logo.svg' %}" id="fixedCartButtonImg" alt="Корзина">
+        </a>
+    </section>
+    <section id="kibershopText">
+        <h1 style="color: #06B9BE">K</h1>
+        <h1 style="color: #FFCD26">I</h1>
+        <h1 style="color: #8C271F">B</h1>
+        <h1 style="color: #9C9C9C">E</h1>
+        <h1 style="color: #1C546D">R</h1>
+        <h1 style="margin-left: 20px">SHOP</h1>
+    </section>
+
+
+    <section class="productListSection">
+        <div style="margin-top: -3vw;" id="warning">
+            <p class="warningText">ПРЕДЗАКАЗ ЗАКРЫТ! ВАШИ ЗАКАЗЫ ВЫ МОЖЕТЕ ОТСЛЕДИТЬ ПЕРЕЙДЯ ПО КНОПКЕ ПРОФИЛЯ В ШАПКЕ</p>
+        </div>
+        {% for category in categories %}
+            <section class="sectionTitle">
+                <span>{{ category.name }}</span>
+            </section>
+            <section class="productsSection">
+                <div class="productsRow" style="display: grid; grid-template-columns: repeat(2, 1fr);">
+                    {% for product in category.product_set.all %}
+                        {% if product.in_stock %}
+                            <form action="{% url 'app_kibershop:add_to_cart' product.id %}" method="post">
+                                {% csrf_token %}
+                                <div class="productCard">
+                                    <img src="{{ product.image.url }}" class="productImg"
+                                         alt="{{ product.name }}">
+                                    <section class="productInfo">
+                                        <section class="productInfoText">
+                                            <p class="productName">{{ product.name }}</p>
+                                            <p class="productPrice">{{ product.price }}К</p>
+                                        </section>
+                                        <section class="buttonsRowSection">
+                                            <button class="cartButton" id="cartButton"><img
+                                                    src="{% static 'img/kibershop/cart_logo.svg' %}"
+                                                    class="iconImg" alt="Корзина"></button>
+                                        </section>
+                                    </section>
+                                </div>
+                            </form>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+        {% endfor %}
+    </section>
+
+    </body>
+
+{% endblock %}
+
+
+
+{% block footer %}
+
+{% endblock %}

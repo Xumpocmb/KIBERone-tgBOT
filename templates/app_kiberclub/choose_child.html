@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>KIBERone</title>
+    {% if is_iphone %}
+        <link rel="stylesheet" type="text/css" href="{% static 'styles/choose_child_style_iphone.css' %}">
+    {% else %}
+        <link rel="stylesheet" type="text/css" href="{% static 'styles/choose_child_style.css' %}">
+    {% endif %}
+    <link rel="stylesheet" href="{% static 'styles/spinner_style.css' %}">
+</head>
+<body>
+<center>
+    <div id="loader"></div>
+</center>
+<div id="mainDiv">
+    <form action="{% url 'app_kiberclub:open_profile' %}" method="post" id="profileForm">
+        {% csrf_token %}
+        {% if profiles %}
+            <label for="profiles">В KIBERone учится...</label>
+            <select id="profiles" name="profile_id">
+                {% for id, name in profiles.items %}
+                    <option value="{{ id }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" id="open">Перейти в KIBERhub</button>
+        {% else %}
+            <p>Как бы мы не старались, но не нашли ни одного профиля.</p>
+        {% endif %}
+    </form>
+</div>
+
+</body>
+<script>
+    document.getElementById("loader").style.display = 'none';
+
+    document.getElementById('profileForm').addEventListener('submit', function () {
+        const contentElement = document.getElementById("mainDiv");
+        const loaderElement = document.getElementById("loader");
+
+        loaderElement.style.display = 'block';
+        contentElement.style.display = 'none';
+
+    });
+</script>
+</html>

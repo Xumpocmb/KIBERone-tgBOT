@@ -1,0 +1,143 @@
+@font-face {
+    font-family: 'pf_beausans_prolight';
+    src: url("../fonts/PFBeauSansPro-Light.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'franklin_gothic_mediumregular';
+    src: url("../fonts/Franklin_Gothic_Medium.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+html {
+    width: 100%;
+    height: 5000px;
+    font-family: 'pf_beausans_prolight';
+    font-size: 43px;
+}
+
+body {
+    font-family: 'pf_beausans_prolight';
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5%;
+}
+
+span {
+    background-color: #fff;
+    padding: 18px;
+    border-radius: 15px;
+    display: flex;
+    width: 800px;
+    max-height: 600px;
+    font-size: 42px;
+    overflow: auto;
+    scroll-snap-type: y mandatory;
+    border: 5px solid #F6C90E;
+}
+
+p {
+    font-size: 42px;
+    font-family: 'franklin_gothic_mediumregular';
+}
+
+a {
+    background-color: #F6C90E;
+    color: #ffffff;
+    border-radius: 20px;
+    padding: 18px;
+    text-decoration: none;
+    font-size: 42px;
+    border: none
+}
+
+textarea {
+    width: 800px;
+    height: 180px;
+}
+
+
+#profileImg {
+    width: 350px;
+    height: 350px;
+    margin-left: 85px;
+    margin-bottom: -30px;
+}
+
+#walletImg {
+    width: 45px;
+    height: 45px;
+    margin-right: 8px;
+}
+
+#userInfo {
+    display: flex;
+    flex-direction: column;
+    /* margin-left: 20px; */
+    color: #000000;
+    text-align: right;
+}
+
+#infoWithImage {
+    display: flex;
+    width: 820px;
+    align-items: end;
+    margin-bottom: 45px;
+    justify-content: space-between;
+}
+
+#extraInfo {
+    padding-top: 8px;
+}
+
+
+/*#feedback:focus-within {*/
+/*    position: fixed;*/
+/*    top: 30%;*/
+/*    left: 50%;*/
+/*    transform: translate(-30%, -50%);*/
+/*}*/
+
+
+/*i {*/
+/*    font-size: 16px;*/
+/*    background-color: #fff;*/
+/*}*/
+
+
+/*textarea {*/
+/*    width: 800px;*/
+/*    height: 180px;*/
+/*    font-size: 40px;*/
+/*    border: 5px solid #F6C90E; */
+/*    margin-bottom: 15px;*/
+/*    border-radius: 15px;*/
+/*    padding: 16px;*/
+/*    margin-left: -2px;*/
+/*}*/
+
+/*#feedbackForm {*/
+/*    display: flex;*/
+/*    align-items: center;*/
+/*    flex-direction: column;*/
+/*    !* padding: 4px; *!*/
+/*}*/
+
+/*#sendButton {*/
+/*    width: 250px;*/
+/*    display: flex;*/
+/*    justify-content: center;*/
+/*    align-items: center;*/
+/*}*/
+
+/*#feedback {*/
+/*    margin-top: 8px;*/
+/*    margin-bottom: 10px;*/
+/*}*/

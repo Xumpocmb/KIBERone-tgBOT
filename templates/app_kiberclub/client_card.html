@@ -1,0 +1,88 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Профиль</title>
+    <link rel="stylesheet" href="{% static 'styles/client_card_style.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/feed_back_form_style.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/running_line.css' %}">
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="{% static 'styles/feed_back_form_style.css' %}">
+</head>
+
+<body>
+<div id="mainDiv">
+    <div id="main">
+        <section id="infoWithImage">
+            <img src="{% static 'img/profile_image.png' %}" id="profileImg" alt="">
+            <section id="userInfo">
+                <section id="account">
+                    <img src="{% static 'img/wallet_img.png' %}" id="walletImg" alt=""><b
+                        id="kiberons">{{ user_kiberons }} К</b>
+                </section>
+                <p id="fullname" style="font-family: 'Inter Light';">{{ user_crm_name }}</p>
+                <b id="dob" style="font-family: 'Inter Light';">{{ user_crm_birthday }}</b>
+                <b id="location" style="font-family: 'Inter Light';">{{ user_location }}</b>
+            </section>
+        </section>
+        <a href="{% url 'app_kibershop:catalog' %}">Перейти в KIBERshop</a>
+        <div id="warning">
+            <p class="warningText">ПРЕДЗАКАЗ ЗАКРЫТ! ВАШИ ЗАКАЗЫ ВЫ МОЖЕТЕ ОТСЛЕДИТЬ ПЕРЕЙДЯ ПО КНОПКЕ ПРОФИЛЯ В ШАПКЕ</p>
+        </div>
+        <section id="extraInfo">
+            <div class="backend_info" id="backend_info"></div>
+            <p>Тема следующего занятия</p>
+            <span id="subject">{{ lesson_name }}</span>
+            <p>Обратная связь от тьютора</p>
+            <span id="resume">
+                <div class="item" id="resumeInfo">
+                    {{ user_resume }}
+                </div>
+            </span>
+        </section>
+        <section id="feedback">
+            <i id="message">Оставьте обратную связь по работе нашей КИБЕР-школы!<br></i>
+            <form id="feedbackForm" onsubmit="event.preventDefault(); submitReview();">
+                {% csrf_token %}
+                <textarea placeholder="Отзыв" id="feedbackInput" name="feedbackInput"></textarea>
+                <div id="forSendButton">
+                    <button type="submit" id="sendButton">Отправить</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+<script>
+    function submitReview() {
+        let formData = new FormData(document.getElementById('feedbackForm'));
+        let button = document.getElementById('sendButton');
+
+        console.log('Button before change:', button.innerText);
+        button.innerText = 'Отправка...';
+        console.log('Button after change:', button.innerText);
+
+        fetch('{% url 'app_kiberclub:review_from_parent' %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('message').innerText = data.message;
+                    button.innerText = 'Отправить';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.innerText = 'Отправить';
+            });
+    }
+</script>
+
+</body>
+</html>
