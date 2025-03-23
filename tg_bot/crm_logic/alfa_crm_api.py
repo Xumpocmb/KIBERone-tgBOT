@@ -8,7 +8,7 @@ import aiohttp
 from dotenv import load_dotenv
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from dateutil.relativedelta import relativedelta
+
 from tg_bot.database.orm_query import orm_get_user_by_crm_id
 
 load_dotenv()
@@ -301,45 +301,19 @@ async def get_user_trial_lesson(user_crm_id: int, branch_ids: list) -> dict | No
     return {"total": 0}
 
 
-async def get_curr_tariff(user_crm_id, branch_id, current_date):
-    logger.debug("Вход в функцию get_curr_tariff")
-    logger.debug(f"Параметры: user_crm_id={user_crm_id}, branch_id={branch_id}, current_date={current_date}")
-
+async def get_curr_tariff(user_crm_id, branch_id, curr_date):
     token = await login_to_alfa_crm()
-    logger.debug(f"Получен токен: {token}")
-
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/customer-tariff/index?customer_id={user_crm_id}"
-    logger.debug(f"Сформированный URL: {url}")
-
     customer_tariffs = await send_request_to_crm(url, "{}", None, token)
-    logger.debug(f"Полученные тарифы клиента: {customer_tariffs}")
-
-    for tariff in sorted(customer_tariffs.get("items", []), key=lambda x: datetime.strptime(x.get("e_date"), '%d.%m.%Y')):
-        logger.debug(f"Обработка тарифа: {tariff}")
-
+    for tariff in sorted(customer_tariffs.get("items"), key=lambda x: datetime.strptime(x.get("e_date"), '%d.%m.%Y')):
         tariff_end_date = datetime.strptime(tariff.get("e_date"), '%d.%m.%Y')
         tariff_begin_date = datetime.strptime(tariff.get("b_date"), '%d.%m.%Y')
-
-        logger.debug(f"Дата окончания тарифа: {tariff_end_date}, дата начала тарифа: {tariff_begin_date}")
-
-        if tariff_end_date.date() >= current_date >= tariff_begin_date.date():
-            logger.debug("Тариф действует в текущем месяце")
-
-            price = float(await get_tariff_price(token, branch_id, tariff.get("tariff_id")))
-            logger.debug(f"Полученная цена тарифа: {price}")
-
+        if tariff_end_date.date() >= curr_date >= tariff_begin_date.date():
+            price = float(await get_tariff_price(token,branch_id, tariff.get("tariff_id")))
             await asyncio.sleep(random.uniform(0.5, 1.2))
-
-            discount = float(await get_curr_discount(token, branch_id, user_crm_id, current_date))
-            logger.debug(f"Полученная скидка: {discount}")
-
-            tariff.update({"price": price * (1 - discount / 100)})
-            logger.debug(f"Обновленный тариф: {tariff}")
-
+            discount = float(await get_curr_discount(token, branch_id, user_crm_id, curr_date))
+            tariff.update({"price": price * (1 - discount/100)})
             return tariff
-
-    logger.debug("Не найден действующий тариф для текущего месяца")
-    return None
 
 
 async def get_tariff_price(token, branch_id, tariff_id):
@@ -365,7 +339,7 @@ async def get_tariff_price(token, branch_id, tariff_id):
     return []
 
 
-async def get_curr_discount(token, branch_id, user_crm_id, current_date):
+async def get_curr_discount(token, branch_id, user_crm_id, curr_date):
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/discount/index"
     page = 0
     data = {"customer_id": user_crm_id, "page": 0}
@@ -379,7 +353,7 @@ async def get_curr_discount(token, branch_id, user_crm_id, current_date):
         for discount in sorted(discounts_items, key=lambda x: datetime.strptime(x.get("end"), '%d.%m.%Y')):
             discount_end_date = datetime.strptime(discount.get("end"), '%d.%m.%Y')
             discount_begin_date = datetime.strptime(discount.get("begin"), '%d.%m.%Y')
-            if discount_end_date.date() >= current_date >= discount_begin_date.date():
+            if discount_end_date.date() >= curr_date >= discount_begin_date.date():
                 return discount.get("amount")
         page += 1
         data.update({"page": page})

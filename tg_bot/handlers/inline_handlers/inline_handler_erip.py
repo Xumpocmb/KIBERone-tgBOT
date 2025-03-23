@@ -3,6 +3,7 @@ import hmac
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+from dateutil.relativedelta import relativedelta
 
 import requests
 from aiogram import F
@@ -16,8 +17,6 @@ from tg_bot.database.engine import session_maker
 from tg_bot.database.orm_query import orm_get_user_by_tg_id
 from tg_bot.keyboards.inline_keyboards.inline_back_to_main import back_to_main_inline
 from tg_bot.middlewares.middleware_database import DataBaseSession
-from dateutil.relativedelta import relativedelta
-
 
 logger = get_logger()
 load_dotenv()
@@ -88,7 +87,7 @@ async def set_pay(user_data):
 
     await clear_user_not_paid_invoices(crm_id)
     amount_payable = await get_paid_summ(user_data, float(user_data.get("balance")), datetime.now().date())
-    logger.debug(f"Сумма к оплате: {amount_payable if amount_payable else "Не удалось получить сумму для оплаты"}")
+
     pay_url = (await get_pay_url(user_data.get("id"), round(amount_payable + 0.001, 2), user_data.get("name")))
     return (f"ФИО: {user_data.get("name").title()}\n"
             f"Сумма к оплате: {round(amount_payable + 0.001, 2)}\n"
@@ -106,90 +105,55 @@ async def get_signature(data):
 
 
 async def get_paid_summ(user_data, user_balance, curr_date):
-    logger.debug("Вход в функцию get_paid_summ")
-    logger.debug(f"Параметры: user_data={user_data}, user_balance={user_balance}, curr_date={curr_date}")
-
-    lesson_price = round(await get_lesson_price(user_data.get("id"), user_data.get("branch_ids")[0], curr_date) + 0.001, 2)
-    logger.debug(f"Рассчитанная цена урока: {lesson_price}")
-
+    lesson_price = round(await get_lesson_price(user_data.get("id"), user_data.get("branch_ids")[0], curr_date)+0.001, 2)
     taught_dates_dict, plan_dates_dict = await get_curr_month_lessons(user_data, curr_date)
-    logger.debug(f"Даты проведенных уроков: {taught_dates_dict}, даты запланированных уроков: {plan_dates_dict}")
-
     if len(taught_dates_dict) + len(plan_dates_dict) == 0:
-        logger.debug("Нет проведенных или запланированных уроков для текущего месяца")
         if user_balance < 0:
-            logger.debug("Баланс пользователя отрицательный, возвращаем абсолютное значение")
             return abs(user_balance)
         else:
             taught_dates_dict, plan_dates_dict = await get_curr_month_lessons(user_data, curr_date + relativedelta(months=1))
-            logger.debug(f"Даты проведенных уроков для следующего месяца: {taught_dates_dict}, запланированных уроков: {plan_dates_dict}")
-
             if len(plan_dates_dict) == 0:
-                logger.debug("Нет запланированных уроков для следующего месяца, возвращаем 0")
                 return 0
             else:
-                logger.debug("Рекурсивный вызов get_paid_summ для следующего месяца")
+                # change func params
                 return await get_paid_summ(user_data, user_balance, curr_date + relativedelta(months=1))
 
-    amount_payable = user_balance - lesson_price * len(plan_dates_dict)
-    logger.debug(f"Рассчитанная сумма к оплате: {amount_payable}")
-
+    amount_payable = user_balance - lesson_price*len(plan_dates_dict)
     if amount_payable < 0:
-        logger.debug("Сумма к оплате отрицательная, возвращаем абсолютное значение")
         return abs(amount_payable)
     else:
-        logger.debug("Рекурсивный вызов get_paid_summ с обновленной суммой к оплате")
-        return await get_paid_summ(user_data, user_balance, curr_date + relativedelta(months=1))
+        return await get_paid_summ(user_data, amount_payable, curr_date + relativedelta(months=1))
 
 
-async def get_curr_month_lessons(user_data, current_date):
-    logger.debug("Вход в функцию get_curr_month_lessons")
-    logger.debug(f"Параметры: user_data={user_data}, current_month={current_date}")
-
+async def get_curr_month_lessons(user_data, curr_date):
     taught_lesson_dates = []
     plan_lesson_dates = []
-
     taught_lessons = await get_client_lessons(user_data.get("id"), user_data.get("branch_ids", []), None, 3)
     taught_lessons = taught_lessons.get("items", [])
     plan_lessons = await get_client_lessons(user_data.get("id"), user_data.get("branch_ids", []), None, 1)
     plan_lessons = plan_lessons.get("items", [])
-
     for lesson in taught_lessons:
         reason_id = lesson.get("details")[0].get("reason_id")
         lesson_date = datetime.strptime(lesson.get("date"), '%Y-%m-%d')
-        logger.debug(f"Обработка проведенного урока: {lesson}, reason_id: {reason_id}")
-
-        if lesson_date.month == current_date.month and lesson_date.year == current_date.year and reason_id != 1:
+        if lesson_date.month == curr_date.month and lesson_date.year == curr_date.year and reason_id != 1:
             taught_lesson_dates.append({"date": lesson.get("date"), "reason": reason_id})
-            logger.debug(f"Добавлен проведенный урок: {lesson.get('date')}, reason_id: {reason_id}")
-
     for lesson in plan_lessons:
         details = lesson.get("details", [])
         if details:
             reason_id = details[0].get("reason_id")
             lesson_date = datetime.strptime(lesson.get("date"), '%Y-%m-%d')
-            logger.debug(f"Обработка запланированного урока: {lesson}, reason_id: {reason_id}, дата: {lesson_date}")
-
-            if lesson_date.month == current_date.month and lesson_date.year == current_date.year and reason_id != 1:
+            if lesson_date.month == curr_date.month and lesson_date.year == curr_date.year and reason_id != 1:
                 plan_lesson_dates.append({"date": lesson_date, "reason": reason_id})
-                logger.debug(f"Добавлен запланированный урок: {lesson_date}, reason_id: {reason_id}")
-
-    logger.debug(f"Возвращаемые даты проведенных уроков: {taught_lesson_dates}, запланированных уроков: {plan_lesson_dates}")
     return taught_lesson_dates, plan_lesson_dates
 
 
-async def get_lesson_price(user_crm_id, branch_id, current_date):
-    tariff = await get_curr_tariff(user_crm_id, branch_id, current_date)
+async def get_lesson_price(user_crm_id, branch_id, curr_date):
+    tariff = await get_curr_tariff(user_crm_id, branch_id, curr_date)
     return tariff.get("price") / 4
 
 
 async def get_pay_url(crm_id, amount, name):
-    logger.debug("Вход в функцию get_pay_url")
-    logger.debug(f"Параметры: crm_id={crm_id}, amount={amount}, name={name}")
-
     url = EXPRESS_PAY_URL + "invoices?token=" + EXPRESS_PAY_TOKEN
-    logger.debug(f"Сформированный URL: {url}")
-
     params = {
         "Token": EXPRESS_PAY_TOKEN,
         "AccountNo": str(crm_id),
@@ -203,32 +167,19 @@ async def get_pay_url(crm_id, amount, name):
         "ReturnInvoiceUrl": "1",
     }
 
-    logger.debug(f"Параметры запроса: {params}")
-
     data = ""
     for p in params.values():
         data += p
 
-    logger.debug(f"Сформированные данные для подписи: {data}")
-
     params["signature"] = await get_signature(data)
-    logger.debug(f"Полученная подпись: {params['signature']}")
 
     res = requests.post(url, data=params).json()
-    logger.debug(f"Ответ от сервера: {res}")
 
-    invoice_url = res.get("InvoiceUrl", DEFAULT_PAY_URL)
-    logger.debug(f"Возвращаемая ссылка для оплаты: {invoice_url}")
-
-    return invoice_url
+    return res.get("InvoiceUrl", DEFAULT_PAY_URL)
 
 
 async def get_invoices(crm_id):
-    logger.debug("Вход в функцию get_invoices")
-    logger.debug(f"Параметры: crm_id={crm_id}")
-
     url = EXPRESS_PAY_URL + "invoices"
-    logger.debug(f"Базовый URL: {url}")
 
     params = {
         "Token": EXPRESS_PAY_TOKEN,
@@ -236,74 +187,36 @@ async def get_invoices(crm_id):
         "Status": 1
     }
 
-    logger.debug(f"Параметры запроса: {params}")
-
     data = ""
     for p in params.values():
         data += str(p)
 
-    logger.debug(f"Сформированные данные для подписи: {data}")
-
     signature = await get_signature(data)
-    logger.debug(f"Полученная подпись: {signature}")
-
     params["signature"] = signature
-
     add_url = "?token=" + EXPRESS_PAY_TOKEN
     add_url += "&AccountNo=" + str(crm_id)
     add_url += "&Status=1&signature=" + signature
 
-    logger.debug(f"Дополнительный URL: {add_url}")
-
-    full_url = url + add_url
-    logger.debug(f"Полный URL запроса: {full_url}")
-
-    response = requests.get(full_url, data=params).json()
-    logger.debug(f"Ответ от сервера: {response}")
-
-    return response
+    return requests.get(url + add_url, data=params).json()
 
 
 async def clear_user_not_paid_invoices(crm_id):
-    logger.debug("Вход в функцию clear_user_not_paid_invoices")
-    logger.debug(f"Параметры: crm_id={crm_id}")
-
     url = EXPRESS_PAY_URL + "invoices"
-    logger.debug(f"Базовый URL: {url}")
 
     res = await get_invoices(crm_id)
-    logger.debug(f"Полученные счета: {res}")
 
-    for inv in res.get("Items", []):
-        logger.debug(f"Обработка счета: {inv}")
-
+    for inv in res.get("Items"):
         params = {
             "Token": EXPRESS_PAY_TOKEN,
             "InvoiceNo": inv.get("InvoiceNo")
         }
-
-        logger.debug(f"Параметры запроса: {params}")
-
         data = ""
         for p in params.values():
             data += str(p)
-
-        logger.debug(f"Сформированные данные для подписи: {data}")
-
         signature = await get_signature(data)
-        logger.debug(f"Полученная подпись: {signature}")
-
         params["signature"] = signature
-
         add_url = '/' + str(inv.get("InvoiceNo"))
         add_url += "?token=" + EXPRESS_PAY_TOKEN
         add_url += "&InvoiceNo=" + str(inv.get("InvoiceNo"))
         add_url += "&signature=" + signature
-
-        logger.debug(f"Дополнительный URL: {add_url}")
-
-        full_url = url + add_url
-        logger.debug(f"Полный URL запроса: {full_url}")
-
-        response = requests.delete(full_url, data=params)
-        logger.debug(f"Ответ от сервера: {response.status_code}, {response.text}")
+        requests.delete(url + add_url, data=params)
